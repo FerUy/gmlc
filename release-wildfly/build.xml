@@ -53,7 +53,7 @@
 	<property name="restcomm-slee.ss7.tag" value="${restcomm-map-ra.version}" />
 	<property name="restcomm-slee.download.distro.name" value="restcomm-slee-${restcomm-slee.version}.${restcomm-slee.build-number}-wildfly-10.1.0.Final" />
 	<property name="restcomm-slee.download.distro.file" value="${restcomm-slee.download.distro.name}.zip" />
-	<property name="restcomm-slee.download.url" value="${github.url}/jain-slee/releases/download/${restcomm-slee.release}/${restcomm-slee.download.distro.file}" />
+	<property name="restcomm-slee.download.url" value="${github.url}/jain-slee/archive/${restcomm-slee.release}/${restcomm-slee.download.distro.file}" />
 	<property name="restcomm-slee.distro.zip.path" value="${checkout.dir}/${restcomm-slee.download.distro.file}" />
 	<property name="restcomm-jss7.download.distro.file" value="restcomm-jss7-${restcomm-jss7.version}.zip" />
 	<property name="restcomm-jss7.download.url" value="${github.url}/jss7/releases/download/${restcomm-jss7.version}/${restcomm-jss7.download.distro.file}" />
@@ -250,8 +250,8 @@
 	</target>
 
 	<target name="clean-up-restcomm-slee">
-		<delete includeemptydirs="true" failonerror="true">
-			<fileset dir="${release.dir}/docs/resources">
+		<delete includeemptydirs="true" failonerror="false">
+			<fileset dir="${release.dir}/docs/resources" erroronmissingdir="false">
 				<include name="**" />
 				<exclude name="**/map/**" />
 				<exclude name="**/sip11/**" />
@@ -262,8 +262,8 @@
 		</delete>
 		<delete dir="${release.dir}/docs/enablers" includeemptydirs="true" failonerror="true" />
 		<delete dir="${release.dir}/docs/examples" includeemptydirs="true" failonerror="true" />
-		<delete includeemptydirs="true" failonerror="true">
-			<fileset dir="${release.dir}/resources">
+		<delete includeemptydirs="true" failonerror="falsee">
+			<fileset dir="${release.dir}/resources" erroronmissingdir="false">
 				<include name="**" />
 				<exclude name="**/map/**" />
 				<exclude name="**/sip11/**" />
@@ -272,21 +272,21 @@
 				<exclude name="**/http-servlet/**" />
 			</fileset>
 		</delete>
-		<delete includeemptydirs="true" failonerror="true">
-			<fileset dir="${release.dir}/extra">
+		<delete includeemptydirs="true" failonerror="false">
+			<fileset dir="${release.dir}/extra" erroronmissingdir="false">
 				<include name="**" />
 				<exclude name="**/restcomm-http/**"/>
 			</fileset>
 		</delete>
-		<delete includeemptydirs="true" failonerror="true">
+		<delete includeemptydirs="true" failonerror="false">
 			<fileset dir="${deploy.dir}">
 				<include name="*.jar" />
 			</fileset>
 		</delete>
-		<delete dir="${release.dir}/enablers" includeemptydirs="true" failonerror="true" />
-		<delete dir="${release.dir}/examples" includeemptydirs="true" failonerror="true" />
-		<delete file="${release.dir}/readme.txt" failonerror="true" />
-		<delete file="${release.dir}/sources.zip" failonerror="true" />
+		<delete dir="${release.dir}/enablers" includeemptydirs="true" failonerror="false" />
+		<delete dir="${release.dir}/examples" includeemptydirs="true" failonerror="false" />
+		<delete file="${release.dir}/readme.txt" failonerror="false" />
+		<delete file="${release.dir}/sources.zip" failonerror="false" />
 	</target>
 
 	<target name="checkout-gmlc-persistence">

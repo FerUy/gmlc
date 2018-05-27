@@ -19,6 +19,8 @@
 
 package org.mobicents.gmlc.slee.cdr.plain;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 
 import javax.slee.ActivityContextInterface;
@@ -30,14 +32,39 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.mobicents.gmlc.slee.cdr.GMLCCDRState;
 import org.mobicents.gmlc.slee.cdr.RecordStatus;
+import org.mobicents.gmlc.slee.map.MobileCoreNetworkInterfaceSbb;
 import org.mobicents.protocols.ss7.indicator.AddressIndicator;
+
+import org.mobicents.protocols.ss7.map.api.MAPException;
 import org.mobicents.protocols.ss7.map.api.primitives.AddressString;
-import org.mobicents.protocols.ss7.map.api.primitives.IMSI;
 import org.mobicents.protocols.ss7.map.api.primitives.ISDNAddressString;
+import org.mobicents.protocols.ss7.map.api.primitives.GSNAddress;
+import org.mobicents.protocols.ss7.map.api.primitives.DiameterIdentity;
+import org.mobicents.protocols.ss7.map.api.primitives.LMSI;
+import org.mobicents.protocols.ss7.map.api.primitives.IMEI;
+import org.mobicents.protocols.ss7.map.api.primitives.IMSI;
+import org.mobicents.protocols.ss7.map.api.primitives.CellGlobalIdOrServiceAreaIdOrLAI;
+
+import org.mobicents.protocols.ss7.map.api.service.lsm.LCSEvent;
+import org.mobicents.protocols.ss7.map.api.service.lsm.LCSQoS;
+import org.mobicents.protocols.ss7.map.api.service.lsm.DeferredmtlrData;
+import org.mobicents.protocols.ss7.map.api.service.lsm.PeriodicLDRInfo;
+import org.mobicents.protocols.ss7.map.api.service.lsm.ServingNodeAddress;
+import org.mobicents.protocols.ss7.map.api.service.lsm.VelocityEstimate;
+import org.mobicents.protocols.ss7.map.api.service.lsm.AccuracyFulfilmentIndicator;
+import org.mobicents.protocols.ss7.map.api.service.lsm.AddGeographicalInformation;
+import org.mobicents.protocols.ss7.map.api.service.lsm.ExtGeographicalInformation;
+import org.mobicents.protocols.ss7.map.api.service.lsm.UtranGANSSpositioningData;
+import org.mobicents.protocols.ss7.map.api.service.lsm.GeranGANSSpositioningData;
+import org.mobicents.protocols.ss7.map.api.service.lsm.PositioningDataInformation;
+import org.mobicents.protocols.ss7.map.api.service.lsm.UtranPositioningDataInfo;
+import org.mobicents.protocols.ss7.map.api.service.lsm.AdditionalNumber;
+import org.mobicents.protocols.ss7.map.api.service.lsm.LCSClientID;
+import org.mobicents.protocols.ss7.map.api.service.lsm.ReportingPLMNList;
+
 import org.mobicents.protocols.ss7.sccp.parameter.GlobalTitle;
 import org.mobicents.protocols.ss7.sccp.parameter.SccpAddress;
 
-import org.mobicents.gmlc.slee.map.MobileCoreNetworkInterfaceSbb;
 import org.mobicents.gmlc.slee.cdr.CDRInterface;
 
 /**
@@ -50,7 +77,6 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
   private static final Logger cdrTracer = Logger.getLogger(CDRGeneratorSbb.class);
 
   private static final String CDR_GENERATED_TO = "Textfile";
-
 
   public CDRGeneratorSbb() {
     //super("CDRGeneratorSbb");
@@ -67,7 +93,7 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
    */
   @Override
   public void init(final boolean reset) {
-    super.logger.info("Setting CDR_GENERATED_TO to "+CDR_GENERATED_TO);
+    super.logger.info("Setting CDR_GENERATED_TO to "+ CDR_GENERATED_TO);
   }
 
   /* (non-Javadoc)
@@ -75,6 +101,7 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
    */
   @Override
   public void createRecord(RecordStatus outcome) {
+
     GMLCCDRState state = getState();
 
     if (state.isGenerated()) {
@@ -191,16 +218,16 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
     // REMOTE DIALOG_ID
     stringBuilder.append(gmlcCdrState.getRemoteDialogId()).append(SEPARATOR);
 
+    // DIALOG_DURATION
     Long dialogDuration = gmlcCdrState.getDialogDuration();
     if (dialogDuration != null) {
       // TODO: output as millis or?
-      // DIALOG_DURATION
       stringBuilder.append(dialogDuration).append(SEPARATOR);
     } else {
       stringBuilder.append(SEPARATOR);
     }
 
-    /*
+    /**
      * LOCAL Address
      */
     SccpAddress localAddress = gmlcCdrState.getLocalAddress();
@@ -216,7 +243,7 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
 
       // Local SSN
       if (addressIndicator.isSSNPresent()) {
-        stringBuilder.append((byte) localAddress.getSubsystemNumber()).append(SEPARATOR);
+        stringBuilder.append(localAddress.getSubsystemNumber()).append(SEPARATOR);
       } else {
         stringBuilder.append(SEPARATOR);
       }
@@ -227,11 +254,8 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
         stringBuilder.append(SEPARATOR);
       }
 
-      /*
-       * Local GLOBAL TITLE
-       */
+      //Local GLOBAL TITLE
       GlobalTitle localAddressGlobalTitle = localAddress.getGlobalTitle();
-
       // Local GLOBAL TITLE INDICATOR
       if (localAddressGlobalTitle != null && localAddressGlobalTitle.getGlobalTitleIndicator() != null) {
         stringBuilder.append((byte) localAddressGlobalTitle.getGlobalTitleIndicator().getValue()).append(SEPARATOR);
@@ -246,7 +270,7 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
       }
     }
 
-    /*
+    /**
      * REMOTE Address
      */
     SccpAddress remoteAddress = gmlcCdrState.getRemoteAddress();
@@ -262,7 +286,7 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
 
       // Remote SSN
       if (addressIndicator.isSSNPresent()) {
-        stringBuilder.append((byte) remoteAddress.getSubsystemNumber()).append(SEPARATOR);
+        stringBuilder.append(remoteAddress.getSubsystemNumber()).append(SEPARATOR);
       } else {
         stringBuilder.append(SEPARATOR);
       }
@@ -274,11 +298,8 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
         stringBuilder.append(SEPARATOR);
       }
 
-      /*
-       * Remote GLOBAL TITLE
-       */
+      // Remote GLOBAL TITLE
       GlobalTitle remoteAddressGlobalTitle = remoteAddress.getGlobalTitle();
-
       if (remoteAddressGlobalTitle != null && remoteAddressGlobalTitle.getGlobalTitleIndicator() != null) {
         // Remote GLOBAL TITLE INDICATOR
         stringBuilder.append((byte) remoteAddressGlobalTitle.getGlobalTitleIndicator().getValue()).append(SEPARATOR);
@@ -293,11 +314,11 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
       }
     }
 
-    /*
+    /**
      * ORIGINATING REFERENCE Address
      */
     AddressString addressString = gmlcCdrState.getOrigReference();
-    if(addressString != null){
+    if(addressString != null) {
       // Originating Reference ADDRESS NATURE
       stringBuilder.append((byte) addressString.getAddressNature().getIndicator()).append(SEPARATOR);
       // Originating Reference NUMBERING PLAN INDICATOR
@@ -310,11 +331,11 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
       stringBuilder.append(SEPARATOR);
     }
 
-    /*
+    /**
      * DESTINATION REFERENCE Address
      */
     addressString = gmlcCdrState.getDestReference();
-    if(addressString != null){
+    if(addressString != null) {
       // Destination Reference ADDRESS NATURE
       stringBuilder.append((byte) addressString.getAddressNature().getIndicator()).append(SEPARATOR);
       // Destination Reference NUMBERING PLAN INDICATOR
@@ -327,11 +348,11 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
       stringBuilder.append(SEPARATOR);
     }
 
-    /*
+    /**
      * ISDN Address
      */
     ISDNAddressString isdnAddressString= gmlcCdrState.getISDNAddressString();
-    if(isdnAddressString != null){
+    if(isdnAddressString != null) {
       // ISDN ADDRESS NATURE
       stringBuilder.append((byte) isdnAddressString.getAddressNature().getIndicator()).append(SEPARATOR);
       // ISDN NUMBERING PLAN INDICATOR
@@ -344,71 +365,645 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
       stringBuilder.append(SEPARATOR);
     }
 
-    IMSI imsi = gmlcCdrState.getImsi();
-    if(imsi != null){
-      // IMSI
-      stringBuilder.append(imsi.getData()).append(SEPARATOR);
-    } else {
-      stringBuilder.append(SEPARATOR);
-    }
-
-    /*
-     * Cell Global Identity
+    /**
+     * CELL GLOBAL IDENTITY (gathered from MAP ATI)
      */
-    int ci = gmlcCdrState.getCi();
-    if(ci != -1){
-      // CELL ID (CI)
-      stringBuilder.append(ci).append(SEPARATOR);
-    } else {
-      stringBuilder.append(SEPARATOR);
-    }
-
-    int lac = gmlcCdrState.getLac();
-    if(lac != -1){
-      // LOCATION AREA CODE (LAC)
-      stringBuilder.append(lac).append(SEPARATOR);
-    } else {
-      stringBuilder.append(SEPARATOR);
-    }
-
+    // CGI MOBILE COUNTRY CODE (MCC)
     int mcc = gmlcCdrState.getMcc();
-    if(mcc != -1){
-      // MOBILE COUNTRY CODE (MCC)
+    if(mcc != -1) {
       stringBuilder.append(mcc).append(SEPARATOR);
     } else {
       stringBuilder.append(SEPARATOR);
     }
 
+    // CGI MOBILE NETWORK CODE (MNC)
     int mnc = gmlcCdrState.getMnc();
-    if(mnc != -1){
-      // MOBILE NETWORK CODE (MNC)
+    if(mnc != -1) {
       stringBuilder.append(mnc).append(SEPARATOR);
     } else {
       stringBuilder.append(SEPARATOR);
     }
 
+    // CGI LAC
+    int lac = gmlcCdrState.getLac();
+    if(lac != -1) {
+      stringBuilder.append(lac).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // CGI CI
+    int ci = gmlcCdrState.getCi();
+    if(ci != -1) {
+      stringBuilder.append(ci).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // AOL
     int aol = gmlcCdrState.getAol();
-    if(aol != -1){
-      // AGE OF LOCATION
+    if(aol != -1) {
       stringBuilder.append(aol).append(SEPARATOR);
     } else {
       stringBuilder.append(SEPARATOR);
     }
 
-    String atiVlrGt = gmlcCdrState.getAtiVlrGt();
-    if(atiVlrGt != null){
-      // MAP ATI VLR GLOBAL TITLE
-      stringBuilder.append(atiVlrGt).append(SEPARATOR);
+    // VLR GT
+    ISDNAddressString atiVlrGt = gmlcCdrState.getAtiVlrGt();
+    if(atiVlrGt != null) {
+      stringBuilder.append(atiVlrGt.getAddress()).append(SEPARATOR);
     } else {
       stringBuilder.append(SEPARATOR);
     }
 
+    // SUBSCRIBER STATE
     String subscriberState = gmlcCdrState.getSubscriberState();
-    if(subscriberState != null){
-      // MAP ATI SUBSCRIBER STATE
-      stringBuilder.append(subscriberState)/*.append(SEPARATOR)*/; /// Uncomment if further fields are added
+    if(subscriberState != null) {
+      stringBuilder.append(subscriberState).append(SEPARATOR);
     } else {
-      /*stringBuilder.append(SEPARATOR)*/; /// Uncomment if further fields are added
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * MAP LSM (SRIforLCS, PSL & SLR) gathered parameters
+     */
+
+    /**
+     * IMSI
+     */
+    IMSI imsi = gmlcCdrState.getImsi();
+    if(imsi != null) {
+      stringBuilder.append(imsi.getData().getBytes(Charset.forName("ISO-8859-1")).toString()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * LMSI
+     */
+    LMSI lmsi = gmlcCdrState.getLmsi();
+    if(lmsi != null) {
+      String lmsiStr = new String(lmsi.getData(), StandardCharsets.ISO_8859_1);
+      stringBuilder.append(lmsiStr).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * Network Node Number
+     */
+    ISDNAddressString networkNodeNumber = gmlcCdrState.getNetworkNodeNumber();
+    if(networkNodeNumber != null) {
+      stringBuilder.append(networkNodeNumber.getAddress()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * GPRS Node Indicator
+     */
+    boolean gprsNodeIndicator = gmlcCdrState.isGprsNodeIndicator();
+    if(gprsNodeIndicator == true || gprsNodeIndicator == false){
+      stringBuilder.append(gprsNodeIndicator).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * Additional Number
+     */
+    AdditionalNumber additionalNumber = gmlcCdrState.getAdditionalNumber();
+    if(additionalNumber != null) {
+      if (additionalNumber.getMSCNumber() != null) {
+        // MAP LSM Additional Number (MSC)
+        stringBuilder.append(additionalNumber.getMSCNumber().getAddress()).append(SEPARATOR);
+      } else {
+        stringBuilder.append(SEPARATOR);
+      }
+      if (additionalNumber.getSGSNNumber() != null) {
+        // MAP LSM Additional Number (SGSN)
+        stringBuilder.append(additionalNumber.getSGSNNumber().getAddress()).append(SEPARATOR);
+      } else {
+        stringBuilder.append(SEPARATOR);
+      }
+    }
+
+    /**
+     * MME Name
+     */
+    DiameterIdentity mmeName = gmlcCdrState.getMmeName();
+    if(mmeName != null) {
+      String mmeNameStr = new String(mmeName.getData(), StandardCharsets.ISO_8859_1);
+      stringBuilder.append(mmeNameStr).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * SGSN Name
+     */
+    DiameterIdentity sgsnName = gmlcCdrState.getSgsnName();
+    if(sgsnName != null) {
+      String sgsnNameStr = new String(sgsnName.getData(), StandardCharsets.ISO_8859_1);
+      stringBuilder.append(sgsnNameStr).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * SGSN Realm
+     */
+    DiameterIdentity sgsnRealm = gmlcCdrState.getSgsnRealm();
+    if(sgsnRealm != null) {
+      String sgsnRealmStr = new String(sgsnRealm.getData(), StandardCharsets.ISO_8859_1);
+      stringBuilder.append(sgsnRealmStr).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * PPR Address
+     */
+    GSNAddress pprAddress = gmlcCdrState.getPprAddress();
+    if(pprAddress != null) {
+      // PPR Address Type
+      if (pprAddress.getGSNAddressAddressType() != null) {
+        stringBuilder.append(pprAddress.getGSNAddressAddressType().toString()).append(SEPARATOR);
+      } else {
+        stringBuilder.append(SEPARATOR);
+      }
+      // PPR Address Data
+      if (pprAddress.getGSNAddressData() != null) {
+        stringBuilder.append(pprAddress.getGSNAddressData().toString()).append(SEPARATOR);
+      } else {
+        stringBuilder.append(SEPARATOR);
+      }
+    }
+
+    /**
+     * Additional V-GMLC Address
+     */
+    GSNAddress addVGmlcAddress = gmlcCdrState.getvGmlcAddress();
+    if(addVGmlcAddress != null) {
+      // V-GMLC Address Type
+      if (addVGmlcAddress.getGSNAddressAddressType() != null) {
+        stringBuilder.append(addVGmlcAddress.getGSNAddressAddressType().toString()).append(SEPARATOR);
+      } else {
+        stringBuilder.append(SEPARATOR);
+      }
+      // V-GMLC Address Data
+      if (addVGmlcAddress.getGSNAddressData() != null) {
+        stringBuilder.append(addVGmlcAddress.getGSNAddressData().toString()).append(SEPARATOR);
+      } else {
+        stringBuilder.append(SEPARATOR);
+      }
+    }
+
+    /**
+     * Location Estimate
+     */
+    // Location Estimate LATITUDE
+    ExtGeographicalInformation latitude = gmlcCdrState.getLocationEstimate();
+    if(latitude != null) {
+      stringBuilder.append(latitude.getLatitude()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // Location Estimate LONGITUDE
+    ExtGeographicalInformation longitude = gmlcCdrState.getLocationEstimate();
+    if(longitude != null) {
+      stringBuilder.append(longitude.getLongitude()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // Location Estimate ALTITUDE
+    ExtGeographicalInformation altitude = gmlcCdrState.getLocationEstimate();
+    if(altitude != null) {
+      stringBuilder.append(altitude.getAltitude()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // Location Estimate CONFIDENCE
+    ExtGeographicalInformation confidence = gmlcCdrState.getLocationEstimate();
+    if(confidence != null) {
+      stringBuilder.append(latitude.getConfidence()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // Location Estimate INNER RADIUS
+    ExtGeographicalInformation innerRadius = gmlcCdrState.getLocationEstimate();
+    if(innerRadius != null) {
+      stringBuilder.append(latitude.getInnerRadius()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // GERAN Positioning Data Info
+    PositioningDataInformation geranPositioningDataInformation = gmlcCdrState.getGeranPositioningDataInformation();
+    if(geranPositioningDataInformation != null) {
+      String geranPositioningDataInformationStr = new String(geranPositioningDataInformation.getData(), StandardCharsets.ISO_8859_1);
+      stringBuilder.append(geranPositioningDataInformationStr).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // UTRAN Positioning Data Info
+    UtranPositioningDataInfo utranPositioningDataInfo = gmlcCdrState.getUtranPositioningDataInfo();
+    if(utranPositioningDataInfo != null) {
+      String utranPositioningDataInformationStr = new String(utranPositioningDataInfo.getData(),  StandardCharsets.ISO_8859_1);
+      stringBuilder.append(utranPositioningDataInformationStr).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * GERAN GANSS Pos Data Info
+     */
+    GeranGANSSpositioningData geranGANSSPositioningDataInformation = gmlcCdrState.getGeranGANSSpositioningData();
+    if(geranGANSSPositioningDataInformation != null) {
+      String geranGANSSPositioningDataInformationStr = new String(geranGANSSPositioningDataInformation.getData(), StandardCharsets.ISO_8859_1);
+      stringBuilder.append(geranGANSSPositioningDataInformationStr).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * UTRAN GANSS Pos Data Info
+     */
+    UtranGANSSpositioningData utranGANSSpositioningData = gmlcCdrState.getUtranGANSSpositioningData();
+    if(utranGANSSpositioningData != null) {
+      String utranGANSSPositioningDataInformationStr = new String(utranGANSSpositioningData.getData(), StandardCharsets.ISO_8859_1);
+      stringBuilder.append(utranGANSSPositioningDataInformationStr).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * AGE OF LOCATION ESTIMATE
+     */
+    int ageOfLocationEstimate = gmlcCdrState.getAgeOfLocationEstimate();
+    if(ageOfLocationEstimate != -1) {
+      stringBuilder.append(ageOfLocationEstimate).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * ADDITIONAL LOCATION ESTIMATE
+     */
+    // Additional Location Estimate LATITUDE
+    AddGeographicalInformation additionalLatitude = gmlcCdrState.getAdditionalLocationEstimate();
+    if(additionalLatitude != null) {
+      stringBuilder.append(additionalLatitude.getLatitude()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // Additional Location Estimate LONGITUDE
+    AddGeographicalInformation additionalLongitude = gmlcCdrState.getAdditionalLocationEstimate();
+    if(additionalLongitude != null) {
+      stringBuilder.append(additionalLongitude.getLongitude()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // Additional Location Estimate ALTITUDE
+    AddGeographicalInformation additionalAltitude = gmlcCdrState.getAdditionalLocationEstimate();
+    if(additionalAltitude != null) {
+      stringBuilder.append(additionalAltitude.getAltitude()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // Additional Location Estimate CONFIDENCE
+    AddGeographicalInformation additionalConfidence = gmlcCdrState.getAdditionalLocationEstimate();
+    if(additionalConfidence != null) {
+      stringBuilder.append(additionalConfidence.getConfidence()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // Additional Location Estimate INNER RADIUS
+    AddGeographicalInformation additionalInnerRadius = gmlcCdrState.getAdditionalLocationEstimate();
+    if(additionalInnerRadius != null) {
+      stringBuilder.append(additionalInnerRadius.getInnerRadius()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * DEFERRED MT LR RESPONSE INDICATOR
+     */
+    boolean deferredMTLRResponseIndicator = gmlcCdrState.isDeferredMTLRResponseIndicator();
+    if(deferredMTLRResponseIndicator == true || deferredMTLRResponseIndicator == false){
+      stringBuilder.append(deferredMTLRResponseIndicator).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * CGI or SAI or LAI
+     */
+    CellGlobalIdOrServiceAreaIdOrLAI lsmCGIorSAIorLAI = gmlcCdrState.getCellGlobalIdOrServiceAreaIdOrLAI();
+    if(lsmCGIorSAIorLAI != null) {
+      try {
+        stringBuilder.append(lsmCGIorSAIorLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getMCC()).append(SEPARATOR);
+        stringBuilder.append(lsmCGIorSAIorLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getMNC()).append(SEPARATOR);
+        stringBuilder.append(lsmCGIorSAIorLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getLac()).append(SEPARATOR);
+        stringBuilder.append(lsmCGIorSAIorLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode()).append(SEPARATOR);
+      } catch (MAPException e) {
+        e.printStackTrace();
+      }
+    } else {
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * PSEUDONYM INDICATOR
+     */
+    boolean pseudonymIndicator = gmlcCdrState.isPseudonymIndicator();
+    if(pseudonymIndicator == true || pseudonymIndicator == false){
+      stringBuilder.append(pseudonymIndicator).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * ACCURACY FULFILLMENT INDICATOR
+     */
+    AccuracyFulfilmentIndicator accuracyFulfilmentIndicator = gmlcCdrState.getAccuracyFulfilmentIndicator();
+    if(accuracyFulfilmentIndicator != null) {
+      stringBuilder.append(accuracyFulfilmentIndicator.getIndicator()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * SEQUENCE NUMBER
+     */
+    int sequenceNumber = gmlcCdrState.getSequenceNumber();
+    if(sequenceNumber != -1) {
+      stringBuilder.append(sequenceNumber).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * VELOCITY ESTIMATE
+     */
+    // HORIZONTAL ESTIMATE
+    VelocityEstimate horizontalVelocityEstimate = gmlcCdrState.getVelocityEstimate();
+    if(horizontalVelocityEstimate != null) {
+      stringBuilder.append(horizontalVelocityEstimate.getHorizontalSpeed()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // VERTICAL ESTIMATE
+    VelocityEstimate verticalVelocityEstimate = gmlcCdrState.getVelocityEstimate();
+    if(verticalVelocityEstimate != null) {
+      stringBuilder.append(verticalVelocityEstimate.getVerticalSpeed()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * SERVING NODE ADDRESS
+     */
+    ServingNodeAddress servingNodeAddress = gmlcCdrState.getServingNodeAddress();
+    if (servingNodeAddress != null) {
+      if(servingNodeAddress.getMscNumber() == null) {
+        stringBuilder.append(SEPARATOR);
+      } else {
+        // MAP LSM Serving Node Address MSC Number
+        stringBuilder.append(servingNodeAddress.getMscNumber().getAddress()).append(SEPARATOR);
+      }
+      if(servingNodeAddress.getSgsnNumber() == null) {
+        stringBuilder.append(SEPARATOR);
+      } else {
+        // MAP LSM Serving Node Address SGSN Number
+        stringBuilder.append(servingNodeAddress.getSgsnNumber().getAddress()).append(SEPARATOR);
+      }
+      if(servingNodeAddress.getMmeNumber() == null) {
+        stringBuilder.append(SEPARATOR);
+      } else {
+        // MAP LSM Serving Node Address MME Number
+        String mmeNumStr = new String(servingNodeAddress.getMmeNumber().getData(), StandardCharsets.ISO_8859_1);
+        stringBuilder.append(mmeNumStr).append(SEPARATOR);
+      }
+    }
+
+    /**
+     * LCSClientID
+     */
+    LCSClientID lcsClientID = gmlcCdrState.getLcsClientID();
+    if(lcsClientID != null) {
+      try {
+        stringBuilder.append(lcsClientID.getLCSClientName().getNameString()).append(SEPARATOR);
+        stringBuilder.append(lcsClientID.getLCSClientName().getDataCodingScheme().getCode()).append(SEPARATOR);
+        stringBuilder.append(lcsClientID.getLCSClientName().getLCSFormatIndicator().getIndicator()).append(SEPARATOR);
+        stringBuilder.append(lcsClientID.getLCSClientName().getNameString().getEncodedString().toString()).append(SEPARATOR);
+        stringBuilder.append(lcsClientID.getLCSAPN().getApn()).append(SEPARATOR);
+        stringBuilder.append(lcsClientID.getLCSClientDialedByMS().getAddress()).append(SEPARATOR);
+        stringBuilder.append(lcsClientID.getLCSClientExternalID().getExternalAddress().getAddress()).append(SEPARATOR);
+        stringBuilder.append(lcsClientID.getLCSClientInternalID().getId()).append(SEPARATOR);
+        stringBuilder.append(lcsClientID.getLCSClientType().getType()).append(SEPARATOR);
+        stringBuilder.append(lcsClientID.getLCSRequestorID().getDataCodingScheme().getCode()).append(SEPARATOR);
+        stringBuilder.append(lcsClientID.getLCSRequestorID().getLCSFormatIndicator().getIndicator()).append(SEPARATOR);
+        stringBuilder.append(lcsClientID.getLCSRequestorID().getRequestorIDString().getEncodedString()).append(SEPARATOR);
+      } catch (MAPException e) {
+        e.printStackTrace();
+      }
+    } else {
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * LCS QoS
+     */
+    // HORIZONTAL ACCURACY
+    LCSQoS horizontalAccuracy = gmlcCdrState.getLcsQoS();
+    if(horizontalAccuracy != null) {
+      stringBuilder.append(horizontalAccuracy.getHorizontalAccuracy().toString()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // VERTICAL ACCURACY
+    LCSQoS verticalAccuracy = gmlcCdrState.getLcsQoS();
+    if(verticalAccuracy != null) {
+      stringBuilder.append(verticalAccuracy.getVerticalAccuracy().toString()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // RESPONSE TIME
+    LCSQoS responseTime = gmlcCdrState.getLcsQoS();
+    if(responseTime != null) {
+      stringBuilder.append(responseTime.getResponseTime().toString()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * LCS REFERENCE NUMBER
+     */
+    int lcsReferenceNumber = gmlcCdrState.getLcsReferenceNumber();
+    if(lcsReferenceNumber != -1) {
+      stringBuilder.append(lcsReferenceNumber).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * LCS SERVICE TYPE ID
+     */
+    int lcsServiceTypeID = gmlcCdrState.getLcsServiceTypeID();
+    if(lcsServiceTypeID != -1) {
+      stringBuilder.append(lcsServiceTypeID).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * BAROMETRIC PRESSURE
+     */
+    String barometricPressureMeasurement = gmlcCdrState.getBarometricPressureMeasurement();
+    if(barometricPressureMeasurement != null) {
+      stringBuilder.append(barometricPressureMeasurement).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * CIVIC ADDRESS
+     */
+    String civicAddress = gmlcCdrState.getCivicAddress();
+    if(civicAddress != null) {
+      stringBuilder.append(civicAddress).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * LCS EVENT
+     */
+    LCSEvent lcsEvent = gmlcCdrState.getLcsEvent();
+    if(lcsEvent != null) {
+      stringBuilder.append(lcsEvent.getEvent()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * MSISDN
+     */
+    ISDNAddressString msisdn = gmlcCdrState.getMsisdn();
+    if(msisdn != null) {
+      stringBuilder.append(msisdn.getAddress()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * IMEI
+     */
+    IMEI imei = gmlcCdrState.getImei();
+    if(imei != null) {
+      stringBuilder.append(imei.getIMEI().getBytes().toString()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * DEFERRED MT LR DATA
+     */
+    // LOCATION EVENT TYPE
+    DeferredmtlrData deferreddMTLRDataDeferredLocationEventType = gmlcCdrState.getDeferredmtlrData();
+    if(deferreddMTLRDataDeferredLocationEventType != null) {
+      if (deferreddMTLRDataDeferredLocationEventType.getDeferredLocationEventType().getEnteringIntoArea() == true)
+        stringBuilder.append("EnteringIntoArea").append(SEPARATOR);
+      if (deferreddMTLRDataDeferredLocationEventType.getDeferredLocationEventType().getBeingInsideArea() == true)
+        stringBuilder.append("InsideArea").append(SEPARATOR);
+      if (deferreddMTLRDataDeferredLocationEventType.getDeferredLocationEventType().getMsAvailable() == true)
+        stringBuilder.append("Available").append(SEPARATOR);
+      if (deferreddMTLRDataDeferredLocationEventType.getDeferredLocationEventType().getLeavingFromArea() == true)
+        stringBuilder.append("LeavingFromArea").append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // LOCATION INFO
+    DeferredmtlrData deferreddMTLRDataDeferredLcsLocationInfo = gmlcCdrState.getDeferredmtlrData();
+    if(deferreddMTLRDataDeferredLcsLocationInfo != null) {
+      stringBuilder.append(deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // TERMINATION CAUSE
+    DeferredmtlrData deferreddMTLRDataDeferredTerminationCause = gmlcCdrState.getDeferredmtlrData();
+    if(deferreddMTLRDataDeferredTerminationCause != null) {
+      stringBuilder.append(deferreddMTLRDataDeferredTerminationCause.getTerminationCause()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * PERIODIC LDR INFO
+     */
+    // REPORTING AMOUNT
+    PeriodicLDRInfo periodicLDRInfoReportingAmount = gmlcCdrState.getPeriodicLDRInfo();
+    if(periodicLDRInfoReportingAmount != null) {
+      stringBuilder.append(periodicLDRInfoReportingAmount.getReportingAmount()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // REPORTING INTERVAL
+    PeriodicLDRInfo periodicLDRInfoReportingInterval = gmlcCdrState.getPeriodicLDRInfo();
+    if(periodicLDRInfoReportingInterval != null) {
+      stringBuilder.append(periodicLDRInfoReportingInterval.getReportingInterval()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * MO LR SHORT-CIRCUIT INDICATOR
+     */
+    boolean moLrShortCircuitIndicator = gmlcCdrState.isMoLrShortCircuitIndicator();
+    if(moLrShortCircuitIndicator == true || moLrShortCircuitIndicator == false){
+      stringBuilder.append(moLrShortCircuitIndicator).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * REPORTING PLMN LIST
+     */
+    ReportingPLMNList plmnList = gmlcCdrState.getReportingPLMNList();
+    if(plmnList != null) {
+      stringBuilder.append(plmnList.getPlmnList())/*.append(SEPARATOR)*/; /// Uncomment if further fields are added
+    } else {
+      /*stringBuilder.append(SEPARATOR);*/ /// Uncomment if further fields are added
     }
 
     return stringBuilder.toString();

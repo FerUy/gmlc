@@ -59,7 +59,7 @@ public class SS7Service extends ServiceMBeanSupport implements SS7ServiceMBean {
         if (name != null) {
             return name;
         } else {
-            return "Mobicents GMLC";
+            return "Restcomm GMLC";
         }
     }
 

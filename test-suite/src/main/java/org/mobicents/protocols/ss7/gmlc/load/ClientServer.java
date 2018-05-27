@@ -37,6 +37,7 @@ import org.mobicents.protocols.ss7.m3ua.parameter.RoutingContext;
 import org.mobicents.protocols.ss7.m3ua.parameter.TrafficModeType;
 import org.mobicents.protocols.ss7.map.MAPParameterFactoryImpl;
 import org.mobicents.protocols.ss7.map.MAPStackImpl;
+
 import org.mobicents.protocols.ss7.map.api.MAPApplicationContext;
 import org.mobicents.protocols.ss7.map.api.MAPApplicationContextName;
 import org.mobicents.protocols.ss7.map.api.MAPApplicationContextVersion;
@@ -51,8 +52,23 @@ import org.mobicents.protocols.ss7.map.api.dialog.MAPNoticeProblemDiagnostic;
 import org.mobicents.protocols.ss7.map.api.dialog.MAPRefuseReason;
 import org.mobicents.protocols.ss7.map.api.dialog.MAPUserAbortChoice;
 import org.mobicents.protocols.ss7.map.api.errors.MAPErrorMessage;
-import org.mobicents.protocols.ss7.map.api.primitives.*;
-import org.mobicents.protocols.ss7.map.api.service.lsm.*;
+
+import org.mobicents.protocols.ss7.map.api.primitives.AddressString;
+import org.mobicents.protocols.ss7.map.api.primitives.AddressNature;
+import org.mobicents.protocols.ss7.map.api.primitives.ISDNAddressString;
+import org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan;
+import org.mobicents.protocols.ss7.map.api.primitives.SubscriberIdentity;
+import org.mobicents.protocols.ss7.map.api.primitives.DiameterIdentity;
+import org.mobicents.protocols.ss7.map.api.primitives.USSDString;
+import org.mobicents.protocols.ss7.map.api.primitives.IMSI;
+import org.mobicents.protocols.ss7.map.api.primitives.IMEI;
+import org.mobicents.protocols.ss7.map.api.primitives.LMSI;
+import org.mobicents.protocols.ss7.map.api.primitives.PlmnId;
+import org.mobicents.protocols.ss7.map.api.primitives.GSNAddress;
+import org.mobicents.protocols.ss7.map.api.primitives.CellGlobalIdOrServiceAreaIdOrLAI;
+import org.mobicents.protocols.ss7.map.api.primitives.CellGlobalIdOrServiceAreaIdFixedLength;
+import org.mobicents.protocols.ss7.map.api.primitives.MAPExtensionContainer;
+
 import org.mobicents.protocols.ss7.map.api.service.mobility.MAPDialogMobility;
 import org.mobicents.protocols.ss7.map.api.service.mobility.MAPServiceMobilityListener;
 import org.mobicents.protocols.ss7.map.api.service.mobility.authentication.AuthenticationFailureReportRequest;
@@ -71,8 +87,100 @@ import org.mobicents.protocols.ss7.map.api.service.mobility.oam.ActivateTraceMod
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.*;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberManagement.*;
 import org.mobicents.protocols.ss7.map.datacoding.CBSDataCodingSchemeImpl;
-import org.mobicents.protocols.ss7.map.primitives.*;
-import org.mobicents.protocols.ss7.map.service.lsm.*;
+
+import org.mobicents.protocols.ss7.map.primitives.ISDNAddressStringImpl;
+import org.mobicents.protocols.ss7.map.primitives.SubscriberIdentityImpl;
+import org.mobicents.protocols.ss7.map.primitives.USSDStringImpl;
+import org.mobicents.protocols.ss7.map.primitives.AddressStringImpl;
+import org.mobicents.protocols.ss7.map.primitives.IMSIImpl;
+import org.mobicents.protocols.ss7.map.primitives.LMSIImpl;
+import org.mobicents.protocols.ss7.map.primitives.IMEIImpl;
+import org.mobicents.protocols.ss7.map.primitives.GSNAddressImpl;
+import org.mobicents.protocols.ss7.map.primitives.PlmnIdImpl;
+import org.mobicents.protocols.ss7.map.primitives.DiameterIdentityImpl;
+import org.mobicents.protocols.ss7.map.primitives.CellGlobalIdOrServiceAreaIdFixedLengthImpl;
+import org.mobicents.protocols.ss7.map.primitives.CellGlobalIdOrServiceAreaIdOrLAIImpl;
+
+import org.mobicents.protocols.ss7.map.api.service.lsm.ExtGeographicalInformation;
+import org.mobicents.protocols.ss7.map.api.service.lsm.AccuracyFulfilmentIndicator;
+import org.mobicents.protocols.ss7.map.api.service.lsm.GeranGANSSpositioningData;
+import org.mobicents.protocols.ss7.map.api.service.lsm.PositioningDataInformation;
+import org.mobicents.protocols.ss7.map.api.service.lsm.AddGeographicalInformation;
+import org.mobicents.protocols.ss7.map.api.service.lsm.UtranGANSSpositioningData;
+import org.mobicents.protocols.ss7.map.api.service.lsm.UtranPositioningDataInfo;
+import org.mobicents.protocols.ss7.map.api.service.lsm.AdditionalNumber;
+import org.mobicents.protocols.ss7.map.api.service.lsm.Area;
+import org.mobicents.protocols.ss7.map.api.service.lsm.AreaType;
+import org.mobicents.protocols.ss7.map.api.service.lsm.AreaEventInfo;
+import org.mobicents.protocols.ss7.map.api.service.lsm.ServingNodeAddress;
+import org.mobicents.protocols.ss7.map.api.service.lsm.VelocityEstimate;
+import org.mobicents.protocols.ss7.map.api.service.lsm.PeriodicLDRInfo;
+import org.mobicents.protocols.ss7.map.api.service.lsm.LCSClientID;
+import org.mobicents.protocols.ss7.map.api.service.lsm.MAPDialogLsm;
+import org.mobicents.protocols.ss7.map.api.service.lsm.LCSPriority;
+import org.mobicents.protocols.ss7.map.api.service.lsm.AreaDefinition;
+import org.mobicents.protocols.ss7.map.api.service.lsm.AreaIdentification;
+import org.mobicents.protocols.ss7.map.api.service.lsm.LCSEvent;
+import org.mobicents.protocols.ss7.map.api.service.lsm.ReportingPLMNList;
+import org.mobicents.protocols.ss7.map.api.service.lsm.ReportingPLMN;
+import org.mobicents.protocols.ss7.map.api.service.lsm.DeferredmtlrData;
+import org.mobicents.protocols.ss7.map.api.service.lsm.LCSQoS;
+import org.mobicents.protocols.ss7.map.api.service.lsm.LocationEstimateType;
+import org.mobicents.protocols.ss7.map.api.service.lsm.OccurrenceInfo;
+import org.mobicents.protocols.ss7.map.api.service.lsm.ResponseTimeCategory;
+import org.mobicents.protocols.ss7.map.api.service.lsm.ResponseTime;
+import org.mobicents.protocols.ss7.map.api.service.lsm.SupportedGADShapes;
+import org.mobicents.protocols.ss7.map.api.service.lsm.LCSClientInternalID;
+import org.mobicents.protocols.ss7.map.api.service.lsm.LCSClientExternalID;
+import org.mobicents.protocols.ss7.map.api.service.lsm.LCSCodeword;
+import org.mobicents.protocols.ss7.map.api.service.lsm.LCSFormatIndicator;
+import org.mobicents.protocols.ss7.map.api.service.lsm.LCSClientName;
+import org.mobicents.protocols.ss7.map.api.service.lsm.LCSClientType;
+import org.mobicents.protocols.ss7.map.api.service.lsm.PrivacyCheckRelatedAction;
+import org.mobicents.protocols.ss7.map.api.service.lsm.LCSPrivacyCheck;
+import org.mobicents.protocols.ss7.map.api.service.lsm.RANTechnology;
+import org.mobicents.protocols.ss7.map.api.service.lsm.SLRArgExtensionContainer;
+import org.mobicents.protocols.ss7.map.api.service.lsm.DeferredLocationEventType;
+import org.mobicents.protocols.ss7.map.api.service.lsm.LCSLocationInfo;
+import org.mobicents.protocols.ss7.map.api.service.lsm.TerminationCause;
+import org.mobicents.protocols.ss7.map.api.service.lsm.LocationType;
+import org.mobicents.protocols.ss7.map.api.service.lsm.MAPServiceLsmListener;
+import org.mobicents.protocols.ss7.map.api.service.lsm.SendRoutingInfoForLCSRequest;
+import org.mobicents.protocols.ss7.map.api.service.lsm.SendRoutingInfoForLCSResponse;
+import org.mobicents.protocols.ss7.map.api.service.lsm.ProvideSubscriberLocationRequest;
+import org.mobicents.protocols.ss7.map.api.service.lsm.ProvideSubscriberLocationResponse;
+import org.mobicents.protocols.ss7.map.api.service.lsm.SubscriberLocationReportRequest;
+import org.mobicents.protocols.ss7.map.api.service.lsm.SubscriberLocationReportResponse;
+
+import org.mobicents.protocols.ss7.map.service.lsm.PeriodicLDRInfoImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.AdditionalNumberImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.AreaDefinitionImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.AreaEventInfoImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.AreaIdentificationImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.AreaImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.DeferredLocationEventTypeImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.GeranGANSSpositioningDataImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.LCSQoSImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.ResponseTimeImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.UtranGANSSpositioningDataImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.AddGeographicalInformationImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.LocationTypeImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.UtranPositioningDataInfoImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.SupportedGADShapesImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.LCSClientIDImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.LCSClientExternalIDImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.LCSClientNameImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.DeferredmtlrDataImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.ExtGeographicalInformationImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.LCSCodewordImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.LCSLocationInfoImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.LCSPrivacyCheckImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.PositioningDataInformationImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.ReportingPLMNImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.ReportingPLMNListImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.ServingNodeAddressImpl;
+import org.mobicents.protocols.ss7.map.service.lsm.VelocityEstimateImpl;
+
 import org.mobicents.protocols.ss7.map.service.mobility.locationManagement.SupportedLCSCapabilitySetsImpl;
 import org.mobicents.protocols.ss7.map.service.mobility.subscriberInformation.RequestedInfoImpl;
 import org.mobicents.protocols.ss7.map.service.mobility.subscriberManagement.APNImpl;
@@ -104,7 +212,9 @@ import static org.mobicents.protocols.ss7.map.api.service.lsm.LCSEvent.emergency
 import static org.mobicents.protocols.ss7.map.api.service.lsm.LocationEstimateType.currentLocation;
 
 /**
+ *
  * @author <a href="mailto:fernando.mendioroz@gmail.com"> Fernando Mendioroz </a>
+ *
  */
 public class ClientServer extends TestHarness implements MAPServiceMobilityListener, MAPServiceLsmListener {
 
@@ -541,14 +651,14 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
 
       // Then, create parameters for concerning MAP operation
       ISDNAddressString isdnAdd = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, "59897654321");
+          NumberingPlan.ISDN, "59897654321");
       SubscriberIdentity msisdn = new SubscriberIdentityImpl(isdnAdd);
 
       RequestedInfo requestedInfo = new RequestedInfoImpl(true, true, null, false, null, false, false, false);
       // requestedInfo (MAP ATI): last known location and state (idle or busy), no IMEI/MS Classmark/MNP
 
       ISDNAddressString gsmSCFAddress = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, "59800001");
+          NumberingPlan.ISDN, "59800001");
 
       mapDialogMobility.addAnyTimeInterrogationRequest(msisdn, requestedInfo, gsmSCFAddress, null);
 
@@ -561,7 +671,7 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
   }
 
   private void initiateMapSRIforLCS() throws MAPException {
-    /*
+        /*
         3GPP TS 29.002 MAP Specification v15.0.0 (2017-03-15)
 
         13A.1	MAP-SEND-ROUTING-INFO-FOR-LCS Service
@@ -594,7 +704,7 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
             PPR Address                                            U          C(=)
             User error                                             C          C(=)
             Provider error                                                    O
-    */
+        */
     try {
       NetworkIdState networkIdState = this.clientMapStack.getMAPProvider().getNetworkIdState(0);
       if (!(networkIdState == null || networkIdState.isAvailavle() && networkIdState.getCongLevel() == 0)) {
@@ -622,11 +732,11 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
 
       // Then, create parameters for concerning MAP operation
       ISDNAddressString isdnAdd = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, "3797554321");
+          NumberingPlan.ISDN, "3797554321");
       SubscriberIdentity msisdn = new SubscriberIdentityImpl(isdnAdd);
 
       ISDNAddressString gmlcAddress = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, "222333");
+          NumberingPlan.ISDN, "222333");
 /*
             long[] oid = {0, 0, 17, 773, 1, 1, 1};
             String privExtData = "1144";
@@ -653,7 +763,7 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
   }
 
   private void initiateMapPSL() throws MAPException {
-    /*
+        /*
         3GPP TS 29.002 MAP Specification v15.0.0 (2017-03-15)
 
         13A.2   MAP-PROVIDE-SUBSCRIBER-LOCATION Service
@@ -703,7 +813,7 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
             Target Serving Node for Handover                                                C                   C(=)
             User error                                                                      C                   C(=)
             Provider error                                                                                      O
-    */
+        */
     try {
       NetworkIdState networkIdState = this.clientMapStack.getMAPProvider().getNetworkIdState(0);
       if (!(networkIdState == null || networkIdState.isAvailavle() && networkIdState.getCongLevel() == 0)) {
@@ -725,16 +835,16 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
       AddressString destRef = this.clientMapProvider.getMAPParameterFactory()
           .createAddressString(AddressNature.international_number, NumberingPlan.ISDN, "67890");
       MAPDialogLsm mapDialogLsm = clientMapProvider.getMAPServiceLsm()
-          .createNewDialog(MAPApplicationContext.getInstance(MAPApplicationContextName.locationSvcEnquiryContext,
+          .createNewDialog(MAPApplicationContext.getInstance(MAPApplicationContextName.locationSvcGatewayContext,
               MAPApplicationContextVersion.version3),
               SCCP_CLIENT_ADDRESS, origRef, SCCP_SERVER_ADDRESS, destRef);
 
       // Then, create parameters for concerning MAP operation
       ISDNAddressString msisdn = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, "3797554321");
+          NumberingPlan.ISDN, "3797554321");
       // SubscriberIdentity msisdn = new SubscriberIdentityImpl(isdnAdd);
       ISDNAddressString mlcNumber = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, "222333");
+          NumberingPlan.ISDN, "222333");
       LocationEstimateType locationEstimateType = currentLocation;
       // public enum LocationEstimateType {currentLocation(0), currentOrLastKnownLocation(1), initialLocation(2),
       //                                   activateDeferredLocation(3), cancelDeferredLocation(4)..
@@ -743,7 +853,7 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
       // DeferredLocationEventType: boolean getMsAvailable(); getEnteringIntoArea(); getLeavingFromArea(); getBeingInsideArea();
       LocationType locationType = new LocationTypeImpl(locationEstimateType, deferredLocationEventType);
       ISDNAddressString externalAddress = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, "340444567");
+          NumberingPlan.ISDN, "340444567");
       MAPExtensionContainer mapExtensionContainer = null;
       LCSClientExternalID lcsClientExternalID = new LCSClientExternalIDImpl(externalAddress, mapExtensionContainer);
       LCSClientInternalID lcsClientInternalID = LCSClientInternalID.anonymousLocation;
@@ -814,7 +924,7 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
       AreaEventInfo areaEventInfo = new AreaEventInfoImpl(areaDefinition, occurrenceInfo, intervalTime);
       byte[] homeGmlcAddress = new BigInteger("999988887777", 16).toByteArray();
       GSNAddress hGmlcAddress = new GSNAddressImpl(homeGmlcAddress);
-      boolean b1 = false;
+      boolean moLrShortCircuitIndicator = false;
       int reportingAmount = 3;
       int reportingInterval = 60;
       PeriodicLDRInfo periodicLDRInfo = new PeriodicLDRInfoImpl(reportingAmount, reportingInterval);
@@ -831,7 +941,7 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
 
       mapDialogLsm.addProvideSubscriberLocationRequest(locationType, mlcNumber, lcsClientID, privacyOverride, imsi, msisdn, lmsi, imei, lcsPriority,
           lcsQoS, extensionContainer, supportedGADShapes, lcsReferenceNumber, lcsServiceTypeID, lcsCodeword,
-          lcsPrivacyCheck, areaEventInfo, hGmlcAddress, b1, periodicLDRInfo, reportingPLMNList);
+          lcsPrivacyCheck, areaEventInfo, hGmlcAddress, moLrShortCircuitIndicator, periodicLDRInfo, reportingPLMNList);
       logger.info("MAP PSL: msisdn:" + msisdn + ", MLC Number:" + mlcNumber);
 
       // This will initiate the TC-BEGIN with INVOKE component
@@ -844,7 +954,7 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
   }
 
   private void initiateMapSLR() throws MAPException {
-    /*
+        /*
         3GPP TS 29.002 MAP Specification v15.0.0 (2017-03-15)
 
         13A.3   MAP-SUBSCRIBER-LOCATION-REPORT Service
@@ -892,7 +1002,7 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
             Reporting PLMN List                                                                     C           C(=)
             User error                                                                              C           C(=)
             Provider error                                                                                      O
-    */
+            */
     try {
       NetworkIdState networkIdState = this.clientMapStack.getMAPProvider().getNetworkIdState(0);
       if (!(networkIdState == null || networkIdState.isAvailavle() && networkIdState.getCongLevel() == 0)) {
@@ -914,22 +1024,22 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
       AddressString destRef = this.clientMapProvider.getMAPParameterFactory()
           .createAddressString(AddressNature.international_number, NumberingPlan.ISDN, "67890");
       MAPDialogLsm mapDialogLsm = clientMapProvider.getMAPServiceLsm()
-          .createNewDialog(MAPApplicationContext.getInstance(MAPApplicationContextName.locationSvcEnquiryContext,
+          .createNewDialog(MAPApplicationContext.getInstance(MAPApplicationContextName.locationSvcGatewayContext,
               MAPApplicationContextVersion.version3),
               SCCP_CLIENT_ADDRESS, origRef, SCCP_SERVER_ADDRESS, destRef);
 
       // Then, create parameters for concerning MAP operation
       ISDNAddressString msisdn = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, "3797554321");
+          NumberingPlan.ISDN, "3797554321");
       // SubscriberIdentity msisdn = new SubscriberIdentityImpl(isdnAdd);
       ISDNAddressString mscNumber = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, "598990192837");
+          NumberingPlan.ISDN, "598990192837");
       ISDNAddressString sgsnNumber = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, "598990192837");
+          NumberingPlan.ISDN, "598990192837");
       ISDNAddressString naEsrd = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, "1110101");
+          NumberingPlan.ISDN, "1110101");
       ISDNAddressString naEsrk = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, "9889277");
+          NumberingPlan.ISDN, "9889277");
       LCSEvent lcsEvent = emergencyCallOrigination;
       // LCS-Event ::= ENUMERATED { emergencyCallOrigination (0), emergencyCallRelease (1), mo-lr (2), ..., deferredmt-lrResponse (3) }
       // -- exception handling: --
@@ -938,7 +1048,7 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
       // public enum LocationEstimateType {currentLocation(0), currentOrLastKnownLocation(1), initialLocation(2), activateDeferredLocation(3),
       //                                   cancelDeferredLocation(4)..
       ISDNAddressString externalAddress = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, "444567");
+          NumberingPlan.ISDN, "444567");
 /*
             long[] oid = {0, 0, 17, 773, 1, 1, 1};
             String pExtData = "1144";
@@ -966,7 +1076,7 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
       APN lcsAPN = new APNImpl(apn);
       LCSClientID lcsClientID = new LCSClientIDImpl(LCSClientType.valueAddedServices, lcsClientExternalID, lcsClientInternalID, lcsClientName, lcsClientDialedByMS, lcsAPN, null);
       ISDNAddressString networkNodeNumber = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, "5983392892");
+          NumberingPlan.ISDN, "5983392892");
       String lmsIdStr = "0a010203";
       byte[] lmsid = lmsIdStr.getBytes();
       LMSI lmsi = new LMSIImpl(lmsid);
@@ -1094,9 +1204,9 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
       CellGlobalIdOrServiceAreaIdOrLAI cellGlobalIdOrServiceAreaIdOrLAI = mapFactory
           .createCellGlobalIdOrServiceAreaIdOrLAI(cellGlobalIdOrServiceAreaIdFixedLength);
       ISDNAddressString vlrNumber = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, "5982123007");
+          NumberingPlan.ISDN, "5982123007");
       ISDNAddressString mscNumber = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, "5982123007");
+          NumberingPlan.ISDN, "5982123007");
       Integer ageOfLocationInformation = 0; // ageOfLocationInformation
       GeographicalInformation geographicalInformation = null;
       LocationNumberMap locationNumber = null;
@@ -1263,9 +1373,9 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
       String mscAddress = "5982123007";
       String sgsnAddress = "5982123009";
       ISDNAddressString mscNumber = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, mscAddress);
+          NumberingPlan.ISDN, mscAddress);
       ISDNAddressString sgsnNumber = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, sgsnAddress);
+          NumberingPlan.ISDN, sgsnAddress);
       AdditionalNumber additionalNumber = new AdditionalNumberImpl(null, sgsnNumber);
       String lmsiStr = "12345678";
       byte[] Lmsi = lmsiStr.getBytes();
@@ -1287,7 +1397,7 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
       byte[] aaaSN = new BigInteger("0011223344556677889900", 16).toByteArray();
       DiameterIdentity aaaServerName = new DiameterIdentityImpl(aaaSN);
       ISDNAddressString isdnAdd = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, "59899077937");
+          NumberingPlan.ISDN, "59899077937");
       SubscriberIdentity msisdn = new SubscriberIdentityImpl(isdnAdd);
       byte[] visitedGmlcAddress = new BigInteger("112233445500", 16).toByteArray();
       GSNAddress vGmlcAddress = new GSNAddressImpl(visitedGmlcAddress);
@@ -1488,9 +1598,9 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
       // Create Routing Information parameters for concerning MAP operation
       MAPParameterFactoryImpl mapFactory = new MAPParameterFactoryImpl();
       ISDNAddressString mscNumber = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, "5982123007");
+          NumberingPlan.ISDN, "5982123007");
       ISDNAddressString sgsnNumber = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, "5982123009");
+          NumberingPlan.ISDN, "5982123009");
       String lmsiStr = "87654321";
       byte[] Lmsi = lmsiStr.getBytes();
       LMSI lmsi = mapFactory.createLMSI(Lmsi);
@@ -1958,9 +2068,9 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
       // Create Routing Information parameters for concerning MAP operation
       MAPParameterFactoryImpl mapFactory = new MAPParameterFactoryImpl();
       ISDNAddressString naEsrd = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, "5982123007");
+          NumberingPlan.ISDN, "5982123007");
       ISDNAddressString naEsrk = new ISDNAddressStringImpl(AddressNature.international_number,
-          org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, "5982123009");
+          NumberingPlan.ISDN, "5982123009");
 /*
             long[] oid = {0, 0, 17, 773, 1, 1, 1};
             String pExtData = "1144";
@@ -2166,8 +2276,8 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
   /*
    * (non-Javadoc)
    *
-   * @see org.mobicents.protocols.ss7.map.api.MAPDialogListener#onDialogProviderAbort
-   * (org.mobicents.protocols.ss7.map.api.MAPDialog, org.mobicents.protocols.ss7.map.api.dialog.MAPAbortProviderReason,
+   * @see org.mobicents.protocols.ss7.map.api.MAPDialogListener#onDialogProviderAbort(org.mobicents.protocols.ss7.map.api.MAPDialog,
+   * org.mobicents.protocols.ss7.map.api.dialog.MAPAbortProviderReason,
    * org.mobicents.protocols.ss7.map.api.dialog.MAPAbortSource,
    * org.mobicents.protocols.ss7.map.api.primitives.MAPExtensionContainer)
    */
@@ -2206,8 +2316,8 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
   /*
    * (non-Javadoc)
    *
-   * @see org.mobicents.protocols.ss7.map.api.MAPDialogListener#onDialogResease
-   * (org.mobicents.protocols.ss7.map.api.MAPDialog)
+   * @see org.mobicents.protocols.ss7.map.api.MAPDialogListener#onDialogResease(org.mobicents.protocols.ss7.map.api.MAPDialog)
+   *
    */
   @Override
   public void onDialogRelease(MAPDialog mapDialog) {
@@ -2229,8 +2339,8 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
   /*
    * (non-Javadoc)
    *
-   * @see org.mobicents.protocols.ss7.map.api.MAPDialogListener#onDialogTimeout
-   * (org.mobicents.protocols.ss7.map.api.MAPDialog)
+   * @see org.mobicents.protocols.ss7.map.api.MAPDialogListener#onDialogTimeout(org.mobicents.protocols.ss7.map.api.MAPDialog)
+   *
    */
   @Override
   public void onDialogTimeout(MAPDialog mapDialog) {
@@ -2240,9 +2350,9 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
   /*
    * (non-Javadoc)
    *
-   * @see org.mobicents.protocols.ss7.map.api.MAPServiceListener#onErrorComponent
-   * (org.mobicents.protocols.ss7.map.api.MAPDialog, java.lang.Long,
-   * org.mobicents.protocols.ss7.map.api.errors.MAPErrorMessage)
+   * @see org.mobicents.protocols.ss7.map.api.MAPServiceListener#onErrorComponent(org.mobicents.protocols.ss7.map.api.MAPDialog,
+   * java.lang.Long,org.mobicents.protocols.ss7.map.api.errors.MAPErrorMessage)
+   *
    */
   // @Override
   // public void onErrorComponent(MAPDialog mapDialog, Long invokeId, MAPErrorMessage mapErrorMessage) {
@@ -2265,8 +2375,8 @@ public class ClientServer extends TestHarness implements MAPServiceMobilityListe
   /*
    * (non-Javadoc)
    *
-   * @see org.mobicents.protocols.ss7.map.api.MAPServiceListener#onInvokeTimeout
-   * (org.mobicents.protocols.ss7.map.api.MAPDialog, java.lang.Long)
+   * @see org.mobicents.protocols.ss7.map.api.MAPServiceListener#onInvokeTimeout(org.mobicents.protocols.ss7.map.api.MAPDialog,
+   * java.lang.Long)
    */
   // @Override
   // public void onInvokeTimeout(MAPDialog mapDialog, Long invokeId) {

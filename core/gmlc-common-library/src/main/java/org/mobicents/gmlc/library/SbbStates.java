@@ -22,7 +22,38 @@
 package org.mobicents.gmlc.library;
 
 /**
+ *
  * @author <a href="mailto:serg.vetyutnev@gmail.com"> Sergey Vetyutnev </a>
+ * @author <a href="mailto:fernando.mendioroz@gmail.com"> Fernando Mendioroz </a>
  */
-public class Test {
+public class SbbStates {
+
+  private static boolean mapLsmServiceState;
+
+  public static boolean isMapLsmServiceState() {
+    return mapLsmServiceState;
+  }
+
+  public static void setMapLsmServiceState(boolean mapLsmServiceState) {
+    SbbStates.mapLsmServiceState = mapLsmServiceState;
+  }
+
+  public static boolean areAllServicesUp() {
+    return mapLsmServiceState;
+  }
+
+  public static String getServicesDownList() {
+
+    StringBuilder sb = new StringBuilder();
+
+    sb.append("ServicesDownList=[");
+
+    if (!mapLsmServiceState)
+      sb.append("mapLsmServiceState, ");
+
+    sb.append("]");
+
+    return sb.toString();
+  }
+
 }

@@ -74,7 +74,7 @@ public final class Version {
      * @return Basic information as a string.
      */
     public String toString() {
-        StringBuilder sb = new StringBuilder("Mobicents GMLC Server: ");
+        StringBuilder sb = new StringBuilder("Restcomm GMLC Server: ");
         boolean first = true;
         for (Object key : props.keySet()) {
             if (first) {
