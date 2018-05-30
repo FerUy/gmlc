@@ -21,7 +21,9 @@ package org.mobicents.gmlc.slee.map;
 
 import net.java.slee.resource.http.events.HttpServletRequestEvent;
 import org.joda.time.DateTime;
+
 import org.mobicents.gmlc.GmlcPropertiesManagement;
+
 import org.mobicents.gmlc.slee.GMLCBaseSbb;
 import org.mobicents.gmlc.slee.cdr.CDRInterface;
 import org.mobicents.gmlc.slee.cdr.CDRInterfaceParent;
@@ -30,12 +32,21 @@ import org.mobicents.gmlc.slee.cdr.RecordStatus;
 import org.mobicents.gmlc.slee.mlp.MLPException;
 import org.mobicents.gmlc.slee.mlp.MLPRequest;
 import org.mobicents.gmlc.slee.mlp.MLPResponse;
+
 import org.mobicents.protocols.ss7.indicator.NatureOfAddress;
 import org.mobicents.protocols.ss7.indicator.NumberingPlan;
 import org.mobicents.protocols.ss7.indicator.RoutingIndicator;
-import org.mobicents.protocols.ss7.map.api.*;
-import org.mobicents.protocols.ss7.map.api.errors.MAPErrorCode;
+
+import org.mobicents.protocols.ss7.map.api.MAPApplicationContext;
+import org.mobicents.protocols.ss7.map.api.MAPApplicationContextName;
+import org.mobicents.protocols.ss7.map.api.MAPApplicationContextVersion;
+import org.mobicents.protocols.ss7.map.api.MAPDialog;
+import org.mobicents.protocols.ss7.map.api.MAPException;
+import org.mobicents.protocols.ss7.map.api.MAPParameterFactory;
+import org.mobicents.protocols.ss7.map.api.MAPProvider;
 import org.mobicents.protocols.ss7.map.api.errors.MAPErrorMessage;
+import org.mobicents.protocols.ss7.map.api.errors.MAPErrorCode;
+
 import org.mobicents.protocols.ss7.map.api.primitives.AddressNature;
 import org.mobicents.protocols.ss7.map.api.primitives.AddressString;
 import org.mobicents.protocols.ss7.map.api.primitives.CellGlobalIdOrServiceAreaIdFixedLength;
@@ -47,6 +58,7 @@ import org.mobicents.protocols.ss7.map.api.primitives.ISDNAddressString;
 import org.mobicents.protocols.ss7.map.api.primitives.LAIFixedLength;
 import org.mobicents.protocols.ss7.map.api.primitives.MAPExtensionContainer;
 import org.mobicents.protocols.ss7.map.api.primitives.SubscriberIdentity;
+
 import org.mobicents.protocols.ss7.map.api.service.lsm.AccuracyFulfilmentIndicator;
 import org.mobicents.protocols.ss7.map.api.service.lsm.AddGeographicalInformation;
 import org.mobicents.protocols.ss7.map.api.service.lsm.Area;
@@ -86,6 +98,7 @@ import org.mobicents.protocols.ss7.map.api.service.lsm.SupportedGADShapes;
 import org.mobicents.protocols.ss7.map.api.service.lsm.UtranGANSSpositioningData;
 import org.mobicents.protocols.ss7.map.api.service.lsm.UtranPositioningDataInfo;
 import org.mobicents.protocols.ss7.map.api.service.lsm.VelocityEstimate;
+
 import org.mobicents.protocols.ss7.map.api.service.mobility.MAPDialogMobility;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.AnyTimeInterrogationRequest;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.AnyTimeInterrogationResponse;
@@ -93,8 +106,10 @@ import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformatio
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.RequestedInfo;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.SubscriberInfo;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.TypeOfShape;
+
 import org.mobicents.protocols.ss7.map.primitives.ISDNAddressStringImpl;
 import org.mobicents.protocols.ss7.map.primitives.SubscriberIdentityImpl;
+
 import org.mobicents.protocols.ss7.map.service.lsm.AreaDefinitionImpl;
 import org.mobicents.protocols.ss7.map.service.lsm.AreaEventInfoImpl;
 import org.mobicents.protocols.ss7.map.service.lsm.AreaIdentificationImpl;
@@ -105,13 +120,16 @@ import org.mobicents.protocols.ss7.map.service.lsm.LocationTypeImpl;
 import org.mobicents.protocols.ss7.map.service.lsm.PeriodicLDRInfoImpl;
 import org.mobicents.protocols.ss7.map.service.lsm.ResponseTimeImpl;
 import org.mobicents.protocols.ss7.map.service.lsm.SupportedGADShapesImpl;
+
 import org.mobicents.protocols.ss7.map.service.mobility.subscriberInformation.RequestedInfoImpl;
+
 import org.mobicents.protocols.ss7.sccp.impl.SccpStackImpl;
 import org.mobicents.protocols.ss7.sccp.impl.parameter.ParameterFactoryImpl;
 import org.mobicents.protocols.ss7.sccp.parameter.EncodingScheme;
 import org.mobicents.protocols.ss7.sccp.parameter.GlobalTitle;
 import org.mobicents.protocols.ss7.sccp.parameter.ParameterFactory;
 import org.mobicents.protocols.ss7.sccp.parameter.SccpAddress;
+
 import org.mobicents.slee.ChildRelationExt;
 import org.mobicents.slee.SbbContextExt;
 import org.mobicents.slee.resource.map.MAPContextInterfaceFactory;
@@ -144,12 +162,21 @@ import javax.slee.facilities.TimerID;
 import javax.slee.facilities.TimerOptions;
 import javax.slee.facilities.Tracer;
 import javax.slee.resource.ResourceAdaptorTypeID;
+
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
 import java.io.Serializable;
+import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.DataOutputStream;
+import java.io.PrintWriter;
+
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author <a href="mailto:fernando.mendioroz@gmail.com"> Fernando Mendioroz </a>
@@ -186,7 +213,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
 
   private String pslLcsReferenceNumber, pslLcsServiceTypeID, pslIntervalTime, pslReportingAmount, pslReportingInterval,
           pslLcsHorizontalAccuracy, pslLcsVerticalAccuracy, pslOccurrenceInfo, pslAreaType, pslAreaId, pslLocationEstimateType, pslDeferredLocationEventType,
-          pslLcsPriority, pslVerticalCoordinateRequest, pslResponseTimeCategory;
+          pslLcsPriority, pslVerticalCoordinateRequest, pslResponseTimeCategory, slrCallbackUrl, psiService;
 
   /**
    * Creates a new instance of CallSbb
@@ -243,12 +270,15 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
     LCSQoS lcsQoS;// LCSQoSImpl(horizontalAccuracy, verticalAccuracy, verticalCoordinateRequest, responseTime, mapExtensionContainer);
     AreaEventInfo areaEventInfo; // AreaEventInfoImpl(areaDefinition, occurrenceInfo, intervalTime);
     PeriodicLDRInfo periodicLDRInfo; // PeriodicLDRInfoImpl(reportingAmount, reportingInterval);
+    String slrCallbackUrl;
+    String psiService;
 
 
     public HttpRequest(HttpRequestType type, String subscriberIdentity, String coreNetwork,
                        String priority, int horAccuracy, int vertAccuracy, String vertCoordRequest, String responseTimeCat,
                        int lcsReferenceNumber, int lcsServiceTypeID, String areaType, String areaId,
-                       String occurrenceInfo, int intervalTime, int reportingAmount, int reportingInterval) {
+                       String occurrenceInfo, int intervalTime, int reportingAmount, int reportingInterval, String slrCallbackUrl,
+                       String psiService) {
       this.type = type;
       this.lcsPriority = LCSPriority.normalPriority;
       if (priority.equalsIgnoreCase("highest")) {
@@ -303,13 +333,16 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         logger.info(String.format("Error while creating AreaEventInfo from HttpRequest:" + e));
       }
       this.periodicLDRInfo = new PeriodicLDRInfoImpl(reportingAmount, reportingInterval);
+      this.slrCallbackUrl = slrCallbackUrl;
+      this.psiService = psiService;
+
     }
 
     public HttpRequest(HttpRequestType type) {
 
       this(type, "", "", "", -1, -1, "",
               "", -1, -1, "", "", "",
-              -1, -1, -1);
+              -1, -1, -1, "", "");
     }
   }
 
@@ -654,7 +687,6 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
       }
       // Set timer last
       this.setTimer(aci);
-      // TODO complete CDR stuff in SRIforLCS response below
 
       if (subscriberIdentity != null) {
         if (this.logger.isFineEnabled()) {
@@ -2351,9 +2383,6 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         }
       }
 
-      // Handle successful retrieval of subscriber's location report (SLR request) info
-      // TODO
-
       this.setSubscriberLocationReportRequest(event);
       if(this.getSubscriberLocationReportRequest() != null) {
 
@@ -2363,6 +2392,11 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
 
         // SubscriberLocationReportResponse is now composed by values taken from SubscriberLocationReportRequest and ready to be sent:
         mapDialogLsmSlr.close(false);
+
+        // Handle successful retrieval of subscriber's location report request (SLR request) info by sending HTTP POST back to the requestor
+        //HttpResponseForSlr httpResponseForSlr = new HttpResponseForSlr();
+        slrCallbackUrl = "http://127.0.0.1:8888/restcomm/gmlc/trgint.com"; // temporary hardcoded
+        sendHttpPostToCallbackUrlAfterSLR(slrRequestValues, slrCallbackUrl);
       }
 
 
@@ -2621,8 +2655,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
     setEventContext(eventContext);
     HttpServletRequest httpServletRequest = event.getRequest();
     HttpRequestType httpRequestType = HttpRequestType.fromPath(httpServletRequest.getPathInfo());
-    String requestingMLP, requestingMSISDN, coreNetwork, horizontalAccuracy, verticalAccuracy, lcsReferenceNumber,
-            lcsServiceTypeID, intervalTime, reportingAmount, reportingInterval, inputIllegalArgument="";
+    String requestingMLP, requestingMSISDN, coreNetwork, inputIllegalArgument="";
 
     switch (httpRequestType) {
       case REST: {
@@ -2643,12 +2676,12 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
 
           this.pslLcsHorizontalAccuracy = httpServletRequest.getParameter("horizontalAccuracy");
           if (pslLcsHorizontalAccuracy == null) {
-            pslLcsHorizontalAccuracy = "0";
+            pslLcsHorizontalAccuracy = "-1";
           }
 
           this.pslLcsVerticalAccuracy = httpServletRequest.getParameter("verticalAccuracy");
           if (pslLcsVerticalAccuracy == null) {
-            pslLcsVerticalAccuracy = "0";
+            pslLcsVerticalAccuracy = "-1";
           }
 
           this.pslVerticalCoordinateRequest   = httpServletRequest.getParameter("vertCoordinateRequest");
@@ -2699,7 +2732,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
 
           this.pslAreaId = httpServletRequest.getParameter("areaId");
           if (pslAreaId == null) {
-            pslAreaId = "999999";
+            pslAreaId = "-1";
           }
 
           this.pslOccurrenceInfo = httpServletRequest.getParameter("occurrenceInfo");
@@ -2712,7 +2745,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
 
           this.pslLcsReferenceNumber = httpServletRequest.getParameter("lcsReferenceNumber");
           if (pslLcsReferenceNumber == null) {
-            pslLcsReferenceNumber = "0";
+            pslLcsReferenceNumber = "-1";
           }
 
           this.pslLcsServiceTypeID =  httpServletRequest.getParameter("lcsServiceTypeID");
@@ -2722,7 +2755,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
 
           this.pslIntervalTime =  httpServletRequest.getParameter("intervalTime");
           if (pslIntervalTime == null) {
-            pslIntervalTime = "9999";
+            pslIntervalTime = "-1";
           }
 
           this.pslReportingAmount =  httpServletRequest.getParameter("reportingAmount");
@@ -2732,8 +2765,19 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
 
           this.pslReportingInterval =  httpServletRequest.getParameter("reportingInterval");
           if (pslReportingInterval == null) {
-            pslReportingInterval = "9999";
+            pslReportingInterval = "-1";
           }
+
+          this.slrCallbackUrl = httpServletRequest.getParameter("slrCallbackUrl");
+          if (this.slrCallbackUrl == null) {
+            slrCallbackUrl = "http://localhost:8080";
+          }
+
+          this.psiService = httpServletRequest.getParameter("psiService");
+          if (psiService == null) {
+            psiService = "false";
+          }
+
         } catch (IllegalArgumentException iae) {
           iae.printStackTrace();
           handleLsmLocationResponse(MLPResponse.MLPResultType.FORMAT_ERROR, null, null, null, "Failure: " + inputIllegalArgument);
@@ -2757,27 +2801,22 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
           requestingMSISDN = output[0];
           coreNetwork = output[1];
           this.pslLcsPriority =  output[2];
-          horizontalAccuracy = output[3];
-          this.pslLcsHorizontalAccuracy = (horizontalAccuracy);
-          verticalAccuracy = output[4];
-          this.pslLcsVerticalAccuracy = (verticalAccuracy);
-          this.pslVerticalCoordinateRequest   = output[5];
+          this.pslLcsHorizontalAccuracy= output[3];
+          this.pslLcsVerticalAccuracy = output[4];
+          this.pslVerticalCoordinateRequest  = output[5];
           this.pslResponseTimeCategory = output[6];
           this.pslLocationEstimateType = output[7];
           this.pslDeferredLocationEventType = output[8];
           this.pslAreaType = output[9];
           this.pslAreaId = output[10];
           this.pslOccurrenceInfo = output[11];
-          lcsReferenceNumber = output[12];
-          this.pslLcsReferenceNumber = (lcsReferenceNumber);
-          lcsServiceTypeID = output[13];
-          this.pslLcsServiceTypeID = (lcsServiceTypeID);
-          intervalTime = output[14];
-          this.pslIntervalTime = (intervalTime);
-          reportingAmount = output[15];
-          this.pslReportingAmount = (reportingAmount);
-          reportingInterval = output[16];
-          this.pslReportingInterval = (reportingInterval);
+          this.pslLcsReferenceNumber = output[12];
+          this.pslLcsServiceTypeID  = output[13];
+          this.pslIntervalTime = output[14];
+          this.pslReportingAmount = output[15];
+          this.pslReportingInterval = output[16];
+          this.slrCallbackUrl = output[17];
+          this.psiService = output[18];
 
         } catch (MLPException e) {
           handleLsmLocationResponse(e.getMlpClientErrorType(), null, null, null, "System Failure: " + e.getMlpClientErrorMessage());
@@ -2796,7 +2835,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
     setHttpRequest(new HttpRequest(httpRequestType, requestingMSISDN, coreNetwork, pslLcsPriority, Integer.parseInt(pslLcsHorizontalAccuracy),
             Integer.parseInt(pslLcsVerticalAccuracy), pslVerticalCoordinateRequest, pslResponseTimeCategory, Integer.parseInt(pslLcsReferenceNumber),
             Integer.parseInt(pslLcsServiceTypeID), pslAreaType, pslAreaId, pslOccurrenceInfo, Integer.parseInt(pslIntervalTime),
-            Integer.parseInt(pslReportingAmount), Integer.parseInt(pslReportingInterval)));
+            Integer.parseInt(pslReportingAmount), Integer.parseInt(pslReportingInterval), slrCallbackUrl, psiService));
 
     if (logger.isFineEnabled()) {
       logger.fine(String.format("Handling %s request, MSISDN: %s from %s", httpRequestType.name().toUpperCase(), requestingMSISDN, coreNetwork));
@@ -2805,11 +2844,17 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
     if (requestingMSISDN != null) {
       eventContext.suspendDelivery();
       setEventContextCMP(eventContext);
-      if (coreNetwork.equalsIgnoreCase("UMTS")) {
-        getMsisdnGeolocationViaLsm(requestingMSISDN);
+      if (psiService.equalsIgnoreCase("true")) {
+        // TODO getMsisdnCGIthruPSI(requestingMSISDN)
+        handlePsiNotSupportedYet(MLPResponse.MLPResultType.SYSTEM_FAILURE, "PSI not supported yet", aci);
       } else {
-        getMsisdnCellGlobalId(requestingMSISDN);
+        if (coreNetwork.equalsIgnoreCase("UMTS")) {
+          getMsisdnGeolocationViaLsm(requestingMSISDN);
+        } else {
+          getMsisdnCellGlobalId(requestingMSISDN);
+        }
       }
+
 
     } else {
       logger.info("MSISDN is null, sending back -1 for Global Cell Identity");
@@ -3450,27 +3495,234 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
   }
 
   /**
+   * HTTP POST to send back to location requestor after SLR request
+   */
+  protected void sendHttpPostToCallbackUrlAfterSLR(SlrRequestValues slrReq, String slrCallbackUrl) throws Exception {
+
+    HttpRequest request = getHttpRequest();
+    EventContext httpEventContext = this.resumeHttpEventContext();
+
+    URL url = new URL(slrCallbackUrl);
+    HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+
+    httpURLConnection.setRequestMethod("POST");
+    String urlParameters;
+
+    List<String> urlParamsList = new ArrayList<>();
+    if (slrReq.getLcsClientID() != null) {
+      if (slrReq.getLcsClientID().getLCSClientType() != null && (slrReq.getLcsClientID().getLCSClientType().getType() > Integer.MIN_VALUE
+              && slrReq.getLcsClientID().getLCSClientType().getType() < Integer.MAX_VALUE))
+        urlParamsList.add("LCSClientIDType=" + Integer.toString(slrReq.getLcsClientID().getLCSClientType().getType()));
+      if (slrReq.getLcsClientID().getLCSClientExternalID() != null)
+        urlParamsList.add("LCSClientIDExternalID=" + slrReq.getLcsClientID().getLCSClientExternalID().getExternalAddress().getAddress());
+      if (slrReq.getLcsClientID().getLCSClientInternalID() != null
+              && (slrReq.getLcsClientID().getLCSClientInternalID().getId() > Integer.MIN_VALUE
+              && slrReq.getLcsClientID().getLCSClientInternalID().getId() < Integer.MAX_VALUE))
+        urlParamsList.add("LCSClientIDInternalID=" + Integer.toString(slrReq.getLcsClientID().getLCSClientInternalID().getId()));
+      if (slrReq.getLcsClientID().getLCSClientName() != null) {
+        urlParamsList.add("LCSClientIDNameString=" + slrReq.getLcsClientID().getLCSClientName().getNameString().toString());
+        urlParamsList.add("LCSClientIDNameDCS=" + Integer.toString(slrReq.getLcsClientID().getLCSClientName().getDataCodingScheme().getCode()));
+        urlParamsList.add("LCSClientIDNameFormatIndicator=" + Integer.toString(slrReq.getLcsClientID().getLCSClientName().getLCSFormatIndicator().getIndicator()));
+      }
+      if (slrReq.getLcsClientID().getLCSAPN() != null)
+        // urlParamsList.add("LCSClientIDAPN=" + slrReq.getLcsClientID().getLCSAPN().getApn().getBytes()); // temporary fail avoidance
+        if (slrReq.getLcsClientID().getLCSRequestorID() != null) {
+          urlParamsList.add("LCSClientIDRequestorIDEncodedString=" + slrReq.getLcsClientID().getLCSRequestorID().getRequestorIDString().getEncodedString().toString());
+          urlParamsList.add("LCSClientIDRequestorIDFormatIndicator=" + Integer.toString(slrReq.getLcsClientID().getLCSRequestorID().getLCSFormatIndicator().getIndicator()));
+          urlParamsList.add("LCSClientIDRequestorIDDCS=" + Integer.toString(slrReq.getLcsClientID().getLCSRequestorID().getDataCodingScheme().getCode()));
+        }
+      if (slrReq.getLcsClientID().getLCSClientDialedByMS() != null)
+        urlParamsList.add("LCSClientIDLCSClientDialedByMS=" + slrReq.getLcsClientID().getLCSClientDialedByMS().getAddress());
+    }
+    if (slrReq.getLcsEvent() != null) {
+      urlParamsList.add("LCSEvent=" + Integer.toString(slrReq.getLcsEvent().getEvent()));
+    }
+    if (slrReq.getLcsReferenceNumber() > Integer.MIN_VALUE && slrReq.getLcsReferenceNumber() < Integer.MAX_VALUE) {
+      urlParamsList.add("LCSReferenceNumber=" + Integer.toString(slrReq.getLcsReferenceNumber()));
+    }
+    if (slrReq.getLcsServiceTypeID() > Integer.MIN_VALUE && slrReq.getLcsServiceTypeID() < Integer.MAX_VALUE) {
+      urlParamsList.add("LCSServiceTypeID=" + Integer.toString(slrReq.getLcsServiceTypeID()));
+    }
+    if (slrReq.getLocationEstimate() != null) {
+      urlParamsList.add("Latitude=" + Double.toString(slrReq.getLocationEstimate().getLatitude()));
+      urlParamsList.add("Longitude=" + Double.toString(slrReq.getLocationEstimate().getLongitude()));
+      urlParamsList.add("Altitude=" + Double.toString(slrReq.getLocationEstimate().getAltitude()));
+      urlParamsList.add("Confidence=" + Double.toString(slrReq.getLocationEstimate().getInnerRadius()));
+      urlParamsList.add("Uncertainty=" + Double.toString(slrReq.getLocationEstimate().getUncertainty()));
+      urlParamsList.add("UncertaintyAltitude=" + Double.toString(slrReq.getLocationEstimate().getUncertaintyAltitude()));
+      urlParamsList.add("UncertaintyInnerRadius=" + Double.toString(slrReq.getLocationEstimate().getUncertaintyRadius()));
+      urlParamsList.add("OffsetAngle=" + Double.toString(slrReq.getLocationEstimate().getOffsetAngle()));
+      urlParamsList.add("IncludeAngle=" + Double.toString(slrReq.getLocationEstimate().getIncludedAngle()));
+      urlParamsList.add("TypeOfShape=" + Integer.toString(slrReq.getLocationEstimate().getTypeOfShape().getCode()));
+
+    }
+    if (slrReq.getAdditionalLocationEstimate() != null) {
+      urlParamsList.add("addLatitude=" + Double.toString(slrReq.getAdditionalLocationEstimate().getLatitude()));
+      urlParamsList.add("addLongitude=" + Double.toString(slrReq.getAdditionalLocationEstimate().getLongitude()));
+      urlParamsList.add("addAltitude=" + Double.toString(slrReq.getAdditionalLocationEstimate().getAltitude()));
+      urlParamsList.add("addConfidence=" + Double.toString(slrReq.getAdditionalLocationEstimate().getInnerRadius()));
+      urlParamsList.add("addUncertainty=" + Double.toString(slrReq.getAdditionalLocationEstimate().getUncertainty()));
+      urlParamsList.add("addUncertaintyAltitude=" + Double.toString(slrReq.getAdditionalLocationEstimate().getUncertaintyAltitude()));
+      urlParamsList.add("addUncertaintyInnerRadius=" + Double.toString(slrReq.getAdditionalLocationEstimate().getUncertaintyRadius()));
+      urlParamsList.add("addOffset=" + Double.toString(slrReq.getAdditionalLocationEstimate().getOffsetAngle()));
+      urlParamsList.add("addInclude=" + Double.toString(slrReq.getAdditionalLocationEstimate().getIncludedAngle()));
+      urlParamsList.add("addTypeOfShape=" + Integer.toString(slrReq.getAdditionalLocationEstimate().getTypeOfShape().getCode()));
+
+    }
+    if (slrReq.getAgeOfLocationEstimate() > Integer.MIN_VALUE && slrReq.getAgeOfLocationEstimate() < Integer.MAX_VALUE) {
+      urlParamsList.add("AgeOfLocationEstimate=" + Integer.toString(slrReq.getAgeOfLocationEstimate()));
+    }
+    if (slrReq.getAccuracyFulfilmentIndicator() != null) {
+      urlParamsList.add("AccuracyFulfillmentIndicator=" + Integer.toString(slrReq.getAccuracyFulfilmentIndicator().getIndicator()));
+    }
+    if (slrReq.getCellGlobalIdOrServiceAreaIdOrLAI() != null) {
+      if (slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength() != null) {
+        urlParamsList.add("CGIorSAIorLAIMCC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMCC()));
+        urlParamsList.add("CGIorSAIorLAIMNC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMNC()));
+        urlParamsList.add("CGIorSAIorLAILAC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getLac()));
+      }
+      if (slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength() != null) {
+        urlParamsList.add("CGIorSAIorLAIMCC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMCC()));
+        urlParamsList.add("CGIorSAIorLAIMNC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMNC()));
+        urlParamsList.add("CGIorSAIorLAILAC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getLac()));
+        urlParamsList.add("CGIorSAIorLAICI=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode()));
+      }
+    }
+    if (slrReq.getPseudonymIndicator() != false && slrReq.getPseudonymIndicator() != true) {
+      urlParamsList.add("PseudonymIndicator=" + Boolean.toString(slrReq.getPseudonymIndicator()));
+    }
+    if (slrReq.isMoLrShortCircuitIndicator() != false && slrReq.isMoLrShortCircuitIndicator() != true) {
+      urlParamsList.add("MOLRShortCircuitIndicator=" + Boolean.toString(slrReq.isMoLrShortCircuitIndicator()));
+    }
+    if (slrReq.getPeriodicLDRInfo() != null) {
+      urlParamsList.add("ReportingAmount=" + Integer.toString(slrReq.getPeriodicLDRInfo().getReportingAmount()));
+      urlParamsList.add("ReportingInterval=" + Integer.toString(slrReq.getPeriodicLDRInfo().getReportingInterval()));
+    }
+    if (slrReq.getSequenceNumber() > Integer.MIN_VALUE && slrReq.getSequenceNumber() < Integer.MAX_VALUE) {
+      urlParamsList.add("Sequence Number=" + Integer.toString(slrReq.getSequenceNumber()));
+    }
+    if (slrReq.getDeferredmtlrData() != null) {
+      if (slrReq.getDeferredmtlrData().getDeferredLocationEventType() != null) {
+        urlParamsList.add("EnteringArea=" + Boolean.toString(slrReq.getDeferredmtlrData().getDeferredLocationEventType().getEnteringIntoArea()));
+        urlParamsList.add("InsideArea=" + Boolean.toString(slrReq.getDeferredmtlrData().getDeferredLocationEventType().getBeingInsideArea()));
+        urlParamsList.add("LeavingArea=" + Boolean.toString(slrReq.getDeferredmtlrData().getDeferredLocationEventType().getLeavingFromArea()));
+        urlParamsList.add("MSAvailable=" + Boolean.toString(slrReq.getDeferredmtlrData().getDeferredLocationEventType().getMsAvailable()));
+      }
+      if (slrReq.getDeferredmtlrData().getLCSLocationInfo() != null) {
+        urlParamsList.add("GPRSNodeIndicator=" + Boolean.toString(slrReq.getDeferredmtlrData().getLCSLocationInfo().getGprsNodeIndicator()));
+        if (slrReq.getDeferredmtlrData().getLCSLocationInfo().getNetworkNodeNumber() != null)
+          urlParamsList.add("DeferredMTLRNetworkNodeNumber=" + slrReq.getDeferredmtlrData().getLCSLocationInfo().getNetworkNodeNumber().getAddress());
+        if (slrReq.getDeferredmtlrData().getLCSLocationInfo().getLMSI() != null)
+          urlParamsList.add("DeferredMTLRLMSI=" + slrReq.getDeferredmtlrData().getLCSLocationInfo().getLMSI().getData().toString());
+        if (slrReq.getDeferredmtlrData().getLCSLocationInfo().getMmeName() != null)
+          urlParamsList.add("DeferredMTLRMMEName=" + slrReq.getDeferredmtlrData().getLCSLocationInfo().getMmeName().getData().toString());
+        if (slrReq.getDeferredmtlrData().getLCSLocationInfo().getAaaServerName() != null)
+          urlParamsList.add("DeferredMTLRAAAServerName=" + slrReq.getDeferredmtlrData().getLCSLocationInfo().getAaaServerName().getData().toString());
+      }
+    }
+
+    StringBuilder params = new StringBuilder();
+    Iterator<String> itr = urlParamsList.iterator();
+    int urlParamsListSize = urlParamsList.size();
+    int c = 0;
+    while (itr.hasNext()) {
+      params.append(itr.next());
+      c++;
+      if (c <= urlParamsListSize)
+        params.append("&");
+    }
+    urlParameters = params.toString();
+    System.out.println(urlParameters);
+
+    // Send post request
+    httpURLConnection.setDoOutput(true);
+    DataOutputStream wr = new DataOutputStream(httpURLConnection.getOutputStream());
+    wr.writeBytes(urlParameters);
+    wr.flush();
+    wr.close();
+
+    int responseCode = httpURLConnection.getResponseCode();
+    System.out.println("\nSending 'POST' request to URL : " + url);
+    System.out.println("Post parameters : " + urlParameters);
+    System.out.println("Response Code : " + responseCode);
+
+    BufferedReader in = new BufferedReader(
+            new InputStreamReader(httpURLConnection.getInputStream()));
+    String inputLine;
+    StringBuffer response = new StringBuffer();
+
+    while ((inputLine = in.readLine()) != null) {
+      response.append(inputLine);
+    }
+    in.close();
+
+    //print result
+    System.out.println(response.toString());
+
+  }
+
+  /**
    * Handle generating the appropriate HTTP response
    * We're making use of the MLPResponse class for both GET/POST requests for convenience and
    * because eventually the GET method will likely be removed
    *
-   * @param mlpResultType         OK or error type to return to client
-   * @param mlpClientErrorMessage Error message to send to client
+   * @param mlpResultType           OK or error type to return to client
+   * @param tcapDialogErrorMessage  Error message to send to client
    */
-  protected void handleDialogError(MLPResponse.MLPResultType mlpResultType, String mlpClientErrorMessage) {
+  protected void handleDialogError(MLPResponse.MLPResultType mlpResultType, String tcapDialogErrorMessage) {
 
     HttpRequest request = getHttpRequest();
     EventContext httpEventContext = this.resumeHttpEventContext();
 
     switch (request.type) {
       case REST:
-        this.sendHTTPResult(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, mlpClientErrorMessage);
+        this.sendHTTPResult(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, tcapDialogErrorMessage);
         break;
 
       case MLP:
         String svcResultXml;
         MLPResponse mlpResponse = new MLPResponse(this.logger);
-        svcResultXml = mlpResponse.getPositionErrorResponseXML(request.msisdn, mlpResultType, mlpClientErrorMessage);
+        svcResultXml = mlpResponse.getPositionErrorResponseXML(request.msisdn, mlpResultType, tcapDialogErrorMessage);
+        this.sendHTTPResult(HttpServletResponse.SC_OK, svcResultXml);
+        break;
+    }
+  }
+
+  /**
+   * Handle generating the appropriate HTTP response
+   * We're making use of the MLPResponse class for both GET/POST requests for convenience and
+   * because eventually the GET method will likely be removed
+   *
+   * @param mlpResultType   OK or error type to return to client
+   * @param errorMessage    Error message to send to client
+   */
+  protected void handlePsiNotSupportedYet(MLPResponse.MLPResultType mlpResultType, String errorMessage, ActivityContextInterface aci) {
+
+    HttpRequest request = getHttpRequest();
+    EventContext httpEventContext = this.resumeHttpEventContext();
+
+    CDRInterface cdrInterface = this.getCDRInterface();
+    GMLCCDRState gmlcCdrState = cdrInterface.getState();
+    gmlcCdrState.init(null, null, null,null, null, null);
+    gmlcCdrState.setDialogStartTime(DateTime.now());
+    gmlcCdrState.setRemoteDialogId(null);
+    cdrInterface.setState(gmlcCdrState);
+    SbbLocalObject sbbLO = (SbbLocalObject) cdrInterface;
+    aci.attach(sbbLO);
+    this.setTimer(aci);
+    if (gmlcCdrState.isInitialized()) {
+      this.createCDRRecord(RecordStatus.FAILED_NOT_IMPLEMENTED);
+    }
+
+    switch (request.type) {
+      case REST:
+        this.sendHTTPResult(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, errorMessage);
+        break;
+
+      case MLP:
+        String svcResultXml;
+        MLPResponse mlpResponse = new MLPResponse(this.logger);
+        svcResultXml = mlpResponse.getPositionErrorResponseXML(request.msisdn, mlpResultType, errorMessage);
         this.sendHTTPResult(HttpServletResponse.SC_OK, svcResultXml);
         break;
     }

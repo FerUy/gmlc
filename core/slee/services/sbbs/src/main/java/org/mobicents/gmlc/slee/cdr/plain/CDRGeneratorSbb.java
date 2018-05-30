@@ -806,19 +806,32 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
     LCSClientID lcsClientID = gmlcCdrState.getLcsClientID();
     if(lcsClientID != null) {
       try {
-        stringBuilder.append(lcsClientID.getLCSClientName().getNameString()).append(SEPARATOR);
-        stringBuilder.append(lcsClientID.getLCSClientName().getDataCodingScheme().getCode()).append(SEPARATOR);
-        stringBuilder.append(lcsClientID.getLCSClientName().getLCSFormatIndicator().getIndicator()).append(SEPARATOR);
-        stringBuilder.append(lcsClientID.getLCSClientName().getNameString().getEncodedString().toString()).append(SEPARATOR);
-        stringBuilder.append(lcsClientID.getLCSAPN().getApn()).append(SEPARATOR);
-        stringBuilder.append(lcsClientID.getLCSClientDialedByMS().getAddress()).append(SEPARATOR);
-        stringBuilder.append(lcsClientID.getLCSClientExternalID().getExternalAddress().getAddress()).append(SEPARATOR);
-        stringBuilder.append(lcsClientID.getLCSClientInternalID().getId()).append(SEPARATOR);
-        stringBuilder.append(lcsClientID.getLCSClientType().getType()).append(SEPARATOR);
-        stringBuilder.append(lcsClientID.getLCSRequestorID().getDataCodingScheme().getCode()).append(SEPARATOR);
-        stringBuilder.append(lcsClientID.getLCSRequestorID().getLCSFormatIndicator().getIndicator()).append(SEPARATOR);
-        stringBuilder.append(lcsClientID.getLCSRequestorID().getRequestorIDString().getEncodedString()).append(SEPARATOR);
-      } catch (MAPException e) {
+        if (lcsClientID.getLCSClientType() != null && (lcsClientID.getLCSClientType().getType() > Integer.MIN_VALUE
+                && lcsClientID.getLCSClientType().getType() < Integer.MAX_VALUE)) {
+          stringBuilder.append(lcsClientID.getLCSClientType().getType()).append(SEPARATOR);
+        }
+        if (lcsClientID.getLCSClientName() != null) {
+          stringBuilder.append(lcsClientID.getLCSClientName().getNameString()).append(SEPARATOR);
+          stringBuilder.append(lcsClientID.getLCSClientName().getDataCodingScheme().getCode()).append(SEPARATOR);
+          stringBuilder.append(lcsClientID.getLCSClientName().getLCSFormatIndicator().getIndicator()).append(SEPARATOR);
+          stringBuilder.append(lcsClientID.getLCSClientName().getNameString().getEncodedString().toString()).append(SEPARATOR);
+        }
+        if (lcsClientID.getLCSAPN() != null)
+          stringBuilder.append(SEPARATOR); //temporary
+        //stringBuilder.append(lcsClientID.getLCSAPN().getApn().getBytes()).append(SEPARATOR);
+        if (lcsClientID.getLCSClientDialedByMS() != null)
+          stringBuilder.append(lcsClientID.getLCSClientDialedByMS().getAddress()).append(SEPARATOR);
+        if (lcsClientID.getLCSClientExternalID() != null)
+          stringBuilder.append(lcsClientID.getLCSClientExternalID().getExternalAddress().getAddress()).append(SEPARATOR);
+        if (lcsClientID.getLCSClientInternalID() != null && (lcsClientID.getLCSClientInternalID().getId() > Integer.MIN_VALUE
+                && lcsClientID.getLCSClientInternalID().getId() < Integer.MAX_VALUE))
+          stringBuilder.append(lcsClientID.getLCSClientInternalID().getId()).append(SEPARATOR);
+        if (lcsClientID.getLCSRequestorID() != null) {
+          stringBuilder.append(lcsClientID.getLCSRequestorID().getDataCodingScheme().getCode()).append(SEPARATOR);
+          stringBuilder.append(lcsClientID.getLCSRequestorID().getLCSFormatIndicator().getIndicator()).append(SEPARATOR);
+          stringBuilder.append(lcsClientID.getLCSRequestorID().getRequestorIDString().getEncodedString()).append(SEPARATOR);
+        }
+      } catch (Exception e) {
         e.printStackTrace();
       }
     } else {
