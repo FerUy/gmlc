@@ -53,6 +53,12 @@
 					<cmp-field-name>subscriberLocationReportRequest</cmp-field-name>
 				</cmp-field>
 				<cmp-field>
+					<cmp-field-name>sendRoutingInfoForSMResponse</cmp-field-name>
+				</cmp-field>
+				<cmp-field>
+					<cmp-field-name>provideSubscriberInformationResponse</cmp-field-name>
+				</cmp-field>
+				<cmp-field>
 					<cmp-field-name>errorResponse</cmp-field-name>
 				</cmp-field>
 
@@ -74,8 +80,7 @@
 		<event event-direction="Receive" initial-event="False">
 			<event-name>AnyTimeInterrogationRequest</event-name>
 			<event-type-ref>
-				<event-type-name>ss7.map.service.mobility.subscriberinfo.ANY_TIME_INTERROGATION_REQUEST
-				</event-type-name>
+				<event-type-name>ss7.map.service.mobility.subscriberinfo.ANY_TIME_INTERROGATION_REQUEST</event-type-name>
 				<event-type-vendor>org.mobicents</event-type-vendor>
 				<event-type-version>1.0</event-type-version>
 			</event-type-ref>
@@ -83,8 +88,7 @@
 		<event event-direction="Receive" initial-event="False">
 			<event-name>AnyTimeInterrogationResponse</event-name>
 			<event-type-ref>
-				<event-type-name>ss7.map.service.mobility.subscriberinfo.ANY_TIME_INTERROGATION_RESPONSE
-				</event-type-name>
+				<event-type-name>ss7.map.service.mobility.subscriberinfo.ANY_TIME_INTERROGATION_RESPONSE</event-type-name>
 				<event-type-vendor>org.mobicents</event-type-vendor>
 				<event-type-version>1.0</event-type-version>
 			</event-type-ref>
@@ -92,8 +96,7 @@
 		<event event-direction="Receive" initial-event="False">
 			<event-name>SendRoutingInfoForLCSRequest</event-name>
 			<event-type-ref>
-				<event-type-name>ss7.map.service.lsm.SEND_ROUTING_INFO_FOR_LCS_REQUEST
-				</event-type-name>
+				<event-type-name>ss7.map.service.lsm.SEND_ROUTING_INFO_FOR_LCS_REQUEST</event-type-name>
 				<event-type-vendor>org.mobicents</event-type-vendor>
 				<event-type-version>1.0</event-type-version>
 			</event-type-ref>
@@ -101,8 +104,7 @@
 		<event event-direction="Receive" initial-event="False">
 			<event-name>SendRoutingInfoForLCSResponse</event-name>
 			<event-type-ref>
-				<event-type-name>ss7.map.service.lsm.SEND_ROUTING_INFO_FOR_LCS_RESPONSE
-				</event-type-name>
+				<event-type-name>ss7.map.service.lsm.SEND_ROUTING_INFO_FOR_LCS_RESPONSE</event-type-name>
 				<event-type-vendor>org.mobicents</event-type-vendor>
 				<event-type-version>1.0</event-type-version>
 			</event-type-ref>
@@ -110,8 +112,7 @@
 		<event event-direction="Receive" initial-event="False">
 			<event-name>ProvideSubscriberLocationRequest</event-name>
 			<event-type-ref>
-				<event-type-name>ss7.map.service.lsm.PROVIDE_SUBSCRIBER_LOCATION_REQUEST
-				</event-type-name>
+				<event-type-name>ss7.map.service.lsm.PROVIDE_SUBSCRIBER_LOCATION_REQUEST</event-type-name>
 				<event-type-vendor>org.mobicents</event-type-vendor>
 				<event-type-version>1.0</event-type-version>
 			</event-type-ref>
@@ -119,8 +120,7 @@
 		<event event-direction="Receive" initial-event="False">
 			<event-name>ProvideSubscriberLocationResponse</event-name>
 			<event-type-ref>
-				<event-type-name>ss7.map.service.lsm.PROVIDE_SUBSCRIBER_LOCATION_RESPONSE
-				</event-type-name>
+				<event-type-name>ss7.map.service.lsm.PROVIDE_SUBSCRIBER_LOCATION_RESPONSE</event-type-name>
 				<event-type-vendor>org.mobicents</event-type-vendor>
 				<event-type-version>1.0</event-type-version>
 			</event-type-ref>
@@ -128,8 +128,7 @@
 		<event event-direction="Receive" initial-event="True">
 			<event-name>SubscriberLocationReportRequest</event-name>
 			<event-type-ref>
-				<event-type-name>ss7.map.service.lsm.SUBSCRIBER_LOCATION_REPORT_REQUEST
-				</event-type-name>
+				<event-type-name>ss7.map.service.lsm.SUBSCRIBER_LOCATION_REPORT_REQUEST</event-type-name>
 				<event-type-vendor>org.mobicents</event-type-vendor>
 				<event-type-version>1.0</event-type-version>
 			</event-type-ref>
@@ -138,8 +137,39 @@
 		<event event-direction="Receive" initial-event="False">
 			<event-name>SubscriberLocationReportResponse</event-name>
 			<event-type-ref>
-				<event-type-name>ss7.map.service.lsm.SUBSCRIBER_LOCATION_REPORT_RESPONSE
-				</event-type-name>
+				<event-type-name>ss7.map.service.lsm.SUBSCRIBER_LOCATION_REPORT_RESPONSE</event-type-name>
+				<event-type-vendor>org.mobicents</event-type-vendor>
+				<event-type-version>1.0</event-type-version>
+			</event-type-ref>
+		</event>
+		<event event-direction="Receive" initial-event="False">
+			<event-name>SendRoutingInfoForSMRequest</event-name>
+			<event-type-ref>
+				<event-type-name>ss7.map.service.sms.SEND_ROUTING_INFO_FOR_SM_REQUEST</event-type-name>
+				<event-type-vendor>org.mobicents</event-type-vendor>
+				<event-type-version>1.0</event-type-version>
+			</event-type-ref>
+		</event>
+		<event event-direction="Receive" initial-event="False">
+			<event-name>SendRoutingInfoForSMResponse</event-name>
+			<event-type-ref>
+				<event-type-name>ss7.map.service.sms.SEND_ROUTING_INFO_FOR_SM_RESPONSE</event-type-name>
+				<event-type-vendor>org.mobicents</event-type-vendor>
+				<event-type-version>1.0</event-type-version>
+			</event-type-ref>
+		</event>
+		<event event-direction="Receive" initial-event="False">
+			<event-name>ProvideSubscriberInformationRequest</event-name>
+			<event-type-ref>
+				<event-type-name>ss7.map.service.mobility.subscriberinfo.PROVIDE_SUBSCRIBER_INFO_REQUEST</event-type-name>
+				<event-type-vendor>org.mobicents</event-type-vendor>
+				<event-type-version>1.0</event-type-version>
+			</event-type-ref>
+		</event>
+		<event event-direction="Receive" initial-event="False">
+			<event-name>ProvideSubscriberInformationResponse</event-name>
+			<event-type-ref>
+				<event-type-name>ss7.map.service.mobility.subscriberinfo.PROVIDE_SUBSCRIBER_INFO_RESPONSE</event-type-name>
 				<event-type-vendor>org.mobicents</event-type-vendor>
 				<event-type-version>1.0</event-type-version>
 			</event-type-ref>

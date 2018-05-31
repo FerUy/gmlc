@@ -19,6 +19,7 @@
 
 package org.mobicents.gmlc.slee.map;
 
+import io.netty.handler.codec.http.HttpMethod;
 import net.java.slee.resource.http.events.HttpServletRequestEvent;
 import org.joda.time.DateTime;
 
@@ -29,6 +30,7 @@ import org.mobicents.gmlc.slee.cdr.CDRInterface;
 import org.mobicents.gmlc.slee.cdr.CDRInterfaceParent;
 import org.mobicents.gmlc.slee.cdr.GMLCCDRState;
 import org.mobicents.gmlc.slee.cdr.RecordStatus;
+import org.mobicents.gmlc.slee.http.HttpReport;
 import org.mobicents.gmlc.slee.mlp.MLPException;
 import org.mobicents.gmlc.slee.mlp.MLPRequest;
 import org.mobicents.gmlc.slee.mlp.MLPResponse;
@@ -47,17 +49,7 @@ import org.mobicents.protocols.ss7.map.api.MAPProvider;
 import org.mobicents.protocols.ss7.map.api.errors.MAPErrorMessage;
 import org.mobicents.protocols.ss7.map.api.errors.MAPErrorCode;
 
-import org.mobicents.protocols.ss7.map.api.primitives.AddressNature;
-import org.mobicents.protocols.ss7.map.api.primitives.AddressString;
-import org.mobicents.protocols.ss7.map.api.primitives.CellGlobalIdOrServiceAreaIdFixedLength;
-import org.mobicents.protocols.ss7.map.api.primitives.CellGlobalIdOrServiceAreaIdOrLAI;
-import org.mobicents.protocols.ss7.map.api.primitives.GSNAddress;
-import org.mobicents.protocols.ss7.map.api.primitives.IMEI;
-import org.mobicents.protocols.ss7.map.api.primitives.IMSI;
-import org.mobicents.protocols.ss7.map.api.primitives.ISDNAddressString;
-import org.mobicents.protocols.ss7.map.api.primitives.LAIFixedLength;
-import org.mobicents.protocols.ss7.map.api.primitives.MAPExtensionContainer;
-import org.mobicents.protocols.ss7.map.api.primitives.SubscriberIdentity;
+import org.mobicents.protocols.ss7.map.api.primitives.*;
 
 import org.mobicents.protocols.ss7.map.api.service.lsm.AccuracyFulfilmentIndicator;
 import org.mobicents.protocols.ss7.map.api.service.lsm.AddGeographicalInformation;
@@ -100,13 +92,12 @@ import org.mobicents.protocols.ss7.map.api.service.lsm.UtranPositioningDataInfo;
 import org.mobicents.protocols.ss7.map.api.service.lsm.VelocityEstimate;
 
 import org.mobicents.protocols.ss7.map.api.service.mobility.MAPDialogMobility;
-import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.AnyTimeInterrogationRequest;
-import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.AnyTimeInterrogationResponse;
-import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.DomainType;
-import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.RequestedInfo;
-import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.SubscriberInfo;
-import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.TypeOfShape;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.*;
 
+import org.mobicents.protocols.ss7.map.api.service.sms.LocationInfoWithLMSI;
+import org.mobicents.protocols.ss7.map.api.service.sms.MAPDialogSms;
+import org.mobicents.protocols.ss7.map.api.service.sms.SendRoutingInfoForSMRequest;
+import org.mobicents.protocols.ss7.map.api.service.sms.SendRoutingInfoForSMResponse;
 import org.mobicents.protocols.ss7.map.primitives.ISDNAddressStringImpl;
 import org.mobicents.protocols.ss7.map.primitives.SubscriberIdentityImpl;
 
@@ -166,25 +157,20 @@ import javax.slee.resource.ResourceAdaptorTypeID;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.InputStream;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.DataOutputStream;
 import java.io.PrintWriter;
 
-import java.net.HttpURLConnection;
-import java.net.URL;
+
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * @author <a href="mailto:fernando.mendioroz@gmail.com"> Fernando Mendioroz </a>
- * @author <a href="mailto:abhayani@gmail.com"> Amit Bhayani </a>
- * @author <a href="mailto:serg.vetyutnev@gmail.com"> Sergey Vetyutnev </a>
- * @author <a href="mailto:nhanth87@gmail.com"> Tran Huu Nhan </a>
- * @author <a href="mailto:eross@locatrix.com"> Andrew Eross </a>
- * @author <a href="mailto:lucas@locatrix.com"> Lucas Brown </a>
+ * @contributor <a href="mailto:aferreiraguido@gmail.com"> Alejandro Ferreira </a>
+ * @contributor <a href="mailto:abhayani@gmail.com"> Amit Bhayani </a>
+ * @contributor <a href="mailto:serg.vetyutnev@gmail.com"> Sergey Vetyutnev </a>
+ * @contributor <a href="mailto:eross@locatrix.com"> Andrew Eross </a>
+ * @contributor <a href="mailto:lucas@locatrix.com"> Lucas Brown </a>
+ * @contributor <a href="mailto:nhanth87@gmail.com"> Tran Huu Nhan </a>
  */
 public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implements Sbb, CDRInterfaceParent {
 
@@ -208,12 +194,16 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
   private MAPApplicationContext anyTimeEnquiryContext = null;
   private MAPApplicationContext locationSvcEnquiryContext = null;
   private MAPApplicationContext locationSvcGatewayContext = null;
+  private MAPApplicationContext shortMsgGatewayContext = null;
+  private MAPApplicationContext subscriberInfoEnquiryContext = null;
 
   private TimerFacility timerFacility = null;
 
   private String pslLcsReferenceNumber, pslLcsServiceTypeID, pslIntervalTime, pslReportingAmount, pslReportingInterval,
           pslLcsHorizontalAccuracy, pslLcsVerticalAccuracy, pslOccurrenceInfo, pslAreaType, pslAreaId, pslLocationEstimateType, pslDeferredLocationEventType,
           pslLcsPriority, pslVerticalCoordinateRequest, pslResponseTimeCategory, slrCallbackUrl, psiService;
+
+  private HttpReport httpSubscriberLocationReport = new HttpReport();
 
   /**
    * Creates a new instance of CallSbb
@@ -529,7 +519,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 atiResponseValues.setMcc(cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getMCC());
                 atiResponseValues.setMnc(cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getMNC());
                 atiResponseValues.setLac(cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getLac());
-                atiResponseValues.setLac(cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode());
+                atiResponseValues.setCi(cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode());
               } catch (MAPException e1) {
                 e1.printStackTrace();
               }
@@ -2394,9 +2384,8 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         mapDialogLsmSlr.close(false);
 
         // Handle successful retrieval of subscriber's location report request (SLR request) info by sending HTTP POST back to the requestor
-        //HttpResponseForSlr httpResponseForSlr = new HttpResponseForSlr();
-        slrCallbackUrl = "http://127.0.0.1:8888/restcomm/gmlc/trgint.com"; // temporary hardcoded
-        sendHttpPostToCallbackUrlAfterSLR(slrRequestValues, slrCallbackUrl);
+        httpSubscriberLocationReport.Perform(HttpMethod.POST, lcsReferenceNumber);
+
       }
 
 
@@ -2426,6 +2415,398 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
       logger.severe(String.format("Error while trying to process onSubscriberLocationReportResponse=%s", event), e);
     }
 
+  }
+
+  /**
+   * Subscriber Information Services (another way to get location information via MAP)
+   * MAP-SEND-ROUTING-INFO-FOR-SM (SRI) Events
+   */
+  public void onSendRoutingInfoForSMRequest(SendRoutingInfoForSMRequest event, ActivityContextInterface aci) {
+    try {
+      if (this.logger.isFineEnabled()) {
+        this.logger.fine("\nReceived onSendRoutingInfoForSmRequest = " + event);
+      }
+
+    } catch (Exception e) {
+      logger.severe(String.format("Error while trying to process onSendRoutingInfoForSmRequest=%s", event), e);
+    }
+  }
+
+  public void onSendRoutingInfoForSMResponse(SendRoutingInfoForSMResponse event, ActivityContextInterface aci) {
+
+    MAPErrorMessage mapErrorMessage = this.getErrorResponse();
+
+    try {
+      if (this.logger.isFineEnabled()) {
+        this.logger.fine("\nReceived onSendRoutingInfoForSmResponse = " + event);
+      }
+      MAPDialog mapDialogSriForSM = event.getMAPDialog();
+      IMSI imsi = event.getIMSI();
+      LocationInfoWithLMSI locationInfoWithLMSI = event.getLocationInfoWithLMSI();
+      MAPExtensionContainer mapExtensionContainer = event.getExtensionContainer();
+
+      SriForSmResponseValues sriForSmResponseValues = new SriForSmResponseValues();
+      MLPResponse.MLPResultType mlpRespResult = null;
+      String mlpClientErrorMessage = null;
+
+      // CDR initialization stuff
+      CDRInterface cdrInterface = this.getCDRInterface();
+      GMLCCDRState gmlcCdrState = cdrInterface.getState();
+      if (!gmlcCdrState.isInitialized()) {
+        if (this.logger.isFineEnabled()) {
+          this.logger.fine("\nonSendRoutingInfoForSmResponse: CDR state is NOT initialized: " + gmlcCdrState + ", initiating\n");
+        }
+        gmlcCdrState.init(mapDialogSriForSM.getLocalDialogId(), mapDialogSriForSM.getReceivedDestReference(), mapDialogSriForSM.getReceivedOrigReference(),
+                locationInfoWithLMSI.getNetworkNodeNumber(), mapDialogSriForSM.getLocalAddress(), mapDialogSriForSM.getRemoteAddress());
+        gmlcCdrState.setDialogStartTime(DateTime.now());
+        gmlcCdrState.setRemoteDialogId(mapDialogSriForSM.getRemoteDialogId());
+        cdrInterface.setState(gmlcCdrState);
+
+        // attach, in case impl wants to use more of dialog.
+        SbbLocalObject sbbLO = (SbbLocalObject) cdrInterface;
+        aci.attach(sbbLO);
+      }
+      // Set timer last
+      this.setTimer(aci);
+
+      if (locationInfoWithLMSI != null) {
+        mlpRespResult = MLPResponse.MLPResultType.OK;
+        if (this.logger.isFineEnabled()) {
+          this.logger.fine("\nonSendRoutingInfoForSmResponse: received LocationInfoWithLMSI parameter");
+        }
+        if (locationInfoWithLMSI.getNetworkNodeNumber() != null) {
+          sriForSmResponseValues.setNetworkNodeNumber(locationInfoWithLMSI.getNetworkNodeNumber());
+          if (gmlcCdrState.isInitialized()) {
+            gmlcCdrState.setNetworkNodeNumber(sriForSmResponseValues.getNetworkNodeNumber());
+            if (this.logger.isFineEnabled()) {
+              this.logger.fine("\nonSendRoutingInfoForSmResponse: CDR state is initialized, NNN set");
+            }
+          }
+        }
+        if (locationInfoWithLMSI.getAdditionalNumber() != null) {
+          sriForSmResponseValues.setAdditionalNumber(locationInfoWithLMSI.getAdditionalNumber());
+          if (gmlcCdrState.isInitialized()) {
+            gmlcCdrState.setAdditionalNumber(sriForSmResponseValues.getAdditionalNumber());
+            if (this.logger.isFineEnabled()) {
+              this.logger.fine("\nonSendRoutingInfoForSmResponse: CDR state is initialized, Additional Number set");
+            }
+          }
+        }
+        if (locationInfoWithLMSI.getLMSI() != null) {
+          sriForSmResponseValues.setLmsi(locationInfoWithLMSI.getLMSI());
+          if (gmlcCdrState.isInitialized()) {
+            gmlcCdrState.setLmsi(sriForSmResponseValues.getLmsi());
+            if (this.logger.isFineEnabled()) {
+              this.logger.fine("\nonSendRoutingInfoForSmResponse: CDR state is initialized, LMSI set");
+            }
+          }
+        }
+        if (locationInfoWithLMSI.getGprsNodeIndicator() != false && locationInfoWithLMSI.getGprsNodeIndicator() != true) {
+          sriForSmResponseValues.setGprsNodeIndicator(locationInfoWithLMSI.getGprsNodeIndicator());
+          if (gmlcCdrState.isInitialized()) {
+            gmlcCdrState.setGprsNodeIndicator(sriForSmResponseValues.isGprsNodeIndicator());
+            if (this.logger.isFineEnabled()) {
+              this.logger.fine("\nonSendRoutingInfoForSmResponse: CDR state is initialized, GPRS Node Indicator set");
+            }
+          }
+        }
+      }
+
+      if (imsi != null) {
+        mlpRespResult = MLPResponse.MLPResultType.OK;
+        if (this.logger.isFineEnabled()) {
+          this.logger.fine("\nonSendRoutingInfoForSmResponse: received IMSI parameter");
+        }
+        sriForSmResponseValues.setImsi(imsi);
+        if (gmlcCdrState.isInitialized()) {
+          gmlcCdrState.setImsi(sriForSmResponseValues.getImsi());
+          if (this.logger.isFineEnabled()) {
+            this.logger.fine("\nonSendRoutingInfoForSmResponse: CDR state is initialized, IMSI set");
+          }
+        }
+      }
+
+      this.setSendRoutingInfoForSMResponse(event);
+
+      if (this.getSendRoutingInfoForSMResponse() != null) {
+
+        LMSI lmsi = null;
+        if (locationInfoWithLMSI.getLMSI() != null)
+          lmsi = event.getLocationInfoWithLMSI().getLMSI();
+        RequestedInfo requestedInfo = new RequestedInfoImpl(true, true, null, false, null, true, false, false);
+
+        AddressString origAddressString, destAddressString1;
+        origAddressString = destAddressString1 = null;
+
+        MAPDialogMobility mapDialogMobility = this.mapProvider.getMAPServiceMobility().createNewDialog(
+                this.getMAPPsiApplicationContext(), this.getGmlcSccpAddress(), origAddressString,
+                getNNNSCCPAddress(locationInfoWithLMSI.getNetworkNodeNumber().getAddress()), destAddressString1);
+
+        mapDialogMobility.addProvideSubscriberInfoRequest(imsi, lmsi, requestedInfo, mapExtensionContainer, null);
+
+        // Keep ACI in across MAP dialog for PSL
+        ActivityContextInterface lsmPslDialogACI = this.mapAcif.getActivityContextInterface(mapDialogMobility);
+        lsmPslDialogACI.attach(this.sbbContext.getSbbLocalObject());
+
+        // ProvideSubscriberInfoRequest is now composed by values taken from SRIforSM response
+        // Send PSI
+        mapDialogMobility.send();
+      } else {
+        if (mapErrorMessage != null) {
+          // SRIforSM error CDR creation
+          if (gmlcCdrState.isInitialized()) {
+            if (mapErrorMessage.getErrorCode() == 34)
+              this.createCDRRecord(RecordStatus.SRISM_SYSTEM_FAILURE);
+            if (mapErrorMessage.getErrorCode() == 35)
+              this.createCDRRecord(RecordStatus.SRISM_DATA_MISSING);
+            if (mapErrorMessage.getErrorCode() == 36)
+              this.createCDRRecord(RecordStatus.SRISM_UNEXPECTED_DATA_VALUE);
+            if (mapErrorMessage.getErrorCode() == 21)
+              this.createCDRRecord(RecordStatus.SRISM_FACILITY_NOT_SUPPORTED);
+            if (mapErrorMessage.getErrorCode() == 27)
+              this.createCDRRecord(RecordStatus.SRISM_ABSENT_SUBSCRIBER);
+            if (mapErrorMessage.getErrorCode() == 28)
+              this.createCDRRecord(RecordStatus.SRISM_INCOMPATIBLE_TERMINAL);
+            if (mapErrorMessage.getErrorCode() == 51)
+              this.createCDRRecord(RecordStatus.SRISM_RESOURCE_LIMITATION);
+            if (mapErrorMessage.getErrorCode() == 1)
+              this.createCDRRecord(RecordStatus.SRISM_UNKNOWN_SUBSCRIBER);
+            if (mapErrorMessage.getErrorCode() == 3)
+              this.createCDRRecord(RecordStatus.SRISM_UNKNOWN_MSC);
+            if (mapErrorMessage.getErrorCode() == 4)
+              this.createCDRRecord(RecordStatus.SRISM_NUMBER_CHANGED);
+            if (mapErrorMessage.getErrorCode() == 5)
+              this.createCDRRecord(RecordStatus.SRISM_UNIDENTIFIED_SUBSCRIBER);
+            if (mapErrorMessage.getErrorCode() == 7)
+              this.createCDRRecord(RecordStatus.SRISM_UNKNOWN_EQUIPMENT);
+            if (mapErrorMessage.getErrorCode() == 8)
+              this.createCDRRecord(RecordStatus.SRISM_ROMAING_NOT_ALLOWED);
+            if (mapErrorMessage.getErrorCode() == 9)
+              this.createCDRRecord(RecordStatus.SRISM_ILLEGAL_SUBSCRIBER);
+            if (mapErrorMessage.getErrorCode() == 10)
+              this.createCDRRecord(RecordStatus.SRISM_BEARER_SERVICE_NOT_PROVISIONED);
+            if (mapErrorMessage.getErrorCode() == 11)
+              this.createCDRRecord(RecordStatus.SRISM_TELESERVICE_NOT_PROVISIONED);
+            if (mapErrorMessage.getErrorCode() == 12)
+              this.createCDRRecord(RecordStatus.SRISM_ILLEGAL_EQUIPMENT);
+          }
+        }
+      }
+
+    } catch (Exception e) {
+      logger.severe(String.format("Error while trying to process onSendRoutingInformationForSmRequest=%s", event), e);
+    }
+  }
+
+  /**
+   * MAP-PROVIDE-SUBSCRIBER-INFO (PSI) Events
+   */
+  public void onProvideSubscriberInformationRequest(ProvideSubscriberInfoRequest event, ActivityContextInterface aci) {
+    try {
+      if (this.logger.isFineEnabled()) {
+        this.logger.fine("\nReceived onProvideSubscriberInformationRequest = " + event);
+      }
+
+    } catch (Exception e) {
+      logger.severe(String.format("Error while trying to process onProvideSubscriberInformationRequest=%s", event), e);
+    }
+  }
+
+  public void onProvideSubscriberInformationResponse(ProvideSubscriberInfoResponse event, ActivityContextInterface aci) {
+
+    MAPErrorMessage mapErrorMessage = this.getErrorResponse();
+    this.setProvideSubscriberInformationResponse(event);
+
+    try {
+      if (this.logger.isFineEnabled()) {
+        this.logger.fine("\nReceived onProvideSubscriberInformationResponse = " + event);
+      }
+      MAPDialogMobility mapDialogMobility = event.getMAPDialog();
+      SubscriberInfo subscriberInfo = event.getSubscriberInfo();
+      MAPExtensionContainer mapExtensionContainer = event.getExtensionContainer();
+
+      PsiResponseValues psiResponseValues = new PsiResponseValues();
+      MLPResponse.MLPResultType mlpRespResult = null;
+      String mlpClientErrorMessage = null;
+
+      // CDR initialization stuff
+      CDRInterface cdrInterface = this.getCDRInterface();
+      GMLCCDRState gmlcCdrState = cdrInterface.getState();
+      if (!gmlcCdrState.isInitialized()) {
+        if (this.logger.isFineEnabled()) {
+          this.logger.fine("\nonProvideSubscriberInformationResponse: CDR state is NOT initialized: " + gmlcCdrState + ", initiating\n");
+        }
+        gmlcCdrState.init(mapDialogMobility.getLocalDialogId(), mapDialogMobility.getReceivedDestReference(), mapDialogMobility.getReceivedOrigReference(),
+                null, mapDialogMobility.getLocalAddress(), mapDialogMobility.getRemoteAddress());
+        gmlcCdrState.setDialogStartTime(DateTime.now());
+        gmlcCdrState.setRemoteDialogId(mapDialogMobility.getRemoteDialogId());
+        cdrInterface.setState(gmlcCdrState);
+
+        // attach, in case impl wants to use more of dialog.
+        SbbLocalObject sbbLO = (SbbLocalObject) cdrInterface;
+        aci.attach(sbbLO);
+      }
+      // Set timer last
+      this.setTimer(aci);
+
+      if (subscriberInfo != null) {
+        mlpRespResult = MLPResponse.MLPResultType.OK;
+        if (this.logger.isFineEnabled()) {
+          this.logger.fine("\nonProvideSubscriberInformationResponse: "
+                  + "received subscriberInfo, decoding parameters");
+          if (subscriberInfo.getLocationInformation() != null) {
+            psiResponseValues.setLocationInformation(subscriberInfo.getLocationInformation());
+            if (gmlcCdrState.isInitialized()) {
+              gmlcCdrState.setLocationInformation(psiResponseValues.getLocationInformation());
+              if (this.logger.isFineEnabled()) {
+                this.logger.fine("\nonProvideSubscriberInformationResponse: "
+                        + "CDR state is initialized, Location Information set");
+              }
+            }
+          }
+          // Inquire if subscriber state is included in MAP ATI response subscriber's info
+          if (subscriberInfo.getSubscriberState() != null) {
+            mlpRespResult = MLPResponse.MLPResultType.OK;
+            // Subscriber state is included in MAP ATI response, get it and store it as a response parameter
+            psiResponseValues.setSubscriberState(subscriberInfo.getSubscriberState());
+            //atiResponse.subscriberState = subscriberInfo.getSubscriberState().getSubscriberStateChoice().toString();
+            if (gmlcCdrState.isInitialized()) {
+              gmlcCdrState.setSubscriberState(psiResponseValues.getSubscriberState().getSubscriberStateChoice().toString());
+              if (subscriberInfo.getLocationInformation() == null) {
+                if (this.logger.isFineEnabled()) {
+                  this.logger.fine("\nonProvideSubscriberInformationResponse: "
+                          + "CDR state is initialized, ATI_STATE_SUCCESS");
+                }
+                this.createCDRRecord(RecordStatus.PSI_STATE_SUCCESS);
+              }
+            }
+          }
+          // Inquire if Location information is included in MAP ATI response subscriber's info
+          if (subscriberInfo.getLocationInformation() != null) {
+            psiResponseValues.setLocationInformation(subscriberInfo.getLocationInformation());
+            mlpRespResult = MLPResponse.MLPResultType.OK;
+            // Location information is included in MAP ATI response, then
+            // Inquire if Cell Global Identity (CGI) or Service Area Identity (SAI) or Location Area Identity (LAI) are included in MAP ATI response
+            if (subscriberInfo.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI() != null) {
+              // CGI or SAI or LAI are included in MAP ATI response
+              CellGlobalIdOrServiceAreaIdOrLAI cellGlobalIdOrServiceAreaIdOrLAI = subscriberInfo.getLocationInformation()
+                      .getCellGlobalIdOrServiceAreaIdOrLAI();
+              // Inquire and get parameters of CGI or SAI or LAI included in MAP ATI response
+              if (cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength() != null) {
+                if (this.logger.isFineEnabled()) {
+                  this.logger.fine("\nonProvideSubscriberInformationResponse: "
+                          + "received CellGlobalIdOrServiceAreaIdFixedLength, decoding MCC, MNC, LAC, CI");
+                }
+                psiResponseValues.setCellGlobalIdOrServiceAreaIdFixedLength(cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength());
+                try {
+                  psiResponseValues.setMcc(cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getMCC());
+                  psiResponseValues.setMnc(cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getMNC());
+                  psiResponseValues.setLac(cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getLac());
+                  psiResponseValues.setCi(cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode());
+                } catch (MAPException e1) {
+                  e1.printStackTrace();
+                }
+                // Inquire if Age of Location Information is included in MAP ATI response subscriber's info
+                if (subscriberInfo.getLocationInformation().getAgeOfLocationInformation() != null) {
+                  psiResponseValues.setAgeOfLocationInfo(subscriberInfo.getLocationInformation().getAgeOfLocationInformation().intValue());
+                }
+                // Inquire if VLR number (Global Title) is included in MAP ATI response subscriber's info
+                if (subscriberInfo.getLocationInformation().getVlrNumber() != null) {
+                  psiResponseValues.setVlrNumber(subscriberInfo.getLocationInformation().getVlrNumber());
+                }
+                if (gmlcCdrState.isInitialized()) {
+                  if (this.logger.isFineEnabled()) {
+                    this.logger.fine("\nonProvideSubscriberInformationResponse: "
+                            + "CDR state is initialized, PSI_LOCATION_SUCCESS");
+                  }
+                  try {
+                    gmlcCdrState.setMcc(psiResponseValues.getCellGlobalIdOrServiceAreaIdFixedLength().getMCC());
+                    gmlcCdrState.setMnc(psiResponseValues.getCellGlobalIdOrServiceAreaIdFixedLength().getMNC());
+                    gmlcCdrState.setLac(psiResponseValues.getCellGlobalIdOrServiceAreaIdFixedLength().getLac());
+                    gmlcCdrState.setCi(psiResponseValues.getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode());
+                  } catch (MAPException e1) {
+                    e1.printStackTrace();
+                  }
+                  gmlcCdrState.setAol(psiResponseValues.getAgeOfLocationInfo());
+                  gmlcCdrState.setAtiVlrGt(psiResponseValues.getVlrNumber());
+                  if (gmlcCdrState.getSubscriberState() != null) {
+                    this.createCDRRecord(RecordStatus.PSI_CGI_AND_STATE_SUCCESS);
+                  } else {
+                    this.createCDRRecord(RecordStatus.PSI_CGI_SUCCESS);
+                  }
+                }
+              } else if (cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength() != null) {
+                // Case when LAI length is fixed
+                if (this.logger.isFineEnabled()) {
+                  this.logger.fine("\nonProvideSubscriberInformationResponse: "
+                          + "received laiFixedLength, decoding MCC, MNC, LAC (no CI)");
+                }
+                psiResponseValues.setMcc(cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength().getMCC());
+                psiResponseValues.setMcc(cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength().getMNC());
+                psiResponseValues.setLac(cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength().getLac());
+                if (gmlcCdrState.isInitialized()) {
+                  if (this.logger.isFineEnabled()) {
+                    this.logger.fine("\nonProvideSubscriberInformationResponse: "
+                            + "CDR state is initialized, PSI_LAI_SUCCESS");
+                  }
+                  gmlcCdrState.setMcc(cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength().getMCC());
+                  gmlcCdrState.setMnc(cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength().getMNC());
+                  gmlcCdrState.setLac(cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength().getLac());
+                  if (gmlcCdrState.getSubscriberState() != null) {
+                    this.createCDRRecord(RecordStatus.PSI_LAI_AND_STATE_SUCCESS);
+                  } else {
+                    this.createCDRRecord(RecordStatus.PSI_LAI_SUCCESS);
+                  }
+                }
+              }
+            }
+          }
+        }
+      } else {
+        if (mapErrorMessage != null) {
+          // PSI error CDR creation
+          if (gmlcCdrState.isInitialized()) {
+            if (mapErrorMessage.getErrorCode() == 34)
+              this.createCDRRecord(RecordStatus.PSI_SYSTEM_FAILURE);
+            if (mapErrorMessage.getErrorCode() == 35)
+              this.createCDRRecord(RecordStatus.PSI_DATA_MISSING);
+            if (mapErrorMessage.getErrorCode() == 36)
+              this.createCDRRecord(RecordStatus.PSI_UNEXPECTED_DATA_VALUE);
+            if (mapErrorMessage.getErrorCode() == 21)
+              this.createCDRRecord(RecordStatus.PSI_FACILITY_NOT_SUPPORTED);
+            if (mapErrorMessage.getErrorCode() == 27)
+              this.createCDRRecord(RecordStatus.PSI_ABSENT_SUBSCRIBER);
+            if (mapErrorMessage.getErrorCode() == 28)
+              this.createCDRRecord(RecordStatus.PSI_INCOMPATIBLE_TERMINAL);
+            if (mapErrorMessage.getErrorCode() == 51)
+              this.createCDRRecord(RecordStatus.PSI_RESOURCE_LIMITATION);
+            if (mapErrorMessage.getErrorCode() == 1)
+              this.createCDRRecord(RecordStatus.PSI_UNKNOWN_SUBSCRIBER);
+            if (mapErrorMessage.getErrorCode() == 3)
+              this.createCDRRecord(RecordStatus.PSI_UNKNOWN_MSC);
+            if (mapErrorMessage.getErrorCode() == 4)
+              this.createCDRRecord(RecordStatus.PSI_NUMBER_CHANGED);
+            if (mapErrorMessage.getErrorCode() == 5)
+              this.createCDRRecord(RecordStatus.PSI_UNIDENTIFIED_SUBSCRIBER);
+            if (mapErrorMessage.getErrorCode() == 7)
+              this.createCDRRecord(RecordStatus.PSI_UNKNOWN_EQUIPMENT);
+            if (mapErrorMessage.getErrorCode() == 8)
+              this.createCDRRecord(RecordStatus.PSI_ROMAING_NOT_ALLOWED);
+            if (mapErrorMessage.getErrorCode() == 9)
+              this.createCDRRecord(RecordStatus.PSI_ILLEGAL_SUBSCRIBER);
+            if (mapErrorMessage.getErrorCode() == 10)
+              this.createCDRRecord(RecordStatus.PSI_BEARER_SERVICE_NOT_PROVISIONED);
+            if (mapErrorMessage.getErrorCode() == 11)
+              this.createCDRRecord(RecordStatus.PSI_TELESERVICE_NOT_PROVISIONED);
+            if (mapErrorMessage.getErrorCode() == 12)
+              this.createCDRRecord(RecordStatus.PSI_ILLEGAL_EQUIPMENT);
+          }
+        }
+      }
+
+    } catch (Exception e) {
+      logger.severe(String.format("Error while trying to process onProvideSubscriberInformationResponse=%s", event), e);
+    }
   }
 
   /**
@@ -2846,7 +3227,8 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
       setEventContextCMP(eventContext);
       if (psiService.equalsIgnoreCase("true")) {
         // TODO getMsisdnCGIthruPSI(requestingMSISDN)
-        handlePsiNotSupportedYet(MLPResponse.MLPResultType.SYSTEM_FAILURE, "PSI not supported yet", aci);
+        getLocationViaSubscriberInformation(requestingMSISDN);
+        //handlePsiNotSupportedYet(MLPResponse.MLPResultType.SYSTEM_FAILURE, "PSI not supported yet", aci);
       } else {
         if (coreNetwork.equalsIgnoreCase("UMTS")) {
           getMsisdnGeolocationViaLsm(requestingMSISDN);
@@ -2896,6 +3278,14 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
   public abstract void setSubscriberLocationReportRequest(SubscriberLocationReportRequest subscriberLocationReportRequest);
 
   public abstract SubscriberLocationReportRequest getSubscriberLocationReportRequest();
+
+  public abstract void setSendRoutingInfoForSMResponse(SendRoutingInfoForSMResponse sendRoutingInfoForSMResponse);
+
+  public abstract SendRoutingInfoForSMResponse getSendRoutingInfoForSMResponse();
+
+  public abstract void setProvideSubscriberInformationResponse(ProvideSubscriberInfoResponse subscriberLocationReportRequest);
+
+  public abstract ProvideSubscriberInfoResponse getProvideSubscriberInformationResponse();
 
   public abstract void setErrorResponse(MAPErrorMessage errorResponse);
 
@@ -2998,6 +3388,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, this.getGmlcSccpAddress().getGlobalTitle().getDigits());
         MAPExtensionContainer mapExtensionContainer = null;
         mapDialogLsmSRIforLCS.addSendRoutingInfoForLCSRequest(gmlcAddress, subscriberIdentity, mapExtensionContainer);
+        // Create the ACI and attach this SBB
         ActivityContextInterface sriForLcsDialogACI = this.mapAcif.getActivityContextInterface(mapDialogLsmSRIforLCS);
         sriForLcsDialogACI.attach(this.sbbContext.getSbbLocalObject());
         mapDialogLsmSRIforLCS.send();
@@ -3079,6 +3470,67 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
     }
   }
 
+  /**
+   * Retrieve the location for the specified MSISDN via MAP ATI
+   */
+  private void getLocationViaSubscriberInformation(String requestingMSISDN) {
+
+    if (!requestingMSISDN.equals(fakeNumber)) {
+      try {
+        AddressString origAddressString, destAddressString1;
+        origAddressString = destAddressString1 = null;
+        MAPDialogSms mapDialogSms = this.mapProvider.getMAPServiceSms().createNewDialog(
+                this.getMAPSRIforSMApplicationContext(), this.getGmlcSccpAddress(), origAddressString,
+                getHlrSCCPAddress(requestingMSISDN), destAddressString1);
+        ISDNAddressString msisdn = new ISDNAddressStringImpl(AddressNature.international_number,
+                org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, requestingMSISDN);
+        boolean sm_RP_PRI = true;
+        AddressString serviceCentreAddressString = this.mapParameterFactory.createAddressString(AddressNature.international_number,
+                org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, gmlcPropertiesManagement.getGmlcGt());
+        mapDialogSms.addSendRoutingInfoForSMRequest(msisdn, sm_RP_PRI, serviceCentreAddressString,
+                null, false, null, null, null);
+        // Create the ACI and attach this SBB
+        ActivityContextInterface sriDialogACI = this.mapAcif.getActivityContextInterface(mapDialogSms);
+        sriDialogACI.attach(this.sbbContext.getSbbLocalObject());
+
+        // Send SRIforSM
+        mapDialogSms.send();
+
+      } catch (MAPException e) {
+        this.logger.severe("MAPException while trying to send MAP ATI request for MSISDN=" + requestingMSISDN, e);
+        this.handleLocationResponse(MLPResponse.MLPResultType.SYSTEM_FAILURE, null,
+                "System Failure: Failed to send request to network for position: " + e.getMessage());
+      } catch (Exception e) {
+        this.logger.severe("Exception while trying to send MAP ATI request for MSISDN=" + requestingMSISDN, e);
+        this.handleLocationResponse(MLPResponse.MLPResultType.SYSTEM_FAILURE, null,
+                "System Failure: Failed to send request to network for position: " + e.getMessage());
+      }
+
+    } else {
+      // Handle fake location type given fake number set as MSISDN
+      if (this.fakeLocationType == MLPResponse.MLPResultType.OK) {
+        AtiResponseValues response = new AtiResponseValues();
+        try {
+          response.setCi(fakeCellId);
+          response.setMcc(Integer.parseInt(fakeLocationX));
+          response.setMcc(Integer.parseInt(fakeLocationY));
+          response.setLac(Integer.parseInt(fakeLocationRadius));
+        } catch (Exception e) {
+          logger.severe("MAP Exception while assigning ATI response values for MLP fake location:" +e);
+        }
+
+        String mlpClientErrorMessage = null;
+        this.handleLocationResponse(MLPResponse.MLPResultType.OK, response, mlpClientErrorMessage);
+
+      } else {
+        AtiResponseValues response;
+        response = null;
+        this.handleLocationResponse(this.fakeLocationType, response, this.fakeLocationAdditionalInfoErrorString);
+      }
+    }
+  }
+
+
   protected SccpAddress getGmlcSccpAddress() {
 
     if (this.gmlcSCCPAddress == null) {
@@ -3120,6 +3572,22 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
     return this.locationSvcEnquiryContext;
   }
 
+  private MAPApplicationContext getMAPSRIforSMApplicationContext() {
+    if (this.shortMsgGatewayContext == null) {
+      this.shortMsgGatewayContext = MAPApplicationContext.getInstance(
+              MAPApplicationContextName.shortMsgGatewayContext, MAPApplicationContextVersion.version3);
+    }
+    return this.shortMsgGatewayContext;
+  }
+
+  private MAPApplicationContext getMAPPsiApplicationContext() {
+    if (this.subscriberInfoEnquiryContext == null) {
+      this.subscriberInfoEnquiryContext = MAPApplicationContext.getInstance(
+              MAPApplicationContextName.subscriberInfoEnquiryContext, MAPApplicationContextVersion.version3);
+    }
+    return this.subscriberInfoEnquiryContext;
+  }
+
   private SccpAddress getHlrSCCPAddress(String address) {
 
     int translationType = 0; // Translation Type = 0 : Unknown
@@ -3131,6 +3599,11 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
 
 //	    GlobalTitle0100 gt = new GlobalTitle0100Impl(address, 0, BCDEvenEncodingScheme.INSTANCE,NumberingPlan.ISDN_TELEPHONY, NatureOfAddress.INTERNATIONAL);
 //		return new SccpAddressImpl(RoutingIndicator.ROUTING_BASED_ON_GLOBAL_TITLE, gt, 0, gmlcPropertiesManagement.getHlrSsn());
+  }
+
+  protected ISDNAddressString getCalledPartyISDNAddressString(String destinationAddress, int ton, int npi) {
+    return this.mapParameterFactory.createISDNAddressString(AddressNature.getInstance(ton),
+            org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.getInstance(npi), destinationAddress);
   }
 
   private SccpAddress getNNNSCCPAddress(String address) {
@@ -3495,198 +3968,100 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
   }
 
   /**
-   * HTTP POST to send back to location requestor after SLR request
-   */
-  protected void sendHttpPostToCallbackUrlAfterSLR(SlrRequestValues slrReq, String slrCallbackUrl) throws Exception {
-
-    HttpRequest request = getHttpRequest();
-    EventContext httpEventContext = this.resumeHttpEventContext();
-
-    URL url = new URL(slrCallbackUrl);
-    HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-
-    httpURLConnection.setRequestMethod("POST");
-    String urlParameters;
-
-    List<String> urlParamsList = new ArrayList<>();
-    if (slrReq.getLcsClientID() != null) {
-      if (slrReq.getLcsClientID().getLCSClientType() != null && (slrReq.getLcsClientID().getLCSClientType().getType() > Integer.MIN_VALUE
-              && slrReq.getLcsClientID().getLCSClientType().getType() < Integer.MAX_VALUE))
-        urlParamsList.add("LCSClientIDType=" + Integer.toString(slrReq.getLcsClientID().getLCSClientType().getType()));
-      if (slrReq.getLcsClientID().getLCSClientExternalID() != null)
-        urlParamsList.add("LCSClientIDExternalID=" + slrReq.getLcsClientID().getLCSClientExternalID().getExternalAddress().getAddress());
-      if (slrReq.getLcsClientID().getLCSClientInternalID() != null
-              && (slrReq.getLcsClientID().getLCSClientInternalID().getId() > Integer.MIN_VALUE
-              && slrReq.getLcsClientID().getLCSClientInternalID().getId() < Integer.MAX_VALUE))
-        urlParamsList.add("LCSClientIDInternalID=" + Integer.toString(slrReq.getLcsClientID().getLCSClientInternalID().getId()));
-      if (slrReq.getLcsClientID().getLCSClientName() != null) {
-        urlParamsList.add("LCSClientIDNameString=" + slrReq.getLcsClientID().getLCSClientName().getNameString().toString());
-        urlParamsList.add("LCSClientIDNameDCS=" + Integer.toString(slrReq.getLcsClientID().getLCSClientName().getDataCodingScheme().getCode()));
-        urlParamsList.add("LCSClientIDNameFormatIndicator=" + Integer.toString(slrReq.getLcsClientID().getLCSClientName().getLCSFormatIndicator().getIndicator()));
-      }
-      if (slrReq.getLcsClientID().getLCSAPN() != null)
-        // urlParamsList.add("LCSClientIDAPN=" + slrReq.getLcsClientID().getLCSAPN().getApn().getBytes()); // temporary fail avoidance
-        if (slrReq.getLcsClientID().getLCSRequestorID() != null) {
-          urlParamsList.add("LCSClientIDRequestorIDEncodedString=" + slrReq.getLcsClientID().getLCSRequestorID().getRequestorIDString().getEncodedString().toString());
-          urlParamsList.add("LCSClientIDRequestorIDFormatIndicator=" + Integer.toString(slrReq.getLcsClientID().getLCSRequestorID().getLCSFormatIndicator().getIndicator()));
-          urlParamsList.add("LCSClientIDRequestorIDDCS=" + Integer.toString(slrReq.getLcsClientID().getLCSRequestorID().getDataCodingScheme().getCode()));
-        }
-      if (slrReq.getLcsClientID().getLCSClientDialedByMS() != null)
-        urlParamsList.add("LCSClientIDLCSClientDialedByMS=" + slrReq.getLcsClientID().getLCSClientDialedByMS().getAddress());
-    }
-    if (slrReq.getLcsEvent() != null) {
-      urlParamsList.add("LCSEvent=" + Integer.toString(slrReq.getLcsEvent().getEvent()));
-    }
-    if (slrReq.getLcsReferenceNumber() > Integer.MIN_VALUE && slrReq.getLcsReferenceNumber() < Integer.MAX_VALUE) {
-      urlParamsList.add("LCSReferenceNumber=" + Integer.toString(slrReq.getLcsReferenceNumber()));
-    }
-    if (slrReq.getLcsServiceTypeID() > Integer.MIN_VALUE && slrReq.getLcsServiceTypeID() < Integer.MAX_VALUE) {
-      urlParamsList.add("LCSServiceTypeID=" + Integer.toString(slrReq.getLcsServiceTypeID()));
-    }
-    if (slrReq.getLocationEstimate() != null) {
-      urlParamsList.add("Latitude=" + Double.toString(slrReq.getLocationEstimate().getLatitude()));
-      urlParamsList.add("Longitude=" + Double.toString(slrReq.getLocationEstimate().getLongitude()));
-      urlParamsList.add("Altitude=" + Double.toString(slrReq.getLocationEstimate().getAltitude()));
-      urlParamsList.add("Confidence=" + Double.toString(slrReq.getLocationEstimate().getInnerRadius()));
-      urlParamsList.add("Uncertainty=" + Double.toString(slrReq.getLocationEstimate().getUncertainty()));
-      urlParamsList.add("UncertaintyAltitude=" + Double.toString(slrReq.getLocationEstimate().getUncertaintyAltitude()));
-      urlParamsList.add("UncertaintyInnerRadius=" + Double.toString(slrReq.getLocationEstimate().getUncertaintyRadius()));
-      urlParamsList.add("OffsetAngle=" + Double.toString(slrReq.getLocationEstimate().getOffsetAngle()));
-      urlParamsList.add("IncludeAngle=" + Double.toString(slrReq.getLocationEstimate().getIncludedAngle()));
-      urlParamsList.add("TypeOfShape=" + Integer.toString(slrReq.getLocationEstimate().getTypeOfShape().getCode()));
-
-    }
-    if (slrReq.getAdditionalLocationEstimate() != null) {
-      urlParamsList.add("addLatitude=" + Double.toString(slrReq.getAdditionalLocationEstimate().getLatitude()));
-      urlParamsList.add("addLongitude=" + Double.toString(slrReq.getAdditionalLocationEstimate().getLongitude()));
-      urlParamsList.add("addAltitude=" + Double.toString(slrReq.getAdditionalLocationEstimate().getAltitude()));
-      urlParamsList.add("addConfidence=" + Double.toString(slrReq.getAdditionalLocationEstimate().getInnerRadius()));
-      urlParamsList.add("addUncertainty=" + Double.toString(slrReq.getAdditionalLocationEstimate().getUncertainty()));
-      urlParamsList.add("addUncertaintyAltitude=" + Double.toString(slrReq.getAdditionalLocationEstimate().getUncertaintyAltitude()));
-      urlParamsList.add("addUncertaintyInnerRadius=" + Double.toString(slrReq.getAdditionalLocationEstimate().getUncertaintyRadius()));
-      urlParamsList.add("addOffset=" + Double.toString(slrReq.getAdditionalLocationEstimate().getOffsetAngle()));
-      urlParamsList.add("addInclude=" + Double.toString(slrReq.getAdditionalLocationEstimate().getIncludedAngle()));
-      urlParamsList.add("addTypeOfShape=" + Integer.toString(slrReq.getAdditionalLocationEstimate().getTypeOfShape().getCode()));
-
-    }
-    if (slrReq.getAgeOfLocationEstimate() > Integer.MIN_VALUE && slrReq.getAgeOfLocationEstimate() < Integer.MAX_VALUE) {
-      urlParamsList.add("AgeOfLocationEstimate=" + Integer.toString(slrReq.getAgeOfLocationEstimate()));
-    }
-    if (slrReq.getAccuracyFulfilmentIndicator() != null) {
-      urlParamsList.add("AccuracyFulfillmentIndicator=" + Integer.toString(slrReq.getAccuracyFulfilmentIndicator().getIndicator()));
-    }
-    if (slrReq.getCellGlobalIdOrServiceAreaIdOrLAI() != null) {
-      if (slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength() != null) {
-        urlParamsList.add("CGIorSAIorLAIMCC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMCC()));
-        urlParamsList.add("CGIorSAIorLAIMNC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMNC()));
-        urlParamsList.add("CGIorSAIorLAILAC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getLac()));
-      }
-      if (slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength() != null) {
-        urlParamsList.add("CGIorSAIorLAIMCC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMCC()));
-        urlParamsList.add("CGIorSAIorLAIMNC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMNC()));
-        urlParamsList.add("CGIorSAIorLAILAC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getLac()));
-        urlParamsList.add("CGIorSAIorLAICI=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode()));
-      }
-    }
-    if (slrReq.getPseudonymIndicator() != false && slrReq.getPseudonymIndicator() != true) {
-      urlParamsList.add("PseudonymIndicator=" + Boolean.toString(slrReq.getPseudonymIndicator()));
-    }
-    if (slrReq.isMoLrShortCircuitIndicator() != false && slrReq.isMoLrShortCircuitIndicator() != true) {
-      urlParamsList.add("MOLRShortCircuitIndicator=" + Boolean.toString(slrReq.isMoLrShortCircuitIndicator()));
-    }
-    if (slrReq.getPeriodicLDRInfo() != null) {
-      urlParamsList.add("ReportingAmount=" + Integer.toString(slrReq.getPeriodicLDRInfo().getReportingAmount()));
-      urlParamsList.add("ReportingInterval=" + Integer.toString(slrReq.getPeriodicLDRInfo().getReportingInterval()));
-    }
-    if (slrReq.getSequenceNumber() > Integer.MIN_VALUE && slrReq.getSequenceNumber() < Integer.MAX_VALUE) {
-      urlParamsList.add("Sequence Number=" + Integer.toString(slrReq.getSequenceNumber()));
-    }
-    if (slrReq.getDeferredmtlrData() != null) {
-      if (slrReq.getDeferredmtlrData().getDeferredLocationEventType() != null) {
-        urlParamsList.add("EnteringArea=" + Boolean.toString(slrReq.getDeferredmtlrData().getDeferredLocationEventType().getEnteringIntoArea()));
-        urlParamsList.add("InsideArea=" + Boolean.toString(slrReq.getDeferredmtlrData().getDeferredLocationEventType().getBeingInsideArea()));
-        urlParamsList.add("LeavingArea=" + Boolean.toString(slrReq.getDeferredmtlrData().getDeferredLocationEventType().getLeavingFromArea()));
-        urlParamsList.add("MSAvailable=" + Boolean.toString(slrReq.getDeferredmtlrData().getDeferredLocationEventType().getMsAvailable()));
-      }
-      if (slrReq.getDeferredmtlrData().getLCSLocationInfo() != null) {
-        urlParamsList.add("GPRSNodeIndicator=" + Boolean.toString(slrReq.getDeferredmtlrData().getLCSLocationInfo().getGprsNodeIndicator()));
-        if (slrReq.getDeferredmtlrData().getLCSLocationInfo().getNetworkNodeNumber() != null)
-          urlParamsList.add("DeferredMTLRNetworkNodeNumber=" + slrReq.getDeferredmtlrData().getLCSLocationInfo().getNetworkNodeNumber().getAddress());
-        if (slrReq.getDeferredmtlrData().getLCSLocationInfo().getLMSI() != null)
-          urlParamsList.add("DeferredMTLRLMSI=" + slrReq.getDeferredmtlrData().getLCSLocationInfo().getLMSI().getData().toString());
-        if (slrReq.getDeferredmtlrData().getLCSLocationInfo().getMmeName() != null)
-          urlParamsList.add("DeferredMTLRMMEName=" + slrReq.getDeferredmtlrData().getLCSLocationInfo().getMmeName().getData().toString());
-        if (slrReq.getDeferredmtlrData().getLCSLocationInfo().getAaaServerName() != null)
-          urlParamsList.add("DeferredMTLRAAAServerName=" + slrReq.getDeferredmtlrData().getLCSLocationInfo().getAaaServerName().getData().toString());
-      }
-    }
-
-    StringBuilder params = new StringBuilder();
-    Iterator<String> itr = urlParamsList.iterator();
-    int urlParamsListSize = urlParamsList.size();
-    int c = 0;
-    while (itr.hasNext()) {
-      params.append(itr.next());
-      c++;
-      if (c <= urlParamsListSize)
-        params.append("&");
-    }
-    urlParameters = params.toString();
-    System.out.println(urlParameters);
-
-    // Send post request
-    httpURLConnection.setDoOutput(true);
-    DataOutputStream wr = new DataOutputStream(httpURLConnection.getOutputStream());
-    wr.writeBytes(urlParameters);
-    wr.flush();
-    wr.close();
-
-    int responseCode = httpURLConnection.getResponseCode();
-    System.out.println("\nSending 'POST' request to URL : " + url);
-    System.out.println("Post parameters : " + urlParameters);
-    System.out.println("Response Code : " + responseCode);
-
-    BufferedReader in = new BufferedReader(
-            new InputStreamReader(httpURLConnection.getInputStream()));
-    String inputLine;
-    StringBuffer response = new StringBuffer();
-
-    while ((inputLine = in.readLine()) != null) {
-      response.append(inputLine);
-    }
-    in.close();
-
-    //print result
-    System.out.println(response.toString());
-
-  }
-
-  /**
    * Handle generating the appropriate HTTP response
    * We're making use of the MLPResponse class for both GET/POST requests for convenience and
    * because eventually the GET method will likely be removed
    *
    * @param mlpResultType           OK or error type to return to client
-   * @param tcapDialogErrorMessage  Error message to send to client
+   * @param psiResponseValues       PSI values on SPI attempt
+   * @param mlpClientErrorMessage   Error message to send to client
    */
-  protected void handleDialogError(MLPResponse.MLPResultType mlpResultType, String tcapDialogErrorMessage) {
+  protected void handlePsiResponse(MLPResponse.MLPResultType mlpResultType, PsiResponseValues psiResponseValues, String mlpClientErrorMessage) {
 
     HttpRequest request = getHttpRequest();
     EventContext httpEventContext = this.resumeHttpEventContext();
 
     switch (request.type) {
       case REST:
-        this.sendHTTPResult(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, tcapDialogErrorMessage);
+        if (mlpResultType == MLPResponse.MLPResultType.OK && httpEventContext != null) {
+
+          HttpServletRequestEvent httpRequest = (HttpServletRequestEvent) httpEventContext.getEvent();
+          HttpServletResponse httpServletResponse = httpRequest.getResponse();
+          httpServletResponse.setStatus(HttpServletResponse.SC_OK);
+          int mcc = -1;
+          int mnc = -1;
+          int lac = -1;
+          int ci = -1;
+          int ageOfLocationInfo = -1;
+          String vlrNumber = "";
+          String subscriberState = "";
+
+          StringBuilder atiResponseSb = new StringBuilder();
+          atiResponseSb.append("mcc=");
+          try {
+            if (psiResponseValues.getLocationInformation() != null) {
+              if (psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength() != null) {
+                mcc = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMCC();
+                mnc = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMNC();
+                lac = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getLac();
+              } else if (psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength() != null) {
+                mcc = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMCC();
+                mnc = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMNC();
+                lac = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getLac();
+                ci = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode();
+              }
+              if (psiResponseValues.getLocationInformation().getAgeOfLocationInformation() >= Integer.MIN_VALUE
+                      && psiResponseValues.getLocationInformation().getAgeOfLocationInformation() <= Integer.MAX_VALUE)
+                ageOfLocationInfo = psiResponseValues.getLocationInformation().getAgeOfLocationInformation().intValue();
+              if (psiResponseValues.getLocationInformation().getVlrNumber() != null)
+                vlrNumber = psiResponseValues.getLocationInformation().getVlrNumber().getAddress();
+            }
+            if (psiResponseValues.getSubscriberState() != null)
+              subscriberState = psiResponseValues.getSubscriberState().getSubscriberStateChoice().toString();
+            atiResponseSb.append(mcc);
+            atiResponseSb.append(",mnc=");
+            atiResponseSb.append(mnc);
+            atiResponseSb.append(",lac=");
+            atiResponseSb.append(lac);
+            atiResponseSb.append(",cellid=");
+            atiResponseSb.append(ci);
+            atiResponseSb.append(",aol=");
+            atiResponseSb.append(ageOfLocationInfo);
+            atiResponseSb.append(",vlrNumber=");
+            atiResponseSb.append(vlrNumber);
+            atiResponseSb.append(",subscriberState=");
+            atiResponseSb.append(subscriberState);
+          } catch (MAPException me) {
+            logger.severe("Map exception while retrieving ATI response values: "+me);
+          } catch (Exception e) {
+            logger.severe("Exception while retrieving ATI response values: " +e);
+          }
+
+          this.sendHTTPResult(httpServletResponse.SC_OK, atiResponseSb.toString());
+
+        } else {
+          this.sendHTTPResult(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, mlpClientErrorMessage);
+        }
         break;
 
       case MLP:
         String svcResultXml;
         MLPResponse mlpResponse = new MLPResponse(this.logger);
-        svcResultXml = mlpResponse.getPositionErrorResponseXML(request.msisdn, mlpResultType, tcapDialogErrorMessage);
+
+        if (mlpResultType == MLPResponse.MLPResultType.OK) {
+          MLPResponseParams atiResponse = new MLPResponseParams();
+          svcResultXml = mlpResponse.getSinglePositionSuccessXML(atiResponse.x, atiResponse.y, atiResponse.radius, request.msisdn);
+        } else if (MLPResponse.isSystemError(mlpResultType)) {
+          svcResultXml = mlpResponse.getSystemErrorResponseXML(mlpResultType, mlpClientErrorMessage);
+        } else {
+          svcResultXml = mlpResponse.getPositionErrorResponseXML(request.msisdn, mlpResultType, mlpClientErrorMessage);
+        }
+
         this.sendHTTPResult(HttpServletResponse.SC_OK, svcResultXml);
         break;
     }
   }
+
 
   /**
    * Handle generating the appropriate HTTP response
@@ -3723,6 +4098,33 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         String svcResultXml;
         MLPResponse mlpResponse = new MLPResponse(this.logger);
         svcResultXml = mlpResponse.getPositionErrorResponseXML(request.msisdn, mlpResultType, errorMessage);
+        this.sendHTTPResult(HttpServletResponse.SC_OK, svcResultXml);
+        break;
+    }
+  }
+
+  /**
+   * Handle generating the appropriate HTTP response
+   * We're making use of the MLPResponse class for both GET/POST requests for convenience and
+   * because eventually the GET method will likely be removed
+   *
+   * @param mlpResultType           OK or error type to return to client
+   * @param tcapDialogErrorMessage  Error message to send to client
+   */
+  protected void handleDialogError(MLPResponse.MLPResultType mlpResultType, String tcapDialogErrorMessage) {
+
+    HttpRequest request = getHttpRequest();
+    EventContext httpEventContext = this.resumeHttpEventContext();
+
+    switch (request.type) {
+      case REST:
+        this.sendHTTPResult(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, tcapDialogErrorMessage);
+        break;
+
+      case MLP:
+        String svcResultXml;
+        MLPResponse mlpResponse = new MLPResponse(this.logger);
+        svcResultXml = mlpResponse.getPositionErrorResponseXML(request.msisdn, mlpResultType, tcapDialogErrorMessage);
         this.sendHTTPResult(HttpServletResponse.SC_OK, svcResultXml);
         break;
     }

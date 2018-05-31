@@ -51,6 +51,8 @@ import org.mobicents.protocols.ss7.map.api.service.lsm.DeferredmtlrData;
 import org.mobicents.protocols.ss7.map.api.service.lsm.PeriodicLDRInfo;
 import org.mobicents.protocols.ss7.map.api.service.lsm.ReportingPLMNList;
 
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.LocationInformation;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.SubscriberInfo;
 import org.mobicents.protocols.ss7.sccp.parameter.SccpAddress;
 
 /**
@@ -130,6 +132,8 @@ public class GMLCCDRState implements Serializable {
   protected int sequenceNumber;
   protected PeriodicLDRInfo periodicLDRInfo;
   protected ReportingPLMNList reportingPLMNList;
+  protected SubscriberInfo subscriberInfo;
+  protected LocationInformation locationInformation;
 
   /****************/
   /*** GETTERS ***/
@@ -583,6 +587,20 @@ public class GMLCCDRState implements Serializable {
     return reportingPLMNList;
   }
 
+  /**
+   * @return the subscriber info
+   */
+  public SubscriberInfo getSubscriberInfo() {
+    return subscriberInfo;
+  }
+
+  /**
+   * @return the subscriber location info
+   */
+  public LocationInformation getLocationInformation() {
+    return locationInformation;
+  }
+
   /****************/
   /*** SETTERS ***/
   /**************/
@@ -1021,6 +1039,19 @@ public class GMLCCDRState implements Serializable {
     this.reportingPLMNList = reportingPLMNList;
   }
 
+  /**
+   * @param subscriberInfo to set
+   */
+  public void setSubscriberInfo(SubscriberInfo subscriberInfo) {
+    this.subscriberInfo = subscriberInfo;
+  }
+
+  /**
+   * @param locationInformation to set
+   */
+  public void setLocationInformation(LocationInformation locationInformation) {
+    this.locationInformation = locationInformation;
+  }
 
   public void init(final Long dialogId, final AddressString destRef, final AddressString origRef, final ISDNAddressString isdnAddressString,
                    final SccpAddress localAddress, final SccpAddress remoteAddress) {
@@ -1081,7 +1112,8 @@ public class GMLCCDRState implements Serializable {
                    boolean deferredMTLRResponseIndicator, CellGlobalIdOrServiceAreaIdOrLAI cellGlobalIdOrServiceAreaIdOrLAI, AccuracyFulfilmentIndicator accuracyFulfilmentIndicator,
                    VelocityEstimate velocityEstimate, ServingNodeAddress servingNodeAddress, LCSQoS lcsQoS, int lcsReferenceNumber, String barometricPressureMeasurement,
                    String civicAddress, LCSEvent lcsEvent, ISDNAddressString msisdn, IMEI imei, DeferredmtlrData deferredmtlrData, int lcsServiceTypeID,
-                   boolean pseudonymIndicator, int sequenceNumber, PeriodicLDRInfo periodicLDRInfo, ReportingPLMNList reportingPLMNList) {
+                   boolean pseudonymIndicator, int sequenceNumber, PeriodicLDRInfo periodicLDRInfo, ReportingPLMNList reportingPLMNList,
+                   SubscriberInfo subscriberInfo, LocationInformation locationInformation) {
     this.initiated = initiated;
     this.generated = generated;
     this.id = id;
@@ -1143,7 +1175,10 @@ public class GMLCCDRState implements Serializable {
     this.sequenceNumber = sequenceNumber;
     this.periodicLDRInfo = periodicLDRInfo;
     this.reportingPLMNList = reportingPLMNList;
+    this.subscriberInfo = subscriberInfo;
+    this.locationInformation = locationInformation;
   }
+
 
   /*
    * (non-Javadoc)
@@ -1568,6 +1603,19 @@ public class GMLCCDRState implements Serializable {
     } else if (!reportingPLMNList.equals(other.reportingPLMNList))
       return false;
 
+    if (subscriberInfo == null) {
+      if (other.subscriberInfo != null)
+        return false;
+    } else if (!subscriberInfo.equals(other.subscriberInfo))
+      return false;
+
+    if (locationInformation == null) {
+      if (other.locationInformation != null)
+        return false;
+    } else if (!locationInformation.equals(other.locationInformation))
+      return false;
+
+
     return true;
   }
 
@@ -1680,7 +1728,9 @@ public class GMLCCDRState implements Serializable {
             ", PeriodicReportingAmount=" + periodicLDRInfo.getReportingAmount() +
             ", PeriodicReportingInterval=" + periodicLDRInfo.getReportingInterval() +
             ", moLrShortCircuitIndicator=" + moLrShortCircuitIndicator +
-            ", ReportingPLMNList=" + reportingPLMNList.getPlmnList().toString() + "]@" + super.hashCode();
+            ", ReportingPLMNList=" + reportingPLMNList.getPlmnList().toString() +
+            ", subscriberInfo=" + subscriberInfo +
+            ", subscriberInfo=" + locationInformation +"]@" + super.hashCode();
   }
 
 }

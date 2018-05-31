@@ -40,7 +40,7 @@ import java.io.Serializable;
 /**
  * @author <a href="mailto:fernando.mendioroz@gmail.com"> Fernando Mendioroz </a>
  */
-public class AtiResponseValues  implements Serializable {
+public class AtiResponseValues implements Serializable {
 
   private static final long serialVersionUID = -5012512208618460289L;
 
