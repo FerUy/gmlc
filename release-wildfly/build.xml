@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <project name="restcomm.gmlc.release" default="release" basedir=".">
 	<property environment="sys"/>
+	<property name="local.url" value="http://localhost" />
 	<property name="release.dir" location="${ant.file.restcomm.gmlc.release}/../target" />
 	<property name="base.dir" location="${ant.file.restcomm.gmlc.release}/.." />
 	<property name="docs.dir" location="${release.dir}/docs" />
@@ -15,7 +16,8 @@
 	<property name="checkout.restcomm-diam.dir" value="${checkout.dir}/restcomm-diam" />
 	<property name="checkout.restcomm-slee.jainslee-jss7-build.dir" value="${checkout.dir}/restcomm-jains-slee-jss7-build" />
 
-	<property name="cloudbees.url" value="https://mobicents.ci.cloudbees.com" />
+	<!--<property name="cloudbees.url" value="https://mobicents.ci.cloudbees.com" />-->
+	<property name="cloudbees.url" value="http://localhost" />
 	<property name="github.url" value="https://github.com/RestComm" />
 
 	<property name="restcomm.gmlc.git.tag" value="master"/>
@@ -53,7 +55,7 @@
 	<property name="restcomm-slee.ss7.tag" value="${restcomm-map-ra.version}" />
 	<property name="restcomm-slee.download.distro.name" value="restcomm-slee-${restcomm-slee.version}.${restcomm-slee.build-number}-wildfly-10.1.0.Final" />
 	<property name="restcomm-slee.download.distro.file" value="${restcomm-slee.download.distro.name}.zip" />
-	<property name="restcomm-slee.download.url" value="${github.url}/jain-slee/archive/${restcomm-slee.release}/${restcomm-slee.download.distro.file}" />
+	<property name="restcomm-slee.download.url" value="${local.url}/jain-slee/archive/${restcomm-slee.release}/${restcomm-slee.download.distro.file}" />
 	<property name="restcomm-slee.distro.zip.path" value="${checkout.dir}/${restcomm-slee.download.distro.file}" />
 	<property name="restcomm-jss7.download.distro.file" value="restcomm-jss7-${restcomm-jss7.version}.zip" />
 	<property name="restcomm-jss7.download.url" value="${github.url}/jss7/releases/download/${restcomm-jss7.version}/${restcomm-jss7.download.distro.file}" />
@@ -83,14 +85,14 @@
 	</taskdef>
 
 	<target name="clean">
-		<delete dir="${release.dir}"/>
-		<delete dir="${bundle.docs.dir}"/>
+		<!--<delete dir="${release.dir}" failonerror="false"/>
+		<delete dir="${bundle.docs.dir}" failonerror="false"/>
 		<delete includeemptydirs="true" failonerror="false">
 			<fileset dir="${checkout.dir}" defaultexcludes="false">
 				<exclude name="*.zip" />
 				<exclude name="*.jar" />
 			</fileset>
-		</delete>
+		</delete>-->
 		<delete>
 			<fileset dir="${base.dir}">
 				<include name="restcomm-gmlc-*.*" />
@@ -163,8 +165,10 @@
 
 
 	<!-- get-diam-base-ra,get-diam-ro-ra, -->
-	<target name="get-deps" depends="get-restcomm-slee,get-restcomm-jss7,get-restcomm-map-ra-docs,get-restcomm-diam" />
-	<target name="extract-deps" depends="extract-restcomm-slee,extract-restcomm-jss7,extract-restcomm-map-ra-docs,extract-restcomm-diam" />
+	<!--<target name="get-deps" depends="get-restcomm-slee,get-restcomm-jss7,get-restcomm-map-ra-docs,get-restcomm-diam" />-->
+	<target name="get-deps" depends="get-restcomm-slee,get-restcomm-jss7,get-restcomm-map-ra-docs" />
+	<!--<target name="extract-deps" depends="extract-restcomm-slee,extract-restcomm-jss7,extract-restcomm-map-ra-docs,extract-restcomm-diam" />-->
+	<target name="extract-deps" depends="extract-restcomm-slee,extract-restcomm-jss7,extract-restcomm-map-ra-docs" />
 
 	<available file="${restcomm-slee.distro.zip.path}" property="got.restcomm-slee" />
 	<target name="get-restcomm-slee" unless="got.restcomm-slee">
@@ -200,7 +204,7 @@
 	<target name="extract-restcomm-jss7" depends="get-restcomm-jss7">
 		<delete dir="${checkout.restcomm-jss7.dir}" failonerror="false" />
 		<unzip src="${restcomm-jss7.distro.zip.path}" dest="${checkout.restcomm-jss7.dir}"/>
-		<move file="${checkout.restcomm-jss7.dir}/restcomm-jss7-${restcomm-jss7.version}-restcomm" tofile="${checkout.restcomm-jss7.dir}/restcomm-jss7-${restcomm-jss7.version}" failonerror="false"/>
+		<move file="${checkout.restcomm-jss7.dir}/restcomm-jss7-${restcomm-jss7.version}" tofile="${checkout.restcomm-jss7.dir}/restcomm-jss7-${restcomm-jss7.version}" failonerror="false"/>
 	</target>
 
 	<available file="${restcomm-map-ra.distro.docs.path}" property="got.restcomm-map-ra-docs" />
@@ -235,7 +239,7 @@
 	</target>
 	-->
 
-	<available file="${restcomm-diam.distro.zip.path}" property="got.restcomm-diam" />
+	<!--<available file="${restcomm-diam.distro.zip.path}" property="got.restcomm-diam" />
 	<target name="get-restcomm-diam" unless="got.restcomm-diam">
 		<echo>Downloading RestComm Diameter version: ${restcomm-diam.version}</echo>
 		<exec failonerror="true" executable="wget">
@@ -247,7 +251,7 @@
 	<target name="extract-restcomm-diam" depends="get-restcomm-diam">
 		<delete dir="${checkout.restcomm-diam.dir}" failonerror="false" />
 		<unzip src="${checkout.dir}/${restcomm-diam.zip}" dest="${checkout.restcomm-diam.dir}"/>
-	</target>
+	</target>-->
 
 	<target name="clean-up-restcomm-slee">
 		<delete includeemptydirs="true" failonerror="false">
@@ -267,8 +271,8 @@
 				<include name="**" />
 				<exclude name="**/map/**" />
 				<exclude name="**/sip11/**" />
-				<exclude name="**/diameter-base/**" />
-				<exclude name="**/diameter-ro/**" />
+				<!--<exclude name="**/diameter-base/**" />
+				<exclude name="**/diameter-ro/**" />-->
 				<exclude name="**/http-servlet/**" />
 			</fileset>
 		</delete>
@@ -333,7 +337,7 @@
 			<property name="basedir" value="${release.dir}/extra/restcomm-ss7/restcomm-jss7-${restcomm-jss7.version}/ss7-wildfly" />
 		</ant>
 
-		<echo>Copy Diameter</echo>
+		<!--<echo>Copy Diameter</echo>
 		<copy todir="${release.dir}/extra/restcomm-diam" failonerror="true">
 			<fileset dir="${checkout.restcomm-diam.dir}">
 				<include name="**" />
@@ -341,7 +345,7 @@
 		</copy>
 		<ant antfile="${release.dir}/extra/restcomm-diam/build.xml" target="deploy">
 			<property name="basedir" value="${release.dir}/extra/restcomm-diam" />
-		</ant>
+		</ant>-->
 
 		<echo>Copy HTTP Servlet</echo>
 		<ant antfile="${release.dir}/extra/restcomm-http/build.xml" target="deploy">
@@ -379,7 +383,7 @@
 			</fileset>
 		</copy>
 
-		<echo>Copy Diameter RAs</echo>
+		<!--<echo>Copy Diameter RAs</echo>
 		<copy todir="${release.dir}/resources/ocs" failonerror="true">
 			<fileset dir="${checkout.restcomm-gmlc.dir}/core/bootstrap/src/main/config/ocs">
 				<include name="**" />
@@ -388,7 +392,7 @@
 		<copy file="${release.dir}/resources/diameter-base/${diam.base.ra.jar}"
 			  todir="${deploy.dir}" failonerror="true" />
 		<copy file="${release.dir}/resources/diameter-ro/${diam.ro.ra.jar}"
-			  todir="${deploy.dir}" failonerror="true" />
+			  todir="${deploy.dir}" failonerror="true" />-->
 
 		<echo>Copy GMLC server</echo>
 
