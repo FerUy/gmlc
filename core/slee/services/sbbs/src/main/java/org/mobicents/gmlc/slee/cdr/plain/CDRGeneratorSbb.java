@@ -62,6 +62,9 @@ import org.mobicents.protocols.ss7.map.api.service.lsm.AdditionalNumber;
 import org.mobicents.protocols.ss7.map.api.service.lsm.LCSClientID;
 import org.mobicents.protocols.ss7.map.api.service.lsm.ReportingPLMNList;
 
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.LocationInformation;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.SubscriberInfo;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.SubscriberState;
 import org.mobicents.protocols.ss7.sccp.parameter.GlobalTitle;
 import org.mobicents.protocols.ss7.sccp.parameter.SccpAddress;
 
@@ -710,13 +713,25 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
      */
     CellGlobalIdOrServiceAreaIdOrLAI lsmCGIorSAIorLAI = gmlcCdrState.getCellGlobalIdOrServiceAreaIdOrLAI();
     if(lsmCGIorSAIorLAI != null) {
-      try {
-        stringBuilder.append(lsmCGIorSAIorLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getMCC()).append(SEPARATOR);
-        stringBuilder.append(lsmCGIorSAIorLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getMNC()).append(SEPARATOR);
-        stringBuilder.append(lsmCGIorSAIorLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getLac()).append(SEPARATOR);
-        stringBuilder.append(lsmCGIorSAIorLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode()).append(SEPARATOR);
-      } catch (MAPException e) {
-        e.printStackTrace();
+      if(lsmCGIorSAIorLAI.getCellGlobalIdOrServiceAreaIdFixedLength() != null) {
+        try {
+          stringBuilder.append(lsmCGIorSAIorLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getMCC()).append(SEPARATOR);
+          stringBuilder.append(lsmCGIorSAIorLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getMNC()).append(SEPARATOR);
+          stringBuilder.append(lsmCGIorSAIorLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getLac()).append(SEPARATOR);
+          stringBuilder.append(lsmCGIorSAIorLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode()).append(SEPARATOR);
+        } catch (MAPException e) {
+          e.printStackTrace();
+        }
+      }
+      if(lsmCGIorSAIorLAI.getLAIFixedLength() != null) {
+        try {
+          stringBuilder.append(lsmCGIorSAIorLAI.getLAIFixedLength().getMCC()).append(SEPARATOR);
+          stringBuilder.append(lsmCGIorSAIorLAI.getLAIFixedLength().getMNC()).append(SEPARATOR);
+          stringBuilder.append(lsmCGIorSAIorLAI.getLAIFixedLength().getLac()).append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
+        } catch (MAPException e) {
+          e.printStackTrace();
+        }
       }
     } else {
       stringBuilder.append(SEPARATOR);
@@ -1014,7 +1029,65 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
      */
     ReportingPLMNList plmnList = gmlcCdrState.getReportingPLMNList();
     if(plmnList != null) {
-      stringBuilder.append(plmnList.getPlmnList())/*.append(SEPARATOR)*/; /// Uncomment if further fields are added
+      stringBuilder.append(plmnList.getPlmnList()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * Location Information (from PSI)
+     */
+    LocationInformation locationInformation = gmlcCdrState.getLocationInformation();
+    if(locationInformation != null) {
+      if(locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI() != null) {
+        if(locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength() != null) {
+          try {
+            stringBuilder.append(locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMCC()).append(SEPARATOR);
+            stringBuilder.append(locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMNC()).append(SEPARATOR);
+            stringBuilder.append(locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getLac()).append(SEPARATOR);
+            stringBuilder.append(locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode()).append(SEPARATOR);
+          } catch (MAPException e) {
+            e.printStackTrace();
+          }
+        }
+        if(locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength() != null) {
+          try {
+            stringBuilder.append(locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMCC()).append(SEPARATOR);
+            stringBuilder.append(locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMNC()).append(SEPARATOR);
+            stringBuilder.append(locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getLac()).append(SEPARATOR);
+            stringBuilder.append(SEPARATOR);
+          } catch (MAPException e) {
+            e.printStackTrace();
+          }
+        }
+      }
+      if(locationInformation.getVlrNumber() != null) {
+        stringBuilder.append(locationInformation.getVlrNumber().getAddress()).append(SEPARATOR);
+      }
+      if(locationInformation.getMscNumber() != null) {
+        stringBuilder.append(locationInformation.getMscNumber().getAddress()).append(SEPARATOR);
+      }
+      if(locationInformation.getGeographicalInformation() != null) {
+        stringBuilder.append(locationInformation.getGeographicalInformation().getLatitude()).append(SEPARATOR);
+        stringBuilder.append(locationInformation.getGeographicalInformation().getLongitude()).append(SEPARATOR);
+      }
+    } else {
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * Subscriber STATE (from PSI)
+     */
+    SubscriberInfo subscriberInfo = gmlcCdrState.getSubscriberInfo();
+    if(subscriberInfo != null) {
+      stringBuilder.append(subscriberInfo.getSubscriberState());//.append(SEPARATOR);
     } else {
       /*stringBuilder.append(SEPARATOR);*/ /// Uncomment if further fields are added
     }

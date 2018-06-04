@@ -64,6 +64,11 @@
             <groupId>org.codehaus.mojo</groupId>
             <version>1.5.0</version>
         </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec-http</artifactId>
+            <version>4.0.15.Final</version>
+        </dependency>
     </dependencies>
 
 

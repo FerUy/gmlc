@@ -21,7 +21,10 @@
 
 package org.mobicents.gmlc.slee.map;
 
-import org.mobicents.protocols.ss7.map.api.primitives.*;
+import org.mobicents.protocols.ss7.map.api.primitives.IMSI;
+import org.mobicents.protocols.ss7.map.api.primitives.ISDNAddressString;
+import org.mobicents.protocols.ss7.map.api.primitives.LMSI;
+
 import org.mobicents.protocols.ss7.map.api.service.lsm.AdditionalNumber;
 
 import java.io.Serializable;
@@ -55,32 +58,32 @@ public class SriForSmResponseValues implements Serializable {
     12.1.2	Service primitives
 
         Table 12.1/1: MAP-SEND-ROUTING-INFO-FOR-SM
-        Parameter name	                            Request	Indication	Response	Confirm
-        Invoke Id	                                      M	    M(=)	      M(=)	    M(=)
-        MSISDN	                                        M	    M(=)
-        SM-RP-PRI	                                      M	    M(=)
-        Service Centre Address	                        M	    M(=)
-        SM-RP-MTI	                                      C	    C(=)
-        SM-RP-SMEA	                                    C	    C(=)
-        GPRS Support Indicator	                        C	    C(=)
-        SM-Delivery Not Intended	                      U	    C(=)
-        IP-SM-GW Guidance Support Indicator	            U	    C(=)
-        Single Attempt Delivery	                        C	    C(=)
-        IMSI	                                          C	    C(=)	      C	        C(=)
-        Correlation ID	                                C	    C(=)
-        T4 Trigger Indicator	                          C	    C(=)
-        Network Node Number			                                          C	        C(=)
+        Parameter name	                                Request	Indication	Response    Confirm
+        Invoke Id	                                        M	    M(=)	    M(=)	   M(=)
+        MSISDN	                                            M	    M(=)
+        SM-RP-PRI	                                        M	    M(=)
+        Service Centre Address	                            M	    M(=)
+        SM-RP-MTI	                                        C	    C(=)
+        SM-RP-SMEA	                                        C	    C(=)
+        GPRS Support Indicator	                            C	    C(=)
+        SM-Delivery Not Intended	                        U	    C(=)
+        IP-SM-GW Guidance Support Indicator	                U	    C(=)
+        Single Attempt Delivery	                            C	    C(=)
+        IMSI	                                            C	    C(=)	    C	        C(=)
+        Correlation ID	                                    C	    C(=)
+        T4 Trigger Indicator	                            C	    C(=)
+        Network Node Number			                                            C	        C(=)
         Network Node Diameter Address			                                C	        C(=)
         LMSI			                                                        C	        C(=)
-        GPRS Node Indicator			                                          C	        C(=)
+        GPRS Node Indicator			                                            C	        C(=)
         Additional Number			                                            C	        C(=)
         Additional Network Node Diameter Address			                    C	        C(=)
         IP-SM-GW Guidance			                                            U	        C(=)
         Third Number			                                                C	        C(=)
-        Third Network Node Diameter Address			                          C	        C(=)
-        IMS Node Indicator			                                          C	        C(=)
-        User error			                                                  C	        C(=)
-        Provider error				                                                      O
+        Third Network Node Diameter Address			                            C	        C(=)
+        IMS Node Indicator			                                            C	        C(=)
+        User error			                                                    C	        C(=)
+        Provider error				                                                        O
 
         ? (M): mandatory parameter.
         ? (O): provider option.

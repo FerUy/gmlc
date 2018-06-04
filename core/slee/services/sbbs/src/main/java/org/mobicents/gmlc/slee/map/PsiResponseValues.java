@@ -21,6 +21,7 @@
 
 package org.mobicents.gmlc.slee.map;
 
+import org.mobicents.protocols.ss7.map.api.MAPException;
 import org.mobicents.protocols.ss7.map.api.primitives.CellGlobalIdOrServiceAreaIdFixedLength;
 import org.mobicents.protocols.ss7.map.api.primitives.CellGlobalIdOrServiceAreaIdOrLAI;
 import org.mobicents.protocols.ss7.map.api.primitives.IMEI;
@@ -57,27 +58,27 @@ public class PsiResponseValues implements Serializable {
 
     8.11.2.2	Service primitives
               Table 8.11/2: Provide_Subscriber_Information
-              Parameter name	                                Request	Indication	Response	Confirm
-              Invoke id	                                        M	        M(=)	    M(=)	    M(=)
-              Requested Info	                                  M	        M(=)
-              IMSI	                                            M	        M(=)
-              LMSI	                                            U	        O
-              Call Priority	                                    U	        O
-              Location Information			                                            C	        C(=)
-              Location Information for GPRS			                                    C	        C(=)
-              Subscriber State			                                                C	        C(=)
-              PS Subscriber State			                                              C	        C(=)
-              IMEI			                                                            C	        C(=)
-              MS Classmark 2			                                                  C	        C(=)
-              GPRS MS Class			                                                    C	        C(=)
-              IMS Voice Over PS Sessions Support Indicator		                      C	        C(=)
-              Last UE Activity Time			                                            C	        C(=)
-              Last RAT Type			                                                    C	        C(=)
-              Location Information for EPS			                                    C	        C(=)
-              Time Zone			                                                        C	        C(=)
-              Daylight Saving Time			                                            C	        C(=)
-              User error			                                                      C	        C(=)
-              Provider error				                                                          O
+              Parameter name	                                Request	    Indication	Response	Confirm
+              Invoke id	                                            M	        M(=)	    M(=)	    M(=)
+              Requested Info	                                    M	        M(=)
+              IMSI	                                                M	        M(=)
+              LMSI	                                                U	        O
+              Call Priority	                                        U	        O
+              Location Information			                                                C	        C(=)
+              Location Information for GPRS			                                        C	        C(=)
+              Subscriber State			                                                    C	        C(=)
+              PS Subscriber State			                                                C	        C(=)
+              IMEI			                                                                C	        C(=)
+              MS Classmark 2			                                                    C	        C(=)
+              GPRS MS Class			                                                        C	        C(=)
+              IMS Voice Over PS Sessions Support Indicator		                            C	        C(=)
+              Last UE Activity Time			                                                C	        C(=)
+              Last RAT Type			                                                        C	        C(=)
+              Location Information for EPS			                                        C	        C(=)
+              Time Zone			                                                            C	        C(=)
+              Daylight Saving Time			                                                C	        C(=)
+              User error			                                                        C	        C(=)
+              Provider error				                                                            O
 
       ? (M): mandatory parameter.
       ? (O): provider option.
@@ -91,15 +92,19 @@ public class PsiResponseValues implements Serializable {
   */
 
     private LocationInformation locationInformation;
-    // Includes Cell Global Identity (CI, LAC, MCC, MNC, Age of Location information
+    // Includes geographical information
+    private double latitude;
+    private double longitude;
     private CellGlobalIdOrServiceAreaIdOrLAI cellGlobalIdOrServiceAreaIdOrLAI;
     private CellGlobalIdOrServiceAreaIdFixedLength cellGlobalIdOrServiceAreaIdFixedLength;
+    // Includes Cell Global Identity (CI, LAC, MCC, MNC, Age of Location information
     private int mcc; // MCC of CGI or LAI
     private int mnc; // MNC of CGI or LAI
     private int lac; // LAC of CGI or LAI
     private int ci; // CI of CGI or LAI
     private int ageOfLocationInfo; // Age of location information of CGI or LAI
     ISDNAddressString vlrNumber; // VLR Global Title at which the MS is attached to
+    ISDNAddressString mscNumber; // MSC Global Title at which the MS is attached to
     private LocationInformationGPRS locationInformationGPRS; // The SGSN indicates here the location of the served subscriber.
     private LocationInformationEPS locationInformationEPS; // The MME indicates here the location of the served subscriber.
     private SubscriberState subscriberState; // State of the MS as defined in 3GPP TS 23.018.
@@ -250,12 +255,36 @@ public class PsiResponseValues implements Serializable {
         this.ageOfLocationInfo = ageOfLocationInfo;
     }
 
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
+    }
+
     public ISDNAddressString getVlrNumber() {
         return vlrNumber;
     }
 
     public void setVlrNumber(ISDNAddressString vlrNumber) {
         this.vlrNumber = vlrNumber;
+    }
+
+    public ISDNAddressString getMscNumber() {
+        return mscNumber;
+    }
+
+    public void setMscNumber(ISDNAddressString mscNumber) {
+        this.mscNumber = mscNumber;
     }
 
     public MNPInfoRes getMnpInfoRes() {
@@ -316,8 +345,24 @@ public class PsiResponseValues implements Serializable {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("PslResponseValues [");
 
-        stringBuilder.append(", location information=");
-        stringBuilder.append(locationInformation);
+        stringBuilder.append(", location information, location number=");
+        try {
+            stringBuilder.append(locationInformation.getLocationNumber().getLocationNumber().getAddress());
+        } catch (MAPException e) {
+            e.printStackTrace();
+        }
+
+        stringBuilder.append(", location information, MSC number=");
+        stringBuilder.append(locationInformation.getMscNumber().getAddress());
+
+        stringBuilder.append(", location information, VLR number=");
+        stringBuilder.append(locationInformation.getVlrNumber().getAddress());
+
+        stringBuilder.append(", location information, latitude=");
+        stringBuilder.append(locationInformation.getGeographicalInformation().getLatitude());
+
+        stringBuilder.append(", location information, longitude=");
+        stringBuilder.append(locationInformation.getGeographicalInformation().getLongitude());
 
         stringBuilder.append(", location information for GPRS");
         stringBuilder.append(locationInformationGPRS);

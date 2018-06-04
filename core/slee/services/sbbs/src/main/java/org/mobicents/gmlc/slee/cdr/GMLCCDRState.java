@@ -134,6 +134,10 @@ public class GMLCCDRState implements Serializable {
   protected ReportingPLMNList reportingPLMNList;
   protected SubscriberInfo subscriberInfo;
   protected LocationInformation locationInformation;
+  protected double psiLatitude;
+  protected double psiLongitude;
+  protected ISDNAddressString psiVlrNumber;
+  protected ISDNAddressString psiMscNumber;
 
   /****************/
   /*** GETTERS ***/
@@ -595,10 +599,38 @@ public class GMLCCDRState implements Serializable {
   }
 
   /**
-   * @return the subscriber location info
+   * @return the subscriber's location info
    */
   public LocationInformation getLocationInformation() {
     return locationInformation;
+  }
+
+  /**
+   * @return the subscriber's latitude location info
+   */
+  public double getPsiLatitude() {
+    return psiLatitude;
+  }
+
+  /**
+   * @return the subscriber's longitude location info
+   */
+  public double getPsiLongitude() {
+    return psiLongitude;
+  }
+
+  /**
+   * @return the subscriber's location info VLR number
+   */
+  public ISDNAddressString getPsiVlrNumber() {
+    return psiVlrNumber;
+  }
+
+  /**
+   * @return the subscriber's location info MSC number
+   */
+  public ISDNAddressString getPsiMscNumber() {
+    return psiMscNumber;
   }
 
   /****************/
@@ -1053,6 +1085,35 @@ public class GMLCCDRState implements Serializable {
     this.locationInformation = locationInformation;
   }
 
+  /**
+   * @param psiLatitude subscriber's location information to set
+   */
+  public void setPsiLatitude(double psiLatitude) {
+    this.psiLatitude = psiLatitude;
+  }
+
+  /**
+   * @param psiLongitude subscriber's location information to set
+   */
+  public void setPsiLongitude(double psiLongitude) {
+    this.psiLongitude = psiLongitude;
+  }
+
+  /**
+   * @param psiVlrNumber subscriber's location information to set
+   */
+  public void setPsiVlrNumber(ISDNAddressString psiVlrNumber) {
+    this.psiVlrNumber = psiVlrNumber;
+  }
+
+  /**
+   * @param psiMscNumber subscriber's location information to set
+   */
+  public void setPsiMscNumber(ISDNAddressString psiMscNumber) {
+    this.psiMscNumber = psiMscNumber;
+  }
+
+
   public void init(final Long dialogId, final AddressString destRef, final AddressString origRef, final ISDNAddressString isdnAddressString,
                    final SccpAddress localAddress, final SccpAddress remoteAddress) {
     this.localDialogId = dialogId;
@@ -1113,7 +1174,7 @@ public class GMLCCDRState implements Serializable {
                    VelocityEstimate velocityEstimate, ServingNodeAddress servingNodeAddress, LCSQoS lcsQoS, int lcsReferenceNumber, String barometricPressureMeasurement,
                    String civicAddress, LCSEvent lcsEvent, ISDNAddressString msisdn, IMEI imei, DeferredmtlrData deferredmtlrData, int lcsServiceTypeID,
                    boolean pseudonymIndicator, int sequenceNumber, PeriodicLDRInfo periodicLDRInfo, ReportingPLMNList reportingPLMNList,
-                   SubscriberInfo subscriberInfo, LocationInformation locationInformation) {
+                   SubscriberInfo subscriberInfo, LocationInformation locationInformation, double psiLatitude, double psiLongitude, ISDNAddressString psiVlrNumber, ISDNAddressString psiMscNumber) {
     this.initiated = initiated;
     this.generated = generated;
     this.id = id;
@@ -1177,6 +1238,10 @@ public class GMLCCDRState implements Serializable {
     this.reportingPLMNList = reportingPLMNList;
     this.subscriberInfo = subscriberInfo;
     this.locationInformation = locationInformation;
+    this.psiLatitude = psiLatitude;
+    this.psiLongitude = psiLongitude;
+    this.psiVlrNumber = psiVlrNumber;
+    this.psiMscNumber = psiMscNumber;
   }
 
 
@@ -1232,6 +1297,7 @@ public class GMLCCDRState implements Serializable {
     result = prime * result + ((deferredmtlrData == null) ? 0 : deferredmtlrData.hashCode());
     result = prime * result + ((periodicLDRInfo == null) ? 0 : periodicLDRInfo.hashCode());
     result = prime * result + ((reportingPLMNList == null) ? 0 : reportingPLMNList.hashCode());
+    result = prime * result + ((locationInformation == null) ? 0 : locationInformation.hashCode());
     return result;
   }
 
@@ -1615,6 +1681,29 @@ public class GMLCCDRState implements Serializable {
     } else if (!locationInformation.equals(other.locationInformation))
       return false;
 
+    if (psiLatitude == -1) {
+      if (other.psiLatitude != -1)
+        return false;
+    } else if (psiLatitude != other.psiLatitude)
+      return false;
+
+    if (psiLongitude == -1) {
+      if (other.psiLongitude != -1)
+        return false;
+    } else if (psiLongitude != other.psiLongitude)
+      return false;
+
+    if (psiVlrNumber == null) {
+      if (other.psiVlrNumber != null)
+        return false;
+    } else if (!psiVlrNumber.equals(other.psiVlrNumber))
+      return false;
+
+    if (psiMscNumber == null) {
+      if (other.psiMscNumber != null)
+        return false;
+    } else if (!psiMscNumber.equals(other.psiMscNumber))
+      return false;
 
     return true;
   }
@@ -1730,7 +1819,10 @@ public class GMLCCDRState implements Serializable {
             ", moLrShortCircuitIndicator=" + moLrShortCircuitIndicator +
             ", ReportingPLMNList=" + reportingPLMNList.getPlmnList().toString() +
             ", subscriberInfo=" + subscriberInfo +
-            ", subscriberInfo=" + locationInformation +"]@" + super.hashCode();
+            ", subscriberInfo=" + locationInformation +
+            ", psiLatitude=" + locationInformation.getGeographicalInformation().getLatitude() +
+            ", psiLongitude=" + locationInformation.getGeographicalInformation().getLongitude() +
+            "]@" + super.hashCode();
   }
 
 }

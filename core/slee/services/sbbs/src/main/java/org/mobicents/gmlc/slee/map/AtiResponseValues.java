@@ -85,7 +85,7 @@ public class AtiResponseValues implements Serializable {
     Time Zone                                                               C         C(=)
     Daylight Saving Time                                                    C         C(=)
     User error                                                              C         C(=)
-    Provider error                                                                     O
+    Provider error                                                                    O
 
   ? (M): mandatory parameter.
   ? (O): provider option.
