@@ -19,7 +19,7 @@
 
 package org.mobicents.gmlc.slee.map;
 
-import io.netty.handler.codec.http.HttpMethod;
+//import io.netty.handler.codec.http.HttpMethod;
 import net.java.slee.resource.http.events.HttpServletRequestEvent;
 import org.joda.time.DateTime;
 
@@ -2390,7 +2390,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         mapDialogLsmSlr.close(false);
 
         // Handle successful retrieval of subscriber's location report request (SLR request) info by sending HTTP POST back to the requestor
-        httpSubscriberLocationReport.Perform(HttpMethod.POST, lcsReferenceNumber);
+        httpSubscriberLocationReport.Perform(HttpReport.HttpMethod.POST, lcsReferenceNumber);
 
       }
 
@@ -2855,6 +2855,9 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         }
       }
 
+      // handle successful retrieval of PSI response
+      handlePsiResponse(MLPResponse.MLPResultType.OK, psiResponseValues, mlpClientErrorMessage);
+
     } catch (Exception e) {
       logger.severe(String.format("Error while trying to process onProvideSubscriberInformationResponse=%s", event), e);
     }
@@ -3164,7 +3167,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
 
           this.pslAreaId = httpServletRequest.getParameter("areaId");
           if (pslAreaId == null) {
-            pslAreaId = "1234567";
+            pslAreaId = "9999999";
           }
 
           this.pslOccurrenceInfo = httpServletRequest.getParameter("occurrenceInfo");
@@ -4117,49 +4120,159 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
           int ageOfLocationInfo = -1;
           String vlrNumber = "";
           String subscriberState = "";
+          Double geographicalLatitude = 0.00;
+          Double geographicalLongitude = 0.00;
+          Double geographicalUncertainty = 0.00;
+          Double geodeticLatitude = 0.00;
+          Double geodeticLongitude = 0.00;
+          Double geodeticUncertainty = 0.00;
+          int geodeticConfidence = -1;
+          int geodeticScreeningAndPresentationIndicators = -1;
+          boolean saiPresent = false;
+          boolean currentLocationRetrieved = false;
+          String mscNumber = "";
+          String mmeName = "";
+          int mnpInfoResultNumberPortabilityStatus = -1;
+          String mnpInfoResultMSISDN = "";
+          String mnpInfoResultIMSI = "";
+          String mnpInfoResultRouteingNumber = "";
 
-          StringBuilder atiResponseSb = new StringBuilder();
-          atiResponseSb.append("mcc=");
+          StringBuilder psiResponseSb = new StringBuilder();
+          psiResponseSb.append("PSI response=");
           try {
             if (psiResponseValues.getLocationInformation() != null) {
               if (psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength() != null) {
                 mcc = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMCC();
                 mnc = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMNC();
                 lac = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getLac();
+                psiResponseSb.append(", mcc=");
+                psiResponseSb.append(mcc);
+                psiResponseSb.append(",mnc=");
+                psiResponseSb.append(mnc);
+                psiResponseSb.append(",lac=");
+                psiResponseSb.append(lac);
               } else if (psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength() != null) {
                 mcc = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMCC();
                 mnc = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMNC();
                 lac = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getLac();
                 ci = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode();
+                psiResponseSb.append(", mcc=");
+                psiResponseSb.append(mcc);
+                psiResponseSb.append(",mnc=");
+                psiResponseSb.append(mnc);
+                psiResponseSb.append(",lac=");
+                psiResponseSb.append(lac);
+                psiResponseSb.append(",cellid=");
+                psiResponseSb.append(ci);
               }
               if (psiResponseValues.getLocationInformation().getAgeOfLocationInformation() >= Integer.MIN_VALUE
-                      && psiResponseValues.getLocationInformation().getAgeOfLocationInformation() <= Integer.MAX_VALUE)
+                      && psiResponseValues.getLocationInformation().getAgeOfLocationInformation() <= Integer.MAX_VALUE) {
                 ageOfLocationInfo = psiResponseValues.getLocationInformation().getAgeOfLocationInformation().intValue();
-              if (psiResponseValues.getLocationInformation().getVlrNumber() != null)
+                psiResponseSb.append(",aol=");
+                psiResponseSb.append(ageOfLocationInfo);
+              }
+              if (psiResponseValues.getLocationInformation().getVlrNumber() != null) {
                 vlrNumber = psiResponseValues.getLocationInformation().getVlrNumber().getAddress();
+                psiResponseSb.append(",vlrNumber=");
+                psiResponseSb.append(vlrNumber);
+              }
+              if (psiResponseValues.getLocationInformation().getGeographicalInformation() != null) {
+                geographicalLatitude = psiResponseValues.getLocationInformation().getGeographicalInformation().getLatitude();
+                geographicalLongitude = psiResponseValues.getLocationInformation().getGeographicalInformation().getLongitude();
+                geographicalUncertainty = psiResponseValues.getLocationInformation().getGeographicalInformation().getUncertainty();
+                psiResponseSb.append(", geographicalLatitude=");
+                psiResponseSb.append(geographicalLatitude);
+                psiResponseSb.append(", geographicalLongitude=");
+                psiResponseSb.append(geographicalLongitude);
+                psiResponseSb.append(", geographicalUncertainty=");
+                psiResponseSb.append(geographicalUncertainty);
+              }
+              if (psiResponseValues.getLocationInformation().getGeodeticInformation() != null) {
+                geodeticLatitude = psiResponseValues.getLocationInformation().getGeodeticInformation().getLatitude();
+                geodeticLongitude = psiResponseValues.getLocationInformation().getGeodeticInformation().getLongitude();
+                geodeticUncertainty = psiResponseValues.getLocationInformation().getGeodeticInformation().getUncertainty();
+                geodeticConfidence = psiResponseValues.getLocationInformation().getGeodeticInformation().getConfidence();
+                geodeticScreeningAndPresentationIndicators = psiResponseValues.getLocationInformation().getGeodeticInformation().getScreeningAndPresentationIndicators();
+                psiResponseSb.append(", geodeticLatitude=");
+                psiResponseSb.append(geodeticLatitude);
+                psiResponseSb.append(", geodeticLongitude=");
+                psiResponseSb.append(geodeticLongitude);
+                psiResponseSb.append(", geodeticUncertainty=");
+                psiResponseSb.append(geodeticUncertainty);
+                psiResponseSb.append(", geodeticConfidence=");
+                psiResponseSb.append(geodeticConfidence);
+                psiResponseSb.append(", geodeticScreeningAndPresentationIndicators=");
+                psiResponseSb.append(geodeticScreeningAndPresentationIndicators);
+              }
+              if (psiResponseValues.getLocationInformation().getMscNumber() != null) {
+                mscNumber = psiResponseValues.getLocationInformation().getMscNumber().getAddress();
+                psiResponseSb.append(", mscNumber=");
+                psiResponseSb.append(mscNumber);
+              }
+              if (psiResponseValues.getLocationInformation().getVlrNumber() != null) {
+                vlrNumber = psiResponseValues.getLocationInformation().getVlrNumber().getAddress();
+                psiResponseSb.append(", vlrNumber=");
+                psiResponseSb.append(vlrNumber);
+              }
+              if (psiResponseValues.getLocationInformation().getSaiPresent() != false) {
+                saiPresent = true;
+                psiResponseSb.append(", saiPresent=");
+                psiResponseSb.append(saiPresent);
+              } else {
+                psiResponseSb.append(", saiPresent=");
+                psiResponseSb.append(saiPresent);
+              }
+              if (psiResponseValues.getLocationInformation().getCurrentLocationRetrieved() != false) {
+                currentLocationRetrieved = true;
+                psiResponseSb.append(", currentLocationRetrieved=");
+                psiResponseSb.append(currentLocationRetrieved);
+              } else {
+                psiResponseSb.append(", currentLocationRetrieved=");
+                psiResponseSb.append(currentLocationRetrieved);
+              }
             }
-            if (psiResponseValues.getSubscriberState() != null)
+            if (psiResponseValues.getSubscriberState() != null) {
               subscriberState = psiResponseValues.getSubscriberState().getSubscriberStateChoice().toString();
-            atiResponseSb.append(mcc);
-            atiResponseSb.append(",mnc=");
-            atiResponseSb.append(mnc);
-            atiResponseSb.append(",lac=");
-            atiResponseSb.append(lac);
-            atiResponseSb.append(",cellid=");
-            atiResponseSb.append(ci);
-            atiResponseSb.append(",aol=");
-            atiResponseSb.append(ageOfLocationInfo);
-            atiResponseSb.append(",vlrNumber=");
-            atiResponseSb.append(vlrNumber);
-            atiResponseSb.append(",subscriberState=");
-            atiResponseSb.append(subscriberState);
+              psiResponseSb.append(",subscriberState=");
+              psiResponseSb.append(subscriberState);
+            }
+            if (psiResponseValues.getMnpInfoRes() != null) {
+              if (psiResponseValues.getMnpInfoRes().getNumberPortabilityStatus() != null) {
+                mnpInfoResultNumberPortabilityStatus = psiResponseValues.getMnpInfoRes().getNumberPortabilityStatus().getType();
+                psiResponseSb.append(",mnpInfoResultNumberPortabilityStatus=");
+                psiResponseSb.append(mnpInfoResultNumberPortabilityStatus);
+              }
+              if (psiResponseValues.getMnpInfoRes().getMSISDN() != null) {
+                mnpInfoResultMSISDN = psiResponseValues.getMnpInfoRes().getMSISDN().getAddress();
+                psiResponseSb.append(",mnpInfoResultMSISDN=");
+                psiResponseSb.append(mnpInfoResultMSISDN);
+              }
+              if (psiResponseValues.getMnpInfoRes().getIMSI() != null) {
+                mnpInfoResultIMSI = psiResponseValues.getMnpInfoRes().getIMSI().getData();
+                psiResponseSb.append(",mnpInfoResultIMSI=");
+                psiResponseSb.append(mnpInfoResultIMSI);
+              }
+              if (psiResponseValues.getMnpInfoRes().getRouteingNumber() != null) {
+                mnpInfoResultRouteingNumber = psiResponseValues.getMnpInfoRes().getRouteingNumber().getRouteingNumber();
+                psiResponseSb.append(",mnpInfoResultRouteingNumber=");
+                psiResponseSb.append(mnpInfoResultRouteingNumber);
+              }
+            }
+            if (psiResponseValues.getLocationInformationEPS() != null) {
+              if (psiResponseValues.getLocationInformationEPS().getMmeName() != null) {
+                mmeName = psiResponseValues.getLocationInformationEPS().getMmeName().toString();
+                psiResponseSb.append(",mmeName=");
+                psiResponseSb.append(mmeName);
+              }
+            }
+
           } catch (MAPException me) {
             logger.severe("Map exception while retrieving ATI response values: "+me);
           } catch (Exception e) {
             logger.severe("Exception while retrieving ATI response values: " +e);
           }
 
-          this.sendHTTPResult(httpServletResponse.SC_OK, atiResponseSb.toString());
+          this.sendHTTPResult(httpServletResponse.SC_OK, psiResponseSb.toString());
 
         } else {
           this.sendHTTPResult(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, mlpClientErrorMessage);

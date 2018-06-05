@@ -21,7 +21,7 @@
 
 package org.mobicents.gmlc.slee.http;
 
-import io.netty.handler.codec.http.HttpMethod;
+//import io.netty.handler.codec.http.HttpMethod;
 import org.mobicents.gmlc.slee.http.report.ReportElement;
 import org.mobicents.gmlc.slee.http.report.ReportParameters;
 import org.mobicents.gmlc.slee.http.report.ReportRegister;
@@ -36,6 +36,8 @@ import java.util.HashMap;
  * @author <a href="mailto:aferreiraguido@gmail.com"> Alejandro Ferreira Guido </a>
  */
 public class HttpReport {
+
+    public enum HttpMethod {POST, GET}
 
     // URL's are stored on a separate list by referenceNumber
     HashMap<Integer, String> callbackUrlHashMap;
