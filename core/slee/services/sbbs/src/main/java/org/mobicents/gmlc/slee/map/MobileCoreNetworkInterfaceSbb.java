@@ -2660,159 +2660,239 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         if (this.logger.isFineEnabled()) {
           this.logger.fine("\nonProvideSubscriberInformationResponse: "
                   + "received subscriberInfo, decoding parameters");
-          if (subscriberInfo.getLocationInformation() != null) {
-            psiResponseValues.setLocationInformation(subscriberInfo.getLocationInformation());
-            if (gmlcCdrState.isInitialized()) {
-              gmlcCdrState.setLocationInformation(psiResponseValues.getLocationInformation());
-              if (this.logger.isFineEnabled()) {
-                this.logger.fine("\nonProvideSubscriberInformationResponse: "
-                        + "CDR state is initialized, Location Information set");
-              }
-            }
-          }
-          // Inquire if subscriber state is included in MAP PSI response subscriber's info
-          if (subscriberInfo.getSubscriberState() != null) {
-            mlpRespResult = MLPResponse.MLPResultType.OK;
-            // Subscriber state is included in MAP PSI response, get it and store it as a response parameter
-            psiResponseValues.setSubscriberState(subscriberInfo.getSubscriberState());
-            //atiResponse.subscriberState = subscriberInfo.getSubscriberState().getSubscriberStateChoice().toString();
-            if (gmlcCdrState.isInitialized()) {
-              gmlcCdrState.setSubscriberState(psiResponseValues.getSubscriberState().getSubscriberStateChoice().toString());
-              if (subscriberInfo.getLocationInformation() == null) {
-                if (this.logger.isFineEnabled()) {
-                  this.logger.fine("\nonProvideSubscriberInformationResponse: "
-                          + "CDR state is initialized, ATI_STATE_SUCCESS");
-                }
-                this.createCDRRecord(RecordStatus.PSI_STATE_SUCCESS);
-              }
-            }
-          }
-          // Inquire if Location information is included in MAP PSI response subscriber's info
-          if (subscriberInfo.getLocationInformation() != null) {
-            psiResponseValues.setLocationInformation(subscriberInfo.getLocationInformation());
-            mlpRespResult = MLPResponse.MLPResultType.OK;
-            // Location information is included in MAP PSI response, then
-            // Inquire if Cell Global Identity (CGI) or Service Area Identity (SAI) or Location Area Identity (LAI) are included in MAP PSI response
-            if (subscriberInfo.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI() != null) {
-              // CGI or SAI or LAI are included in MAP PSI response
-              CellGlobalIdOrServiceAreaIdOrLAI cellGlobalIdOrServiceAreaIdOrLAI = subscriberInfo.getLocationInformation()
-                      .getCellGlobalIdOrServiceAreaIdOrLAI();
-              // Inquire and get parameters of CGI or SAI or LAI included in MAP PSI response
-              if (cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength() != null) {
-                if (this.logger.isFineEnabled()) {
-                  this.logger.fine("\nonProvideSubscriberInformationResponse: "
-                          + "received CellGlobalIdOrServiceAreaIdFixedLength, decoding MCC, MNC, LAC, CI");
-                }
-                psiResponseValues.setCellGlobalIdOrServiceAreaIdFixedLength(cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength());
-                try {
-                  psiResponseValues.setMcc(cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getMCC());
-                  psiResponseValues.setMnc(cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getMNC());
-                  psiResponseValues.setLac(cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getLac());
-                  psiResponseValues.setCi(cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode());
-                } catch (MAPException e1) {
-                  e1.printStackTrace();
-                }
-                // Inquire if Age of Location Information is included in MAP PSI response subscriber's info
-                if (subscriberInfo.getLocationInformation().getAgeOfLocationInformation() != null) {
-                  psiResponseValues.setAgeOfLocationInfo(subscriberInfo.getLocationInformation().getAgeOfLocationInformation().intValue());
-                  gmlcCdrState.setAgeOfLocationEstimate(subscriberInfo.getLocationInformation().getAgeOfLocationInformation().intValue());
-                }
-                if (gmlcCdrState.isInitialized()) {
-                  if (this.logger.isFineEnabled()) {
-                    this.logger.fine("\nonProvideSubscriberInformationResponse: "
-                            + "CDR state is initialized, PSI_LOCATION_SUCCESS");
-                  }
-                  try {
-                    gmlcCdrState.setMcc(psiResponseValues.getCellGlobalIdOrServiceAreaIdFixedLength().getMCC());
-                    gmlcCdrState.setMnc(psiResponseValues.getCellGlobalIdOrServiceAreaIdFixedLength().getMNC());
-                    gmlcCdrState.setLac(psiResponseValues.getCellGlobalIdOrServiceAreaIdFixedLength().getLac());
-                    gmlcCdrState.setCi(psiResponseValues.getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode());
-                  } catch (MAPException e1) {
-                    e1.printStackTrace();
-                  }
-                  gmlcCdrState.setAol(psiResponseValues.getAgeOfLocationInfo());
-                  gmlcCdrState.setAtiVlrGt(psiResponseValues.getVlrNumber());
-                  if (gmlcCdrState.getSubscriberState() != null) {
-                    this.createCDRRecord(RecordStatus.PSI_CGI_AND_STATE_SUCCESS);
-                  } else {
-                    this.createCDRRecord(RecordStatus.PSI_CGI_SUCCESS);
-                  }
-                }
-              } else if (cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength() != null) {
-                // Case when LAI length is fixed
-                if (this.logger.isFineEnabled()) {
-                  this.logger.fine("\nonProvideSubscriberInformationResponse: "
-                          + "received laiFixedLength, decoding MCC, MNC, LAC (no CI)");
-                }
-                psiResponseValues.setMcc(cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength().getMCC());
-                psiResponseValues.setMcc(cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength().getMNC());
-                psiResponseValues.setLac(cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength().getLac());
-                if (gmlcCdrState.isInitialized()) {
-                  if (this.logger.isFineEnabled()) {
-                    this.logger.fine("\nonProvideSubscriberInformationResponse: "
-                            + "CDR state is initialized, PSI_LAI_SUCCESS");
-                  }
-                  gmlcCdrState.setMcc(cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength().getMCC());
-                  gmlcCdrState.setMnc(cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength().getMNC());
-                  gmlcCdrState.setLac(cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength().getLac());
-                  if (gmlcCdrState.getSubscriberState() != null) {
-                    this.createCDRRecord(RecordStatus.PSI_LAI_AND_STATE_SUCCESS);
-                  } else {
-                    this.createCDRRecord(RecordStatus.PSI_LAI_SUCCESS);
-                  }
-                }
-              }
-            }
-            // Inquire if VLR number (Global Title) is included in MAP PSI response subscriber's info
-            if (subscriberInfo.getLocationInformation().getVlrNumber() != null) {
-              psiResponseValues.setVlrNumber(subscriberInfo.getLocationInformation().getVlrNumber());
-              if (gmlcCdrState.isInitialized()) {
-                if (this.logger.isFineEnabled()) {
-                  this.logger.fine("\nonProvideSubscriberInformationResponse: "
-                          + "CDR state is initialized, PSI_LOC_SUCCESS");
-                }
-                gmlcCdrState.setPsiVlrNumber(subscriberInfo.getLocationInformation().getVlrNumber());
-                if (gmlcCdrState.getLocationInformation().getVlrNumber() != null)
-                  this.createCDRRecord(RecordStatus.PSI_LOC_SUCCESS);
-              }
-            }
-            // Inquire if MSC number (Global Title) is included in MAP PSI response subscriber's info
-            if (subscriberInfo.getLocationInformation().getMscNumber() != null) {
-              psiResponseValues.setMscNumber(subscriberInfo.getLocationInformation().getMscNumber());
-              if (gmlcCdrState.isInitialized()) {
-                if (this.logger.isFineEnabled()) {
-                  this.logger.fine("\nonProvideSubscriberInformationResponse: "
-                          + "CDR state is initialized, PSI_LOC_SUCCESS");
-                }
-                gmlcCdrState.setPsiMscNumber(subscriberInfo.getLocationInformation().getMscNumber());
-                if (gmlcCdrState.getLocationInformation().getMscNumber() != null)
-                  this.createCDRRecord(RecordStatus.PSI_LOC_SUCCESS);
-              }
-            }
-            // Inquire if subscriber Geographical information is included in MAP PSI response subscriber's info
-            if (subscriberInfo.getLocationInformation().getGeographicalInformation() != null) {
-              // Geographical information is included in MAP PSI response
-              if (this.logger.isFineEnabled()) {
-                this.logger.fine("\nonProvideSubscriberInformationResponse: "
-                        + "received Geographical information, decoding latitude and longitude");
-              }
-              double latitude = subscriberInfo.getLocationInformation().getGeographicalInformation().getLatitude();
-              double longitude = subscriberInfo.getLocationInformation().getGeographicalInformation().getLongitude();
-              psiResponseValues.setLatitude(latitude);
-              psiResponseValues.setLongitude(longitude);
-              if (gmlcCdrState.isInitialized()) {
-                if (this.logger.isFineEnabled()) {
-                  this.logger.fine("\nonProvideSubscriberInformationResponse: "
-                          + "CDR state is initialized, PSI_LOC_SUCCESS");
-                }
-                gmlcCdrState.setPsiLatitude(subscriberInfo.getLocationInformation().getGeographicalInformation().getLatitude());
-                gmlcCdrState.setPsiLongitude(subscriberInfo.getLocationInformation().getGeographicalInformation().getLongitude());
-                if (gmlcCdrState.getLocationInformation().getGeographicalInformation() != null)
-                  this.createCDRRecord(RecordStatus.PSI_GEO_SUCCESS);
-              }
+        }
+        if (subscriberInfo.getLocationInformation() != null) {
+          psiResponseValues.setLocationInformation(subscriberInfo.getLocationInformation());
+          if (gmlcCdrState.isInitialized()) {
+            gmlcCdrState.setLocationInformation(psiResponseValues.getLocationInformation());
+            if (this.logger.isFineEnabled()) {
+              this.logger.fine("\nonProvideSubscriberInformationResponse: "
+                      + "CDR state is initialized, Location Information set");
             }
           }
         }
+        // Inquire if subscriber state is included in MAP PSI response subscriber's info
+        if (subscriberInfo.getSubscriberState() != null) {
+          mlpRespResult = MLPResponse.MLPResultType.OK;
+          // Subscriber state is included in MAP PSI response, get it and store it as a response parameter
+          psiResponseValues.setSubscriberState(subscriberInfo.getSubscriberState());
+          //atiResponse.subscriberState = subscriberInfo.getSubscriberState().getSubscriberStateChoice().toString();
+          if (gmlcCdrState.isInitialized()) {
+            gmlcCdrState.setSubscriberState(psiResponseValues.getSubscriberState().getSubscriberStateChoice().toString());
+            if (subscriberInfo.getLocationInformation() == null) {
+              if (this.logger.isFineEnabled()) {
+                this.logger.fine("\nonProvideSubscriberInformationResponse: "
+                        + "CDR state is initialized, ATI_STATE_SUCCESS");
+              }
+              this.createCDRRecord(RecordStatus.PSI_STATE_SUCCESS);
+            }
+          }
+        }
+        // Inquire if Location information is included in MAP PSI response subscriber's info
+        if (subscriberInfo.getLocationInformation() != null) {
+          psiResponseValues.setLocationInformation(subscriberInfo.getLocationInformation());
+          mlpRespResult = MLPResponse.MLPResultType.OK;
+          // Inquire if VLR number (Global Title) is included in MAP PSI response subscriber's info
+          if (subscriberInfo.getLocationInformation().getVlrNumber() != null) {
+            psiResponseValues.setVlrNumber(subscriberInfo.getLocationInformation().getVlrNumber());
+            if (gmlcCdrState.isInitialized()) {
+              if (this.logger.isFineEnabled()) {
+                this.logger.fine("\nonProvideSubscriberInformationResponse: " +
+                        "CDR state is initialized, PSI_LOC_SUCCESS");
+              }
+              gmlcCdrState.setPsiVlrNumber(subscriberInfo.getLocationInformation().getVlrNumber());
+              if (gmlcCdrState.getLocationInformation().getVlrNumber() != null)
+                this.createCDRRecord(RecordStatus.PSI_LOC_SUCCESS);
+            }
+          }
+          // Inquire if MSC number (Global Title) is included in MAP PSI response subscriber's info
+          if (subscriberInfo.getLocationInformation().getMscNumber() != null) {
+            psiResponseValues.setMscNumber(subscriberInfo.getLocationInformation().getMscNumber());
+            if (gmlcCdrState.isInitialized()) {
+              if (this.logger.isFineEnabled()) {
+                this.logger.fine("\nonProvideSubscriberInformationResponse: "
+                        + "CDR state is initialized, PSI_LOC_SUCCESS");
+              }
+              gmlcCdrState.setPsiMscNumber(subscriberInfo.getLocationInformation().getMscNumber());
+              if (gmlcCdrState.getLocationInformation().getMscNumber() != null)
+                this.createCDRRecord(RecordStatus.PSI_LOC_SUCCESS);
+            }
+          }
+          // Location information is included in MAP PSI response, then
+          // Inquire if Cell Global Identity (CGI) or Service Area Identity (SAI) or Location Area Identity (LAI) are included in MAP PSI response
+          if (subscriberInfo.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI() != null) {
+            // CGI or SAI or LAI are included in MAP PSI response
+            CellGlobalIdOrServiceAreaIdOrLAI cellGlobalIdOrServiceAreaIdOrLAI = subscriberInfo.getLocationInformation()
+                    .getCellGlobalIdOrServiceAreaIdOrLAI();
+            // Inquire and get parameters of CGI or SAI or LAI included in MAP PSI response
+            if (cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength() != null) {
+              if (this.logger.isFineEnabled()) {
+                this.logger.fine("\nonProvideSubscriberInformationResponse: "
+                        + "received CellGlobalIdOrServiceAreaIdFixedLength, decoding MCC, MNC, LAC, CI");
+              }
+              psiResponseValues.setCellGlobalIdOrServiceAreaIdFixedLength(cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength());
+              try {
+                psiResponseValues.setMcc(cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getMCC());
+                psiResponseValues.setMnc(cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getMNC());
+                psiResponseValues.setLac(cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getLac());
+                psiResponseValues.setCi(cellGlobalIdOrServiceAreaIdOrLAI.getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode());
+
+              } catch (MAPException e1) {
+                e1.printStackTrace();
+              }
+              // Inquire if Age of Location Information is included in MAP PSI response subscriber's info
+              if (subscriberInfo.getLocationInformation().getAgeOfLocationInformation() != null) {
+                psiResponseValues.setAgeOfLocationInfo(subscriberInfo.getLocationInformation().getAgeOfLocationInformation().intValue());
+                gmlcCdrState.setAgeOfLocationEstimate(subscriberInfo.getLocationInformation().getAgeOfLocationInformation().intValue());
+              }
+              if (gmlcCdrState.isInitialized()) {
+                if (this.logger.isFineEnabled()) {
+                  this.logger.fine("\nonProvideSubscriberInformationResponse: "
+                          + "CDR state is initialized, PSI_LOCATION_SUCCESS");
+                }
+                try {
+                  gmlcCdrState.setMcc(psiResponseValues.getCellGlobalIdOrServiceAreaIdFixedLength().getMCC());
+                  gmlcCdrState.setMnc(psiResponseValues.getCellGlobalIdOrServiceAreaIdFixedLength().getMNC());
+                  gmlcCdrState.setLac(psiResponseValues.getCellGlobalIdOrServiceAreaIdFixedLength().getLac());
+                  gmlcCdrState.setCi(psiResponseValues.getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode());
+                } catch (MAPException e1) {
+                  e1.printStackTrace();
+                }
+                gmlcCdrState.setAol(psiResponseValues.getAgeOfLocationInfo());
+                gmlcCdrState.setAtiVlrGt(psiResponseValues.getVlrNumber());
+                if (gmlcCdrState.getSubscriberState() != null) {
+                  this.createCDRRecord(RecordStatus.PSI_CGI_AND_STATE_SUCCESS);
+                } else {
+                  this.createCDRRecord(RecordStatus.PSI_CGI_SUCCESS);
+                }
+              }
+            } else if (cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength() != null) {
+              // Case when LAI length is fixed
+              if (this.logger.isFineEnabled()) {
+                this.logger.fine("\nonProvideSubscriberInformationResponse: "
+                        + "received laiFixedLength, decoding MCC, MNC, LAC (no CI)");
+              }
+              psiResponseValues.setMcc(cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength().getMCC());
+              psiResponseValues.setMcc(cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength().getMNC());
+              psiResponseValues.setLac(cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength().getLac());
+              if (gmlcCdrState.isInitialized()) {
+                if (this.logger.isFineEnabled()) {
+                  this.logger.fine("\nonProvideSubscriberInformationResponse: "
+                          + "CDR state is initialized, PSI_LAI_SUCCESS");
+                }
+                gmlcCdrState.setMcc(cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength().getMCC());
+                gmlcCdrState.setMnc(cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength().getMNC());
+                gmlcCdrState.setLac(cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength().getLac());
+                if (gmlcCdrState.getSubscriberState() != null) {
+                  this.createCDRRecord(RecordStatus.PSI_LAI_AND_STATE_SUCCESS);
+                } else {
+                  this.createCDRRecord(RecordStatus.PSI_LAI_SUCCESS);
+                }
+              }
+            }
+          }
+          // Inquire if SAI is present in MAP PSI response subscriber's info
+          if (subscriberInfo.getLocationInformation().getSaiPresent() != false
+                  && subscriberInfo.getLocationInformation().getSaiPresent() != false) {
+            psiResponseValues.setSaiPresent(subscriberInfo.getLocationInformation().getSaiPresent());
+            //TODO SAI Present value retrieved in PSI CDR
+            /*if (gmlcCdrState.isInitialized()) {
+              if (this.logger.isFineEnabled()) {
+                this.logger.fine("\nonProvideSubscriberInformationResponse: " +
+                    "CDR is initialized, PSI_LOC_SUCCESS");
+              }
+              /gmlcCdrState.setSaiPresent(subscriberInfo.getLocationInformation().getSaiPresent());
+              if (gmlcCdrState.getLocationInformation().getSaiPresent() != false
+                  && gmlcCdrState.getLocationInformation().getSaiPresent() != true)
+                this.createCDRRecord(RecordStatus.PSI_LOC_SUCCESS);
+            }*/
+          }
+          // Inquire if current location retrieval is present in MAP PSI response subscriber's info
+          if (subscriberInfo.getLocationInformation().getCurrentLocationRetrieved() != false
+                  && subscriberInfo.getLocationInformation().getCurrentLocationRetrieved() != false) {
+            psiResponseValues.setCurrentLocationRetrieved(subscriberInfo.getLocationInformation().getCurrentLocationRetrieved());
+            //TODO Current location retrieved value present in PSI CDR
+            /*if (gmlcCdrState.isInitialized()) {
+              if (this.logger.isFineEnabled()) {
+                this.logger.fine("\nonProvideSubscriberInformationResponse: " +
+                    "CDR is initialized, PSI_LOC_SUCCESS");
+              }
+              /gmlcCdrState.setCurrentLocationRetrieved(subscriberInfo.getLocationInformation().getCurrentLocationRetrieved());
+              if (gmlcCdrState.getLocationInformation().getCurrentLocationRetrieved() != false
+                  && gmlcCdrState.getLocationInformation().getCurrentLocationRetrieved() != true)
+                this.createCDRRecord(RecordStatus.PSI_LOC_SUCCESS);
+            }*/
+          }
+          // Inquires if subscriber Geographical information is included in MAP PSI response subscriber's info
+          if (subscriberInfo.getLocationInformation().getGeographicalInformation() != null) {
+            // Geographical information is included in MAP PSI response
+            if (this.logger.isFineEnabled()) {
+              this.logger.fine("\nonProvideSubscriberInformationResponse: "
+                      + "received Geographical information, decoding latitude and longitude");
+            }
+            psiResponseValues.setGeographicalLatitude(subscriberInfo.getLocationInformation().getGeographicalInformation().getLatitude());
+            psiResponseValues.setGeographicalLongitude(subscriberInfo.getLocationInformation().getGeographicalInformation().getLongitude());
+            psiResponseValues.setGeographicalUncertainty(subscriberInfo.getLocationInformation().getGeographicalInformation().getUncertainty());
+            if (gmlcCdrState.isInitialized()) {
+              if (this.logger.isFineEnabled()) {
+                this.logger.fine("\nonProvideSubscriberInformationResponse: "
+                        + "CDR state is initialized, PSI_LOC_SUCCESS");
+              }
+              gmlcCdrState.setPsiLatitude(subscriberInfo.getLocationInformation().getGeographicalInformation().getLatitude());
+              gmlcCdrState.setPsiLongitude(subscriberInfo.getLocationInformation().getGeographicalInformation().getLongitude());
+              if (gmlcCdrState.getLocationInformation().getGeographicalInformation() != null)
+                this.createCDRRecord(RecordStatus.PSI_GEO_SUCCESS);
+            }
+          }
+          // Inquires if subscriber Geodetic information is included in MAP PSI response subscriber's info
+          if (subscriberInfo.getLocationInformation().getGeodeticInformation() != null) {
+            // Geographical information is included in MAP PSI response
+            if (this.logger.isFineEnabled()) {
+              this.logger.fine("\nonProvideSubscriberInformationResponse: "
+                      + "received Geographical information, decoding latitude and longitude");
+            }
+            psiResponseValues.setGeodeticLatitude(subscriberInfo.getLocationInformation().getGeodeticInformation().getLatitude());
+            psiResponseValues.setGeodeticLongitude(subscriberInfo.getLocationInformation().getGeodeticInformation().getLongitude());
+            psiResponseValues.setGeodeticUncertainty(subscriberInfo.getLocationInformation().getGeodeticInformation().getUncertainty());
+            psiResponseValues.setGeodeticConfidence(subscriberInfo.getLocationInformation().getGeodeticInformation().getConfidence());
+            psiResponseValues.setScreeningAndPresentationIndicators(subscriberInfo.getLocationInformation().getGeodeticInformation().getScreeningAndPresentationIndicators());
+            if (gmlcCdrState.isInitialized()) {
+              if (this.logger.isFineEnabled()) {
+                this.logger.fine("\nonProvideSubscriberInformationResponse: "
+                        + "CDR state is initialized, PSI_LOC_SUCCESS");
+              }
+              gmlcCdrState.setPsiLatitude(subscriberInfo.getLocationInformation().getGeographicalInformation().getLatitude());
+              gmlcCdrState.setPsiLongitude(subscriberInfo.getLocationInformation().getGeographicalInformation().getLongitude());
+              if (gmlcCdrState.getLocationInformation().getGeographicalInformation() != null)
+                this.createCDRRecord(RecordStatus.PSI_GEO_SUCCESS);
+            }
+          }
+        }
+        if (subscriberInfo.getMNPInfoRes() != null) {
+          // MNP info result is included in MAP PSI response
+          if (this.logger.isFineEnabled()) {
+            this.logger.fine("\nonProvideSubscriberInformationResponse: "
+                    + "received MNP info result, decoding number portability status, MSISDN, IMSI, Routeing number");
+          }
+          psiResponseValues.setNumberPortabilityStatus(subscriberInfo.getMNPInfoRes().getNumberPortabilityStatus().getType());
+          psiResponseValues.setMsisdnAddress(subscriberInfo.getMNPInfoRes().getMSISDN().getAddress());
+          psiResponseValues.setImsiData(subscriberInfo.getMNPInfoRes().getIMSI().getData());
+          psiResponseValues.setRouteingNumberStr(subscriberInfo.getMNPInfoRes().getRouteingNumber().getRouteingNumber());
+          //TODO MNP Result info in PSI CDR
+            /*if (gmlcCdrState.isInitialized()) {
+              if (this.logger.isFineEnabled()) {
+                this.logger.fine("\nonProvideSubscriberInformationResponse: " +
+                    "CDR is initialized, PSI_LOC_SUCCESS");
+              }
+              /gmlcCdrState.setSaiPresent(subscriberInfo.getLocationInformation().getSaiPresent());
+              if (gmlcCdrState.getLocationInformation().getSaiPresent() != false
+                  && gmlcCdrState.getLocationInformation().getSaiPresent() != true)
+                this.createCDRRecord(RecordStatus.PSI_LOC_SUCCESS);
+            }*/
+        }
+        // handle successful retrieval of PSI response
+        handlePsiResponse(mlpRespResult, psiResponseValues, mlpClientErrorMessage);
+
       } else {
         if (mapErrorMessage != null) {
           // PSI error CDR creation
@@ -2854,9 +2934,6 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
           }
         }
       }
-
-      // handle successful retrieval of PSI response
-      handlePsiResponse(MLPResponse.MLPResultType.OK, psiResponseValues, mlpClientErrorMessage);
 
     } catch (Exception e) {
       logger.severe(String.format("Error while trying to process onProvideSubscriberInformationResponse=%s", event), e);
@@ -2986,8 +3063,6 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
   public void onInvokeTimeout(InvokeTimeout event, ActivityContextInterface aci) {
     if (this.logger.isFineEnabled()) {
       this.logger.fine("\nReceived onInvokeTimeout = " + event);
-    } else {
-      this.logger.severe("\nReceived onInvokeTimeout = " + event);
     }
     this.handleDialogError(MLPResponse.MLPResultType.SYSTEM_FAILURE, "Invoke timeout: " + event);
     MAPDialog mapDialog = event.getMAPDialog();
@@ -3009,8 +3084,6 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
   public void onErrorComponent(ErrorComponent event, ActivityContextInterface aci) {
     if (this.logger.isFineEnabled()) {
       this.logger.fine("\nReceived onErrorComponent = " + event);
-    } else {
-      this.logger.severe("\nReceived onErrorComponent = " + event);
     }
 
     MAPErrorMessage mapErrorMessage = event.getMAPErrorMessage();
@@ -3039,9 +3112,8 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
   public void onRejectComponent(RejectComponent event, ActivityContextInterface aci) {
     if (this.logger.isFineEnabled()) {
       this.logger.fine("\nRx : onRejectComponent " + event);
-    } else {
-      this.logger.severe("\nRx : onRejectComponent " + event);
     }
+
     this.handleDialogError(MLPResponse.MLPResultType.SYSTEM_FAILURE, "RejectedComponent: " + event);
     MAPDialog mapDialog = event.getMAPDialog();
     CDRInterface cdrInterface = this.getCDRInterface();
@@ -3280,9 +3352,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
       eventContext.suspendDelivery();
       setEventContextCMP(eventContext);
       if (psiService.equalsIgnoreCase("true")) {
-        // TODO getMsisdnCGIthruPSI(requestingMSISDN)
         getLocationViaSubscriberInformation(requestingMSISDN);
-        //handlePsiNotSupportedYet(MLPResponse.MLPResultType.SYSTEM_FAILURE, "PSI not supported yet", aci);
       } else {
         if (coreNetwork.equalsIgnoreCase("UMTS")) {
           getMsisdnGeolocationViaLsm(requestingMSISDN);
@@ -3290,7 +3360,6 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
           getMsisdnCellGlobalId(requestingMSISDN);
         }
       }
-
 
     } else {
       logger.info("MSISDN is null, sending back -1 for Global Cell Identity");
@@ -4138,14 +4207,14 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
           String mnpInfoResultRouteingNumber = "";
 
           StringBuilder psiResponseSb = new StringBuilder();
-          psiResponseSb.append("PSI response=");
+          psiResponseSb.append("PSI response:");
           try {
             if (psiResponseValues.getLocationInformation() != null) {
               if (psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength() != null) {
                 mcc = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMCC();
                 mnc = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMNC();
                 lac = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getLac();
-                psiResponseSb.append(", mcc=");
+                psiResponseSb.append(" mcc=");
                 psiResponseSb.append(mcc);
                 psiResponseSb.append(",mnc=");
                 psiResponseSb.append(mnc);
@@ -4156,7 +4225,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 mnc = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMNC();
                 lac = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getLac();
                 ci = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode();
-                psiResponseSb.append(", mcc=");
+                psiResponseSb.append(" mcc=");
                 psiResponseSb.append(mcc);
                 psiResponseSb.append(",mnc=");
                 psiResponseSb.append(mnc);

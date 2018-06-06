@@ -25,15 +25,17 @@ import org.mobicents.protocols.ss7.map.api.MAPException;
 import org.mobicents.protocols.ss7.map.api.primitives.CellGlobalIdOrServiceAreaIdFixedLength;
 import org.mobicents.protocols.ss7.map.api.primitives.CellGlobalIdOrServiceAreaIdOrLAI;
 import org.mobicents.protocols.ss7.map.api.primitives.IMEI;
+import org.mobicents.protocols.ss7.map.api.primitives.IMSI;
 import org.mobicents.protocols.ss7.map.api.primitives.ISDNAddressString;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.LocationInformation;
-import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.LocationInformationEPS;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.LocationInformationGPRS;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.LocationInformationEPS;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.SubscriberState;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.PSSubscriberState;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.MSClassmark2;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.GPRSMSClass;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.MNPInfoRes;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.RouteingNumber;
 
 import java.io.Serializable;
 import java.util.TimeZone;
@@ -58,27 +60,27 @@ public class PsiResponseValues implements Serializable {
 
     8.11.2.2	Service primitives
               Table 8.11/2: Provide_Subscriber_Information
-              Parameter name	                                Request	    Indication	Response	Confirm
-              Invoke id	                                            M	        M(=)	    M(=)	    M(=)
-              Requested Info	                                    M	        M(=)
-              IMSI	                                                M	        M(=)
-              LMSI	                                                U	        O
-              Call Priority	                                        U	        O
-              Location Information			                                                C	        C(=)
-              Location Information for GPRS			                                        C	        C(=)
-              Subscriber State			                                                    C	        C(=)
-              PS Subscriber State			                                                C	        C(=)
-              IMEI			                                                                C	        C(=)
-              MS Classmark 2			                                                    C	        C(=)
-              GPRS MS Class			                                                        C	        C(=)
-              IMS Voice Over PS Sessions Support Indicator		                            C	        C(=)
-              Last UE Activity Time			                                                C	        C(=)
-              Last RAT Type			                                                        C	        C(=)
-              Location Information for EPS			                                        C	        C(=)
-              Time Zone			                                                            C	        C(=)
-              Daylight Saving Time			                                                C	        C(=)
-              User error			                                                        C	        C(=)
-              Provider error				                                                            O
+              Parameter name	                                Request	Indication	Response	Confirm
+              Invoke id	                                        M	        M(=)	    M(=)	    M(=)
+              Requested Info	                                  M	        M(=)
+              IMSI	                                            M	        M(=)
+              LMSI	                                            U	        O
+              Call Priority	                                    U	        O
+              Location Information			                                            C	        C(=)
+              Location Information for GPRS			                                    C	        C(=)
+              Subscriber State			                                                C	        C(=)
+              PS Subscriber State			                                              C	        C(=)
+              IMEI			                                                            C	        C(=)
+              MS Classmark 2			                                                  C	        C(=)
+              GPRS MS Class			                                                    C	        C(=)
+              IMS Voice Over PS Sessions Support Indicator		                      C	        C(=)
+              Last UE Activity Time			                                            C	        C(=)
+              Last RAT Type			                                                    C	        C(=)
+              Location Information for EPS			                                    C	        C(=)
+              Time Zone			                                                        C	        C(=)
+              Daylight Saving Time			                                            C	        C(=)
+              User error			                                                      C	        C(=)
+              Provider error				                                                          O
 
       ? (M): mandatory parameter.
       ? (O): provider option.
@@ -93,8 +95,18 @@ public class PsiResponseValues implements Serializable {
 
     private LocationInformation locationInformation;
     // Includes geographical information
-    private double latitude;
-    private double longitude;
+    private double geographicalLatitude;
+    private double geographicalLongitude;
+    private double geographicalUncertainty;
+    // includes geodetic information
+    private double geodeticLatitude;
+    private double geodeticLongitude;
+    private double geodeticUncertainty;
+    private int geodeticConfidence;
+    private int screeningAndPresentationIndicators;
+    // other location info
+    private boolean saiPresent;
+    private boolean currentLocationRetrieved;
     private CellGlobalIdOrServiceAreaIdOrLAI cellGlobalIdOrServiceAreaIdOrLAI;
     private CellGlobalIdOrServiceAreaIdFixedLength cellGlobalIdOrServiceAreaIdFixedLength;
     // Includes Cell Global Identity (CI, LAC, MCC, MNC, Age of Location information
@@ -113,7 +125,14 @@ public class PsiResponseValues implements Serializable {
     private IMEI imei; // International Mobile Equipment Identity.
     private MSClassmark2 msClassmark2; // Defined in 3GPP TS 24.008.
     private GPRSMSClass gprsmsClass;
-    private MNPInfoRes mnpInfoRes; // Mobile Number Portability (MNP) information result.
+    private MNPInfoRes mnpInfoRes; // Mobile Number Portability (MNP) information result number portability status, MSISDN, IMSI, Routeing number.
+    private int numberPortabilityStatus;
+    private ISDNAddressString msisdn;
+    private String msisdnAddress;
+    private IMSI imsi;
+    private String imsiData;
+    private RouteingNumber routeingNumber;
+    private String routeingNumberStr;
     private boolean imsVoiceOverPsSessionsSupportIndicator;
     // Last UE Activity Time
     // Last RAT Type
@@ -255,20 +274,84 @@ public class PsiResponseValues implements Serializable {
         this.ageOfLocationInfo = ageOfLocationInfo;
     }
 
-    public double getLatitude() {
-        return latitude;
+    public double getGeoraphicalLatitude() {
+        return geographicalLatitude;
     }
 
-    public void setLatitude(double latitude) {
-        this.latitude = latitude;
+    public void setGeoraphicalLatitude(double latitude) {
+        this.geographicalLatitude = latitude;
     }
 
-    public double getLongitude() {
-        return longitude;
+    public double getGeoraphicalLongitude() {
+        return geographicalLongitude;
     }
 
-    public void setLongitude(double longitude) {
-        this.longitude = longitude;
+    public void setGeoraphicalLongitude(double longitude) {
+        this.geographicalLongitude = longitude;
+    }
+
+    public double getGeographicalLatitude() {
+        return geographicalLatitude;
+    }
+
+    public void setGeographicalLatitude(double geographicalLatitude) {
+        this.geographicalLatitude = geographicalLatitude;
+    }
+
+    public double getGeographicalLongitude() {
+        return geographicalLongitude;
+    }
+
+    public void setGeographicalLongitude(double geographicalLongitude) {
+        this.geographicalLongitude = geographicalLongitude;
+    }
+
+    public double getGeographicalUncertainty() {
+        return geographicalUncertainty;
+    }
+
+    public void setGeographicalUncertainty(double geographicalUncertainty) {
+        this.geographicalUncertainty = geographicalUncertainty;
+    }
+
+    public double getGeodeticLatitude() {
+        return geodeticLatitude;
+    }
+
+    public void setGeodeticLatitude(double geodeticLatitude) {
+        this.geodeticLatitude = geodeticLatitude;
+    }
+
+    public double getGeodeticLongitude() {
+        return geodeticLongitude;
+    }
+
+    public void setGeodeticLongitude(double geodeticLongitude) {
+        this.geodeticLongitude = geodeticLongitude;
+    }
+
+    public double getGeodeticUncertainty() {
+        return geodeticUncertainty;
+    }
+
+    public void setGeodeticUncertainty(double geodeticUncertainty) {
+        this.geodeticUncertainty = geodeticUncertainty;
+    }
+
+    public int getGeodeticConfidence() {
+        return geodeticConfidence;
+    }
+
+    public void setGeodeticConfidence(int geodeticConfidence) {
+        this.geodeticConfidence = geodeticConfidence;
+    }
+
+    public int getScreeningAndPresentationIndicators() {
+        return screeningAndPresentationIndicators;
+    }
+
+    public void setScreeningAndPresentationIndicators(int screeningAndPresentationIndicators) {
+        this.screeningAndPresentationIndicators = screeningAndPresentationIndicators;
     }
 
     public ISDNAddressString getVlrNumber() {
@@ -293,6 +376,62 @@ public class PsiResponseValues implements Serializable {
 
     public void setMnpInfoRes(MNPInfoRes mnpInfoRes) {
         this.mnpInfoRes = mnpInfoRes;
+    }
+
+    public int getNumberPortabilityStatus() {
+        return numberPortabilityStatus;
+    }
+
+    public void setNumberPortabilityStatus(int numberPortabilityStatus) {
+        this.numberPortabilityStatus = numberPortabilityStatus;
+    }
+
+    public ISDNAddressString getMsisdn() {
+        return msisdn;
+    }
+
+    public void setMsisdn(ISDNAddressString msisdn) {
+        this.msisdn = msisdn;
+    }
+
+    public String getMsisdnAddress() {
+        return msisdnAddress;
+    }
+
+    public void setMsisdnAddress(String msisdnAddress) {
+        this.msisdnAddress = msisdnAddress;
+    }
+
+    public IMSI getImsi() {
+        return imsi;
+    }
+
+    public void setImsi(IMSI imsi) {
+        this.imsi = imsi;
+    }
+
+    public String getImsiData() {
+        return imsiData;
+    }
+
+    public void setImsiData(String imsiData) {
+        this.imsiData = imsiData;
+    }
+
+    public RouteingNumber getRouteingNumber() {
+        return routeingNumber;
+    }
+
+    public void setRouteingNumber(RouteingNumber routeingNumber) {
+        this.routeingNumber = routeingNumber;
+    }
+
+    public String getRouteingNumberStr() {
+        return routeingNumberStr;
+    }
+
+    public void setRouteingNumberStr(String routeingNumberStr) {
+        this.routeingNumberStr = routeingNumberStr;
     }
 
     public boolean isImsVoiceOverPsSessionsSupportIndicator() {
@@ -329,6 +468,22 @@ public class PsiResponseValues implements Serializable {
 
     public void setLocationInformationEPS(LocationInformationEPS locationInformationEPS) {
         this.locationInformationEPS = locationInformationEPS;
+    }
+
+    public boolean isSaiPresent() {
+        return saiPresent;
+    }
+
+    public void setSaiPresent(boolean saiPresent) {
+        this.saiPresent = saiPresent;
+    }
+
+    public boolean isCurrentLocationRetrieved() {
+        return currentLocationRetrieved;
+    }
+
+    public void setCurrentLocationRetrieved(boolean currentLocationRetrieved) {
+        this.currentLocationRetrieved = currentLocationRetrieved;
     }
 
     public TimeZone getTimeZone() {
