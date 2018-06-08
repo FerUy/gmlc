@@ -955,12 +955,12 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         // ReportingPLMNList hardcoded to null for now
         ReportingPLMNList reportingPLMNList = null;
 
-        AddressString origAddressString, destAddressString1;
-        origAddressString = destAddressString1 = null;
+        AddressString originAddressString, destinationAddressString;
+        originAddressString = destinationAddressString = null;
 
         MAPDialogLsm mapDialogLsmPsl = this.mapProvider.getMAPServiceLsm().createNewDialog(
-                this.getMAPPslSlrApplicationContext(),  this.getGmlcSccpAddress(), origAddressString,
-                getNNNSCCPAddress(lcsLocationInfo.getNetworkNodeNumber().getAddress()), destAddressString1);
+                this.getMAPPslSlrApplicationContext(),  this.getGmlcSccpAddress(), originAddressString,
+                getNNNSCCPAddress(lcsLocationInfo.getNetworkNodeNumber().getAddress()), destinationAddressString);
 
         mapDialogLsmPsl.addProvideSubscriberLocationRequest(locationType, mlcNumber, lcsClientID, false,
                 sriForLcsResponseValues.getImsi(), sriForLcsResponseValues.getMsisdn().getClass().newInstance().getMSISDN(),
@@ -2539,14 +2539,22 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         LMSI lmsi = null;
         if (locationInfoWithLMSI.getLMSI() != null)
           lmsi = event.getLocationInfoWithLMSI().getLMSI();
-        RequestedInfo requestedInfo = new RequestedInfoImpl(true, true, null, true, null, true, false, false);
+        boolean locationInformation = true;
+        boolean subscriberState = true;
+        MAPExtensionContainer extensionContainer = null;
+        boolean currentLocation = true;
+        DomainType requestedDomain = null;
+        boolean imei = true;
+        boolean msClassmark = false;
+        boolean mnpRequestedInfo = false;
+        RequestedInfo requestedInfo = new RequestedInfoImpl(locationInformation, subscriberState, extensionContainer, currentLocation, requestedDomain, imei, msClassmark, mnpRequestedInfo);
 
-        AddressString origAddressString, destAddressString1;
-        origAddressString = destAddressString1 = null;
+        AddressString originAddressString, destinationAddressString;
+        originAddressString = destinationAddressString = null;
 
         MAPDialogMobility mapDialogMobility = this.mapProvider.getMAPServiceMobility().createNewDialog(
-                this.getMAPPsiApplicationContext(), this.getGmlcSccpAddress(), origAddressString,
-                getNNNSCCPAddress(locationInfoWithLMSI.getNetworkNodeNumber().getAddress()), destAddressString1);
+                this.getMAPPsiApplicationContext(), this.getGmlcSccpAddress(), originAddressString,
+                getNNNSCCPAddress(locationInfoWithLMSI.getNetworkNodeNumber().getAddress()), destinationAddressString);
 
         mapDialogMobility.addProvideSubscriberInfoRequest(imsi, lmsi, requestedInfo, mapExtensionContainer, null);
 
@@ -3425,11 +3433,11 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
 
     if (!requestingMSISDN.equals(fakeNumber)) {
       try {
-        AddressString origAddressString, destAddressString1;
-        origAddressString = destAddressString1 = null;
+        AddressString originAddressString, destinationAddressString;
+        originAddressString = destinationAddressString = null;
         MAPDialogMobility mapDialogMobility = this.mapProvider.getMAPServiceMobility().createNewDialog(
-                this.getMAPAtiApplicationContext(), this.getGmlcSccpAddress(), origAddressString,
-                getHlrSCCPAddress(requestingMSISDN), destAddressString1);
+                this.getMAPAtiApplicationContext(), this.getGmlcSccpAddress(), originAddressString,
+                getHlrSCCPAddress(requestingMSISDN), destinationAddressString);
         ISDNAddressString msisdn = new ISDNAddressStringImpl(AddressNature.international_number,
                 org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, requestingMSISDN);
         SubscriberIdentity subscriberIdentity = new SubscriberIdentityImpl(msisdn);
@@ -3499,11 +3507,11 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
 
     if (!requestingMSISDN.equals(fakeNumber)) {
       try {
-        AddressString origAddressString, destAddressString1;
-        origAddressString = destAddressString1 = null;
+        AddressString originAddressString, destinationAddressString;
+        originAddressString = destinationAddressString = null;
         MAPDialogLsm mapDialogLsmSRIforLCS = this.mapProvider.getMAPServiceLsm().createNewDialog(
-                this.getMAPSRIforLCSApplicationContext(),  this.getGmlcSccpAddress(), origAddressString,
-                getHlrSCCPAddress(requestingMSISDN), destAddressString1);
+                this.getMAPSRIforLCSApplicationContext(),  this.getGmlcSccpAddress(), originAddressString,
+                getHlrSCCPAddress(requestingMSISDN), destinationAddressString);
         ISDNAddressString msisdn = new ISDNAddressStringImpl(AddressNature.international_number,
                 org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, requestingMSISDN);
         SubscriberIdentity subscriberIdentity = new SubscriberIdentityImpl(msisdn);
@@ -3600,11 +3608,11 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
 
     if (!requestingMSISDN.equals(fakeNumber)) {
       try {
-        AddressString origAddressString, destAddressString1;
-        origAddressString = destAddressString1 = null;
+        AddressString originAddressString, destinationAddressString;
+        originAddressString = destinationAddressString = null;
         MAPDialogSms mapDialogSms = this.mapProvider.getMAPServiceSms().createNewDialog(
-                this.getMAPSRIforSMApplicationContext(), this.getGmlcSccpAddress(), origAddressString,
-                getHlrSCCPAddress(requestingMSISDN), destAddressString1);
+                this.getMAPSRIforSMApplicationContext(), this.getGmlcSccpAddress(), originAddressString,
+                getHlrSCCPAddress(requestingMSISDN), destinationAddressString);
         ISDNAddressString msisdn = new ISDNAddressStringImpl(AddressNature.international_number,
                 org.mobicents.protocols.ss7.map.api.primitives.NumberingPlan.ISDN, requestingMSISDN);
         boolean sm_RP_PRI = true;
@@ -3863,7 +3871,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
               mapLsmResponseSb.append("MAP Send Routing Info for LCS response. ");
               mapLsmResponseSb.append("MSISDN=");
               mapLsmResponseSb.append(sri.getMsisdn());
-              mapLsmResponseSb.append("IMSI=");
+              mapLsmResponseSb.append(" IMSI=");
               mapLsmResponseSb.append(sri.getImsi());
               if (sri.getNetworkNodeNumber() !=null) {
                 mapLsmResponseSb.append(", NetworkNodeNumber=");
@@ -3920,22 +3928,22 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 mapLsmResponseSb.append(psl.getLocationEstimate().getIncludedAngle());
               }
 
-              mapLsmResponseSb.append(", aol=");
+              mapLsmResponseSb.append("; aol=");
               mapLsmResponseSb.append(psl.getAgeOfLocationEstimate());
-              mapLsmResponseSb.append(", deferredMTLRresponseIndicator=");
+              mapLsmResponseSb.append("; deferredMTLRresponseIndicator=");
               mapLsmResponseSb.append(psl.isDeferredMTLRResponseIndicator());
-              mapLsmResponseSb.append(", MOLRShortCircuitIndicator=");
+              mapLsmResponseSb.append("; MOLRShortCircuitIndicator=");
               mapLsmResponseSb.append(psl.isMoLrShortCircuitIndicator());
-              mapLsmResponseSb.append(", CGIorSAIorLAI:");
+              mapLsmResponseSb.append("; CGIorSAIorLAI:");
               if (psl.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength() != null) {
-                mapLsmResponseSb.append(", mcc=");
+                mapLsmResponseSb.append(" LAI fixed mcc=");
                 mapLsmResponseSb.append(psl.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMCC());
                 mapLsmResponseSb.append(", mnc=");
                 mapLsmResponseSb.append(psl.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMNC());
                 mapLsmResponseSb.append(", lac=");
                 mapLsmResponseSb.append(psl.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getLac());
               } else if (psl.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength() != null) {
-                mapLsmResponseSb.append(", mcc=");
+                mapLsmResponseSb.append(" mcc=");
                 mapLsmResponseSb.append(psl.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMCC());
                 mapLsmResponseSb.append(", mnc=");
                 mapLsmResponseSb.append(psl.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMNC());
@@ -3944,7 +3952,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 mapLsmResponseSb.append(", cellid=");
                 mapLsmResponseSb.append(psl.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode());
               }
-              mapLsmResponseSb.append(", AccuracyFulfilmentIndicator=");
+              mapLsmResponseSb.append("; AccuracyFulfilmentIndicator=");
               mapLsmResponseSb.append(psl.getAccuracyFulfilmentIndicator());
             }
 
@@ -3952,7 +3960,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
               // Render and send SLR request values (not repeating previously displayed values)
               mapLsmResponseSb.append("MAP Subscriber Location Report: ");
               if (slrReq.getLcsClientID() != null) {
-                mapLsmResponseSb.append("ReportLCSClientID:");
+                mapLsmResponseSb.append("; ReportLCSClientID:");
                 mapLsmResponseSb.append(", ReportLCSClientType=");
                 mapLsmResponseSb.append(slrReq.getLcsClientID().getLCSClientType());
                 mapLsmResponseSb.append(", ReportLCSClientExternalID=");
@@ -3968,14 +3976,14 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 mapLsmResponseSb.append(", ReportLCSRequestorID=");
                 mapLsmResponseSb.append(slrReq.getLcsClientID().getLCSRequestorID());
               }
-              mapLsmResponseSb.append(", ReportLCSEvent=");
+              mapLsmResponseSb.append("; ReportLCSEvent=");
               mapLsmResponseSb.append(slrReq.getLcsEvent());
               mapLsmResponseSb.append(", ReportLCSReferenceNumber=");
               mapLsmResponseSb.append(slrReq.getLcsReferenceNumber());
               mapLsmResponseSb.append(", ReportLCSServiceTypeID=");
               mapLsmResponseSb.append(slrReq.getLcsServiceTypeID());
               if (slrReq.getLocationEstimate() != null) {
-                mapLsmResponseSb.append(", ReportLocationEstimate:");
+                mapLsmResponseSb.append("; ReportLocationEstimate:");
                 mapLsmResponseSb.append(" ReportLatitude=");
                 mapLsmResponseSb.append(slrReq.getLocationEstimate().getLatitude());
                 mapLsmResponseSb.append(", ReportLongitude=");
@@ -4004,7 +4012,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 mapLsmResponseSb.append(slrReq.getLocationEstimate().getIncludedAngle());
               }
               if (slrReq.getLocationEstimate() != null) {
-                mapLsmResponseSb.append(", ReportAdditionalLocationEstimate:");
+                mapLsmResponseSb.append("; ReportAdditionalLocationEstimate:");
                 mapLsmResponseSb.append(" ReportAdditionalLatitude=");
                 mapLsmResponseSb.append(slrReq.getAdditionalLocationEstimate().getLatitude());
                 mapLsmResponseSb.append(", ReportAdditionalLongitude=");
@@ -4032,14 +4040,15 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 mapLsmResponseSb.append(", ReportAdditionalIncludedAngle=");
                 mapLsmResponseSb.append(slrReq.getAdditionalLocationEstimate().getIncludedAngle());
               }
-              mapLsmResponseSb.append(", ReportAgeOfLocationEstimate=");
+              mapLsmResponseSb.append("; ReportAgeOfLocationEstimate=");
               mapLsmResponseSb.append(slrReq.getAgeOfLocationEstimate());
-              mapLsmResponseSb.append(", ReportPseudonymIndicator=");
+              mapLsmResponseSb.append("; ReportPseudonymIndicator=");
               mapLsmResponseSb.append(slrReq.getPseudonymIndicator());
-              mapLsmResponseSb.append(", ReportMOLRShortCircuitIndicator=");
+              mapLsmResponseSb.append("; ReportMOLRShortCircuitIndicator=");
               mapLsmResponseSb.append(slrReq.isMoLrShortCircuitIndicator());
-              mapLsmResponseSb.append(", ReportCGIorSAIorLAI:");
+              mapLsmResponseSb.append("; ReportCGIorSAIorLAI:");
               if (slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength() != null) {
+                mapLsmResponseSb.append(", Report LAI fixed length:");
                 mapLsmResponseSb.append(", ReportMCC=");
                 mapLsmResponseSb.append(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMCC());
                 mapLsmResponseSb.append(", ReportMNC=");
@@ -4047,6 +4056,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 mapLsmResponseSb.append(", ReportLAC=");
                 mapLsmResponseSb.append(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getLac());
               } else if (slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength() != null) {
+                mapLsmResponseSb.append(", Report CGI or LAI or SAI:");
                 mapLsmResponseSb.append(", ReportMCC=");
                 mapLsmResponseSb.append(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMCC());
                 mapLsmResponseSb.append(", ReportMNC=");
@@ -4059,7 +4069,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
               mapLsmResponseSb.append(", ReportAccuracyFulfilmentIndicator=");
               mapLsmResponseSb.append(slrReq.getAccuracyFulfilmentIndicator());
               if (slrReq.getDeferredmtlrData() != null) {
-                mapLsmResponseSb.append(", ReportDeferredMTLRData=");
+                mapLsmResponseSb.append("; ReportDeferredMTLRData=");
                 mapLsmResponseSb.append(", terminationCause=");
                 mapLsmResponseSb.append(slrReq.getDeferredmtlrData().getTerminationCause().getCause());
                 if (slrReq.getDeferredmtlrData().getLCSLocationInfo() != null) {
@@ -4081,7 +4091,8 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                   }
                   if (slrReq.getDeferredmtlrData().getLCSLocationInfo().getAdditionalNumber() != null) {
                     if (slrReq.getDeferredmtlrData().getLCSLocationInfo().getAdditionalNumber().getMSCNumber() != null) {
-                      mapLsmResponseSb.append(", MSCNumber=");
+                      mapLsmResponseSb.append("; Additional number:");
+                      mapLsmResponseSb.append(" MSCNumber=");
                       mapLsmResponseSb.append(slrReq.getDeferredmtlrData().getLCSLocationInfo().getAdditionalNumber().getMSCNumber().getAddress());
                     }
                     if (slrReq.getDeferredmtlrData().getLCSLocationInfo().getAdditionalNumber().getSGSNNumber() != null) {
@@ -4090,7 +4101,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                     }
                   }
                   if (slrReq.getDeferredmtlrData().getLCSLocationInfo().getSupportedLCSCapabilitySets() != null) {
-                    mapLsmResponseSb.append(", SupportedLCSCapabilitySets=");
+                    mapLsmResponseSb.append("; SupportedLCSCapabilitySets=");
                     mapLsmResponseSb.append(", LCSCapabilitySets98_99=");
                     mapLsmResponseSb.append(slrReq.getDeferredmtlrData().getLCSLocationInfo().getSupportedLCSCapabilitySets().getCapabilitySetRelease98_99());
                     mapLsmResponseSb.append(", LCSCapabilitySets4=");
@@ -4103,7 +4114,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                     mapLsmResponseSb.append(slrReq.getDeferredmtlrData().getLCSLocationInfo().getSupportedLCSCapabilitySets().getCapabilitySetRelease7());
                   }
                   if (slrReq.getDeferredmtlrData().getLCSLocationInfo().getAdditionalLCSCapabilitySets() != null) {
-                    mapLsmResponseSb.append(", AdditionalSupportedLCSCapabilitySets=");
+                    mapLsmResponseSb.append("; AdditionalSupportedLCSCapabilitySets=");
                     mapLsmResponseSb.append(", AdditionalLCSCapabilitySets98_99=");
                     mapLsmResponseSb.append(slrReq.getDeferredmtlrData().getLCSLocationInfo().getAdditionalLCSCapabilitySets().getCapabilitySetRelease98_99());
                     mapLsmResponseSb.append(", AdditionalLCSCapabilitySets4=");
@@ -4119,14 +4130,14 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                   mapLsmResponseSb.append(slrReq.getDeferredmtlrData().getLCSLocationInfo().getGprsNodeIndicator());
                 }
                 if (slrReq.getPeriodicLDRInfo() != null) {
-                  mapLsmResponseSb.append(", ReportPeriodicLDRInfo:");
+                  mapLsmResponseSb.append("; ReportPeriodicLDRInfo:");
                   mapLsmResponseSb.append(", reportingAmount=");
                   mapLsmResponseSb.append(slrReq.getPeriodicLDRInfo().getReportingAmount());
                   mapLsmResponseSb.append(", reportingInterval=");
                   mapLsmResponseSb.append(slrReq.getPeriodicLDRInfo().getReportingInterval());
                 }
               }
-              mapLsmResponseSb.append(", ReportSequenceNumber=");
+              mapLsmResponseSb.append("; ReportSequenceNumber=");
               mapLsmResponseSb.append(slrReq.getSequenceNumber());
             }
 
@@ -4214,6 +4225,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 mcc = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMCC();
                 mnc = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMNC();
                 lac = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getLac();
+                psiResponseSb.append(" LAI fixed length values:");
                 psiResponseSb.append(" mcc=");
                 psiResponseSb.append(mcc);
                 psiResponseSb.append(",mnc=");
@@ -4225,31 +4237,38 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 mnc = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMNC();
                 lac = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getLac();
                 ci = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode();
+                psiResponseSb.append(" CGI or LAI of SAI fixed length values:");
                 psiResponseSb.append(" mcc=");
                 psiResponseSb.append(mcc);
                 psiResponseSb.append(",mnc=");
                 psiResponseSb.append(mnc);
                 psiResponseSb.append(",lac=");
                 psiResponseSb.append(lac);
-                psiResponseSb.append(",cellid=");
+                psiResponseSb.append(", cellid=");
                 psiResponseSb.append(ci);
               }
               if (psiResponseValues.getLocationInformation().getAgeOfLocationInformation() >= Integer.MIN_VALUE
                       && psiResponseValues.getLocationInformation().getAgeOfLocationInformation() <= Integer.MAX_VALUE) {
                 ageOfLocationInfo = psiResponseValues.getLocationInformation().getAgeOfLocationInformation().intValue();
-                psiResponseSb.append(",aol=");
+                psiResponseSb.append("; aol=");
                 psiResponseSb.append(ageOfLocationInfo);
               }
               if (psiResponseValues.getLocationInformation().getVlrNumber() != null) {
                 vlrNumber = psiResponseValues.getLocationInformation().getVlrNumber().getAddress();
-                psiResponseSb.append(",vlrNumber=");
+                psiResponseSb.append("; vlrNumber=");
                 psiResponseSb.append(vlrNumber);
+              }
+              if (psiResponseValues.getLocationInformation().getMscNumber() != null) {
+                mscNumber = psiResponseValues.getLocationInformation().getMscNumber().getAddress();
+                psiResponseSb.append("; mscNumber=");
+                psiResponseSb.append(mscNumber);
               }
               if (psiResponseValues.getLocationInformation().getGeographicalInformation() != null) {
                 geographicalLatitude = psiResponseValues.getLocationInformation().getGeographicalInformation().getLatitude();
                 geographicalLongitude = psiResponseValues.getLocationInformation().getGeographicalInformation().getLongitude();
                 geographicalUncertainty = psiResponseValues.getLocationInformation().getGeographicalInformation().getUncertainty();
-                psiResponseSb.append(", geographicalLatitude=");
+                psiResponseSb.append("; Geographical information values:");
+                psiResponseSb.append(" geographicalLatitude=");
                 psiResponseSb.append(geographicalLatitude);
                 psiResponseSb.append(", geographicalLongitude=");
                 psiResponseSb.append(geographicalLongitude);
@@ -4262,7 +4281,8 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 geodeticUncertainty = psiResponseValues.getLocationInformation().getGeodeticInformation().getUncertainty();
                 geodeticConfidence = psiResponseValues.getLocationInformation().getGeodeticInformation().getConfidence();
                 geodeticScreeningAndPresentationIndicators = psiResponseValues.getLocationInformation().getGeodeticInformation().getScreeningAndPresentationIndicators();
-                psiResponseSb.append(", geodeticLatitude=");
+                psiResponseSb.append("; Geodetic information values:");
+                psiResponseSb.append(" geodeticLatitude=");
                 psiResponseSb.append(geodeticLatitude);
                 psiResponseSb.append(", geodeticLongitude=");
                 psiResponseSb.append(geodeticLongitude);
@@ -4273,72 +4293,69 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 psiResponseSb.append(", geodeticScreeningAndPresentationIndicators=");
                 psiResponseSb.append(geodeticScreeningAndPresentationIndicators);
               }
-              if (psiResponseValues.getLocationInformation().getMscNumber() != null) {
-                mscNumber = psiResponseValues.getLocationInformation().getMscNumber().getAddress();
-                psiResponseSb.append(", mscNumber=");
-                psiResponseSb.append(mscNumber);
-              }
               if (psiResponseValues.getLocationInformation().getVlrNumber() != null) {
                 vlrNumber = psiResponseValues.getLocationInformation().getVlrNumber().getAddress();
-                psiResponseSb.append(", vlrNumber=");
+                psiResponseSb.append("; vlrNumber=");
                 psiResponseSb.append(vlrNumber);
               }
               if (psiResponseValues.getLocationInformation().getSaiPresent() != false) {
                 saiPresent = true;
-                psiResponseSb.append(", saiPresent=");
+                psiResponseSb.append("; saiPresent=");
                 psiResponseSb.append(saiPresent);
               } else {
-                psiResponseSb.append(", saiPresent=");
+                psiResponseSb.append("; saiPresent=");
                 psiResponseSb.append(saiPresent);
               }
               if (psiResponseValues.getLocationInformation().getCurrentLocationRetrieved() != false) {
                 currentLocationRetrieved = true;
-                psiResponseSb.append(", currentLocationRetrieved=");
+                psiResponseSb.append("; currentLocationRetrieved=");
                 psiResponseSb.append(currentLocationRetrieved);
               } else {
-                psiResponseSb.append(", currentLocationRetrieved=");
+                psiResponseSb.append("; currentLocationRetrieved=");
                 psiResponseSb.append(currentLocationRetrieved);
               }
             }
             if (psiResponseValues.getSubscriberState() != null) {
               subscriberState = psiResponseValues.getSubscriberState().getSubscriberStateChoice().toString();
-              psiResponseSb.append(",subscriberState=");
+              psiResponseSb.append("; subscriberState=");
               psiResponseSb.append(subscriberState);
             }
             if (psiResponseValues.getMnpInfoRes() != null) {
+              psiResponseSb.append("; MNO info result values:");
               if (psiResponseValues.getMnpInfoRes().getNumberPortabilityStatus() != null) {
                 mnpInfoResultNumberPortabilityStatus = psiResponseValues.getMnpInfoRes().getNumberPortabilityStatus().getType();
-                psiResponseSb.append(",mnpInfoResultNumberPortabilityStatus=");
+                psiResponseSb.append(" mnpInfoResultNumberPortabilityStatus=");
                 psiResponseSb.append(mnpInfoResultNumberPortabilityStatus);
               }
               if (psiResponseValues.getMnpInfoRes().getMSISDN() != null) {
                 mnpInfoResultMSISDN = psiResponseValues.getMnpInfoRes().getMSISDN().getAddress();
-                psiResponseSb.append(",mnpInfoResultMSISDN=");
+                psiResponseSb.append(", mnpInfoResultMSISDN=");
                 psiResponseSb.append(mnpInfoResultMSISDN);
               }
               if (psiResponseValues.getMnpInfoRes().getIMSI() != null) {
                 mnpInfoResultIMSI = psiResponseValues.getMnpInfoRes().getIMSI().getData();
-                psiResponseSb.append(",mnpInfoResultIMSI=");
+                psiResponseSb.append(", mnpInfoResultIMSI=");
                 psiResponseSb.append(mnpInfoResultIMSI);
               }
               if (psiResponseValues.getMnpInfoRes().getRouteingNumber() != null) {
                 mnpInfoResultRouteingNumber = psiResponseValues.getMnpInfoRes().getRouteingNumber().getRouteingNumber();
-                psiResponseSb.append(",mnpInfoResultRouteingNumber=");
+                psiResponseSb.append(", mnpInfoResultRouteingNumber=");
                 psiResponseSb.append(mnpInfoResultRouteingNumber);
               }
             }
             if (psiResponseValues.getLocationInformationEPS() != null) {
+              psiResponseSb.append("; EPS Location information values:");
               if (psiResponseValues.getLocationInformationEPS().getMmeName() != null) {
                 mmeName = psiResponseValues.getLocationInformationEPS().getMmeName().toString();
-                psiResponseSb.append(",mmeName=");
+                psiResponseSb.append(", mmeName=");
                 psiResponseSb.append(mmeName);
               }
             }
 
           } catch (MAPException me) {
-            logger.severe("Map exception while retrieving ATI response values: "+me);
+            logger.severe("Map exception while retrieving PSI response values: "+me);
           } catch (Exception e) {
-            logger.severe("Exception while retrieving ATI response values: " +e);
+            logger.severe("Exception while retrieving PSI response values: " +e);
           }
 
           this.sendHTTPResult(httpServletResponse.SC_OK, psiResponseSb.toString());
