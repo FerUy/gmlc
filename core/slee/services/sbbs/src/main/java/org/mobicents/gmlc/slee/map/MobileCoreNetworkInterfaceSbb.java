@@ -205,9 +205,10 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
 
   private TimerFacility timerFacility = null;
 
-  private String pslLcsReferenceNumber, pslLcsServiceTypeID, pslIntervalTime, pslReportingAmount, pslReportingInterval,
+  private String pslLcsServiceTypeID, pslIntervalTime, pslReportingAmount, pslReportingInterval,
           pslLcsHorizontalAccuracy, pslLcsVerticalAccuracy, pslOccurrenceInfo, pslAreaType, pslAreaId, pslLocationEstimateType, pslDeferredLocationEventType,
           pslLcsPriority, pslVerticalCoordinateRequest, pslResponseTimeCategory, slrCallbackUrl, psiService;
+  private Integer pslLcsReferenceNumber;
 
   private HttpReport httpSubscriberLocationReport = new HttpReport();
 
@@ -955,6 +956,11 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         // ReportingPLMNList hardcoded to null for now
         ReportingPLMNList reportingPLMNList = null;
 
+        // TODO: register CallbackURL for PSL Report
+        Integer pslReferenceNumber = httpSubscriberLocationReport.Register(pslLcsReferenceNumber, slrCallbackUrl,null);
+        logger.info(String.format("Sending PSL Req with ref# %d from LCS request ref# %d with url '%s'",
+                pslReferenceNumber, pslLcsReferenceNumber, slrCallbackUrl));
+
         AddressString originAddressString, destinationAddressString;
         originAddressString = destinationAddressString = null;
 
@@ -965,7 +971,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         mapDialogLsmPsl.addProvideSubscriberLocationRequest(locationType, mlcNumber, lcsClientID, false,
                 sriForLcsResponseValues.getImsi(), sriForLcsResponseValues.getMsisdn().getClass().newInstance().getMSISDN(),
                 sriForLcsResponseValues.getLmsi(), imei, lcsPriority, lcsQoS, mapExtensionContainer,
-                supportedGADShapes, Integer.parseInt(pslLcsReferenceNumber), Integer.parseInt(pslLcsServiceTypeID), lcsCodeword, lcsPrivacyCheck,
+                supportedGADShapes, pslLcsReferenceNumber, Integer.parseInt(pslLcsServiceTypeID), lcsCodeword, lcsPrivacyCheck,
                 areaEventInfo, hGmlcAddress, moLrShortCircuitIndicator, periodicLDRInfo, reportingPLMNList);
 
         // Keep ACI in across MAP dialog for PSL
@@ -2390,6 +2396,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         mapDialogLsmSlr.close(false);
 
         // Handle successful retrieval of subscriber's location report request (SLR request) info by sending HTTP POST back to the requestor
+        logger.info(String.format("Handling SubscriberLocationReport POST ReferenceNumber '%s'\n", lcsReferenceNumber));
         httpSubscriberLocationReport.Perform(HttpReport.HttpMethod.POST, lcsReferenceNumber);
 
       }
@@ -3258,9 +3265,10 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
             throw new IllegalArgumentException();
           }
 
-          this.pslLcsReferenceNumber = httpServletRequest.getParameter("lcsReferenceNumber");
-          if (pslLcsReferenceNumber == null) {
-            pslLcsReferenceNumber = "0";
+          try {
+            this.pslLcsReferenceNumber = Integer.parseInt(httpServletRequest.getParameter("lcsReferenceNumber"));
+          } catch (NumberFormatException nfe) {
+            pslLcsReferenceNumber = 0;
           }
 
           this.pslLcsServiceTypeID =  httpServletRequest.getParameter("lcsServiceTypeID");
@@ -3325,7 +3333,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
           this.pslAreaType = output[9];
           this.pslAreaId = output[10];
           this.pslOccurrenceInfo = output[11];
-          this.pslLcsReferenceNumber = output[12];
+          this.pslLcsReferenceNumber = Integer.parseInt(output[12]);
           this.pslLcsServiceTypeID  = output[13];
           this.pslIntervalTime = output[14];
           this.pslReportingAmount = output[15];
@@ -3348,7 +3356,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
     }
 
     setHttpRequest(new HttpRequest(httpRequestType, requestingMSISDN, coreNetwork, pslLcsPriority, Integer.parseInt(pslLcsHorizontalAccuracy),
-            Integer.parseInt(pslLcsVerticalAccuracy), pslVerticalCoordinateRequest, pslResponseTimeCategory, Integer.parseInt(pslLcsReferenceNumber),
+            Integer.parseInt(pslLcsVerticalAccuracy), pslVerticalCoordinateRequest, pslResponseTimeCategory, pslLcsReferenceNumber,
             Integer.parseInt(pslLcsServiceTypeID), pslAreaType, pslAreaId, pslOccurrenceInfo, Integer.parseInt(pslIntervalTime),
             Integer.parseInt(pslReportingAmount), Integer.parseInt(pslReportingInterval), slrCallbackUrl, psiService));
 
