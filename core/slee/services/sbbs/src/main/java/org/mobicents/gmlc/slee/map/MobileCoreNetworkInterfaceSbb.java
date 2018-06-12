@@ -957,7 +957,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         ReportingPLMNList reportingPLMNList = null;
 
         // TODO: register CallbackURL for PSL Report
-        Integer pslReferenceNumber = httpSubscriberLocationReport.Register(pslLcsReferenceNumber, slrCallbackUrl,null);
+        Integer pslReferenceNumber = httpSubscriberLocationReport.Register(pslLcsReferenceNumber, slrCallbackUrl, null);
         logger.info(String.format("Sending PSL Req with ref# %d from LCS request ref# %d with url '%s'",
                 pslReferenceNumber, pslLcsReferenceNumber, slrCallbackUrl));
 
@@ -983,7 +983,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         mapDialogLsmPsl.send();
 
       } else {
-        // ATI Error CDR creation
+        // SRIforLCS Error CDR creation
         if (mapErrorMessage != null) {
           if (gmlcCdrState.isInitialized()) {
             if (mapErrorMessage.getErrorCode() == 52)
