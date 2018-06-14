@@ -831,9 +831,10 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
           stringBuilder.append(lcsClientID.getLCSClientName().getLCSFormatIndicator().getIndicator()).append(SEPARATOR);
           stringBuilder.append(lcsClientID.getLCSClientName().getNameString().getEncodedString().toString()).append(SEPARATOR);
         }
-        if (lcsClientID.getLCSAPN() != null)
-          stringBuilder.append(SEPARATOR); //temporary
-        //stringBuilder.append(lcsClientID.getLCSAPN().getApn().getBytes()).append(SEPARATOR);
+        if (lcsClientID.getLCSAPN() != null) {
+          if (lcsClientID.getLCSAPN().getApn() != null)
+            stringBuilder.append(lcsClientID.getLCSAPN().getApn()).append(SEPARATOR);
+        }
         if (lcsClientID.getLCSClientDialedByMS() != null)
           stringBuilder.append(lcsClientID.getLCSClientDialedByMS().getAddress()).append(SEPARATOR);
         if (lcsClientID.getLCSClientExternalID() != null)
@@ -1049,6 +1050,11 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
           } catch (MAPException e) {
             e.printStackTrace();
           }
+        } else {
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
         }
         if(locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength() != null) {
           try {
@@ -1059,19 +1065,47 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
           } catch (MAPException e) {
             e.printStackTrace();
           }
+        } else {
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
         }
       }
       if(locationInformation.getVlrNumber() != null) {
         stringBuilder.append(locationInformation.getVlrNumber().getAddress()).append(SEPARATOR);
+      } else {
+        stringBuilder.append(SEPARATOR);
       }
       if(locationInformation.getMscNumber() != null) {
         stringBuilder.append(locationInformation.getMscNumber().getAddress()).append(SEPARATOR);
+      } else {
+        stringBuilder.append(SEPARATOR);
       }
       if(locationInformation.getGeographicalInformation() != null) {
         stringBuilder.append(locationInformation.getGeographicalInformation().getLatitude()).append(SEPARATOR);
         stringBuilder.append(locationInformation.getGeographicalInformation().getLongitude()).append(SEPARATOR);
+        stringBuilder.append(locationInformation.getGeographicalInformation().getUncertainty()).append(SEPARATOR);
+      } else {
+        stringBuilder.append(SEPARATOR);
+        stringBuilder.append(SEPARATOR);
+        stringBuilder.append(SEPARATOR);
+      }
+      if(locationInformation.getGeodeticInformation() != null) {
+        stringBuilder.append(locationInformation.getGeodeticInformation().getLatitude()).append(SEPARATOR);
+        stringBuilder.append(locationInformation.getGeodeticInformation().getLongitude()).append(SEPARATOR);
+        stringBuilder.append(locationInformation.getGeodeticInformation().getUncertainty()).append(SEPARATOR);
+        stringBuilder.append(locationInformation.getGeodeticInformation().getConfidence()).append(SEPARATOR);
+      } else {
+        stringBuilder.append(SEPARATOR);
+        stringBuilder.append(SEPARATOR);
+        stringBuilder.append(SEPARATOR);
+        stringBuilder.append(SEPARATOR);
       }
     } else {
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
       stringBuilder.append(SEPARATOR);
       stringBuilder.append(SEPARATOR);
       stringBuilder.append(SEPARATOR);
@@ -1087,7 +1121,7 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
      */
     SubscriberInfo subscriberInfo = gmlcCdrState.getSubscriberInfo();
     if(subscriberInfo != null) {
-      stringBuilder.append(subscriberInfo.getSubscriberState());//.append(SEPARATOR);
+      stringBuilder.append(subscriberInfo.getSubscriberState().getSubscriberStateChoice());//.append(SEPARATOR);
     } else {
       /*stringBuilder.append(SEPARATOR);*/ /// Uncomment if further fields are added
     }

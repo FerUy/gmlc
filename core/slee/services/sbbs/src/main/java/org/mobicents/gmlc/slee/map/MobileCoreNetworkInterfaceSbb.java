@@ -2853,8 +2853,9 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 this.logger.fine("\nonProvideSubscriberInformationResponse: "
                         + "CDR state is initialized, PSI_LOC_SUCCESS");
               }
-              gmlcCdrState.setPsiLatitude(subscriberInfo.getLocationInformation().getGeographicalInformation().getLatitude());
-              gmlcCdrState.setPsiLongitude(subscriberInfo.getLocationInformation().getGeographicalInformation().getLongitude());
+              gmlcCdrState.setPsiGeographicLatitude(subscriberInfo.getLocationInformation().getGeographicalInformation().getLatitude());
+              gmlcCdrState.setPsiGeographicLongitude(subscriberInfo.getLocationInformation().getGeographicalInformation().getLongitude());
+              gmlcCdrState.setPsiGeographicUncertainty(subscriberInfo.getLocationInformation().getGeographicalInformation().getUncertainty());
               if (gmlcCdrState.getLocationInformation().getGeographicalInformation() != null)
                 this.createCDRRecord(RecordStatus.PSI_GEO_SUCCESS);
             }
@@ -2876,8 +2877,10 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 this.logger.fine("\nonProvideSubscriberInformationResponse: "
                         + "CDR state is initialized, PSI_LOC_SUCCESS");
               }
-              gmlcCdrState.setPsiLatitude(subscriberInfo.getLocationInformation().getGeographicalInformation().getLatitude());
-              gmlcCdrState.setPsiLongitude(subscriberInfo.getLocationInformation().getGeographicalInformation().getLongitude());
+              gmlcCdrState.setPsiGeodeticLatitude(subscriberInfo.getLocationInformation().getGeographicalInformation().getLatitude());
+              gmlcCdrState.setPsiGeodeticLongitude(subscriberInfo.getLocationInformation().getGeographicalInformation().getLongitude());
+              gmlcCdrState.setPsiGeodeticLongitude(subscriberInfo.getLocationInformation().getGeographicalInformation().getUncertainty());
+              gmlcCdrState.setTypeOfShape(subscriberInfo.getLocationInformation().getGeographicalInformation().getTypeOfShape());
               if (gmlcCdrState.getLocationInformation().getGeographicalInformation() != null)
                 this.createCDRRecord(RecordStatus.PSI_GEO_SUCCESS);
             }
@@ -3879,7 +3882,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
               mapLsmResponseSb.append("MAP Send Routing Info for LCS response. ");
               mapLsmResponseSb.append("MSISDN=");
               mapLsmResponseSb.append(sri.getMsisdn());
-              mapLsmResponseSb.append(" IMSI=");
+              mapLsmResponseSb.append(", IMSI=");
               mapLsmResponseSb.append(sri.getImsi());
               if (sri.getNetworkNodeNumber() !=null) {
                 mapLsmResponseSb.append(", NetworkNodeNumber=");
@@ -4236,9 +4239,9 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 psiResponseSb.append(" LAI fixed length values:");
                 psiResponseSb.append(" mcc=");
                 psiResponseSb.append(mcc);
-                psiResponseSb.append(",mnc=");
+                psiResponseSb.append(", mnc=");
                 psiResponseSb.append(mnc);
-                psiResponseSb.append(",lac=");
+                psiResponseSb.append(", lac=");
                 psiResponseSb.append(lac);
               } else if (psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength() != null) {
                 mcc = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMCC();
@@ -4248,9 +4251,9 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 psiResponseSb.append(" CGI or LAI of SAI fixed length values:");
                 psiResponseSb.append(" mcc=");
                 psiResponseSb.append(mcc);
-                psiResponseSb.append(",mnc=");
+                psiResponseSb.append(", mnc=");
                 psiResponseSb.append(mnc);
-                psiResponseSb.append(",lac=");
+                psiResponseSb.append(", lac=");
                 psiResponseSb.append(lac);
                 psiResponseSb.append(", cellid=");
                 psiResponseSb.append(ci);
