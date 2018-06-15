@@ -1657,7 +1657,7 @@ public class GMLCCDRState implements Serializable {
       return false;
 
     if (gprsNodeIndicator != false && gprsNodeIndicator != true) {
-      if (other.gprsNodeIndicator != false && other.gprsNodeIndicator != true)
+      if (other.gprsNodeIndicator == false && other.gprsNodeIndicator == true)
         return false;
     } else if (!(gprsNodeIndicator == (other.gprsNodeIndicator)))
       return false;
@@ -1723,7 +1723,7 @@ public class GMLCCDRState implements Serializable {
       return false;
 
     if (moLrShortCircuitIndicator != false && moLrShortCircuitIndicator != true) {
-      if (other.moLrShortCircuitIndicator != false && other.moLrShortCircuitIndicator != true)
+      if (other.moLrShortCircuitIndicator == false && other.moLrShortCircuitIndicator == true)
         return false;
     } else if (!(moLrShortCircuitIndicator == (other.moLrShortCircuitIndicator)))
       return false;
@@ -1765,7 +1765,7 @@ public class GMLCCDRState implements Serializable {
       return false;
 
     if (deferredMTLRResponseIndicator != false && deferredMTLRResponseIndicator != true) {
-      if (other.deferredMTLRResponseIndicator != false && other.deferredMTLRResponseIndicator != true)
+      if (other.deferredMTLRResponseIndicator == false && other.deferredMTLRResponseIndicator == true)
         return false;
     } else if (!(deferredMTLRResponseIndicator == (other.deferredMTLRResponseIndicator)))
       return false;
@@ -1849,7 +1849,7 @@ public class GMLCCDRState implements Serializable {
       return false;
 
     if (pseudonymIndicator != false && pseudonymIndicator != true) {
-      if (other.pseudonymIndicator != false && other.pseudonymIndicator != true)
+      if (other.pseudonymIndicator == false && other.pseudonymIndicator == true)
         return false;
     } else if (!(pseudonymIndicator == (other.pseudonymIndicator)))
       return false;
@@ -1894,6 +1894,102 @@ public class GMLCCDRState implements Serializable {
       if (other.psiMscNumber != null)
         return false;
     } else if (!psiMscNumber.equals(other.psiMscNumber))
+      return false;
+
+    if (psiGeographicLatitude == null) {
+      if (other.psiGeographicLatitude != null)
+        return false;
+    } else if (!psiGeographicLatitude.equals(other.psiGeographicLatitude))
+      return false;
+
+    if (psiGeographicLongitude == null) {
+      if (other.psiGeographicLongitude != null)
+        return false;
+    } else if (!psiGeographicLongitude.equals(other.psiGeographicLongitude))
+      return false;
+
+    if (psiGeographicUncertainty == null) {
+      if (other.psiGeographicUncertainty != null)
+        return false;
+    } else if (!psiGeographicUncertainty.equals(other.psiGeographicUncertainty))
+      return false;
+
+    if (psiGeodeticLatitude == null) {
+      if (other.psiGeodeticLatitude != null)
+        return false;
+    } else if (!psiGeodeticLatitude.equals(other.psiGeodeticLatitude))
+      return false;
+
+    if (psiGeodeticLongitude == null) {
+      if (other.psiGeodeticLongitude != null)
+        return false;
+    } else if (!psiGeodeticLongitude.equals(other.psiGeodeticLongitude))
+      return false;
+
+    if (psiGeodeticUncertainty == null) {
+      if (other.psiGeodeticUncertainty != null)
+        return false;
+    } else if (!psiGeodeticUncertainty.equals(other.psiGeodeticUncertainty))
+      return false;
+
+    if (psiGeodeticConfidence == -1) {
+      if (other.psiGeodeticConfidence != -1)
+        return false;
+    } else if (psiGeodeticConfidence != psiGeodeticConfidence)
+      return false;
+
+    if (psiScreeningAndPresentationIndicators == -1) {
+      if (other.psiScreeningAndPresentationIndicators != -1)
+        return false;
+    } else if (psiScreeningAndPresentationIndicators != psiScreeningAndPresentationIndicators)
+      return false;
+
+    if (typeOfShape == null) {
+      if (other.typeOfShape != null)
+        return false;
+    } else if (!typeOfShape.equals(other.typeOfShape))
+      return false;
+
+    if (mnpInfoRes == null) {
+      if (other.mnpInfoRes != null)
+        return false;
+    } else if (!mnpInfoRes.equals(other.mnpInfoRes))
+      return false;
+
+    if (mnpStatus == -1) {
+      if (other.mnpStatus != -1)
+        return false;
+    } else if (mnpStatus != mnpStatus)
+      return false;
+
+    if (mnpRouteingNumber == -1) {
+      if (other.mnpRouteingNumber != -1)
+        return false;
+    } else if (mnpRouteingNumber != mnpRouteingNumber)
+      return false;
+
+    if (mnpIMSI == null) {
+      if (other.mnpIMSI != null)
+        return false;
+    } else if (!mnpIMSI.equals(other.mnpIMSI))
+      return false;
+
+    if (mnpMSISDN == null) {
+      if (other.mnpMSISDN != null)
+        return false;
+    } else if (!mnpMSISDN.equals(other.mnpMSISDN))
+      return false;
+
+    if (psiSaiPresent != false && psiSaiPresent != true) {
+      if (other.psiSaiPresent == false && other.psiSaiPresent == true)
+        return false;
+    } else if (!(psiSaiPresent == (other.psiSaiPresent)))
+      return false;
+
+    if (currentLocationRetrieved != false && currentLocationRetrieved != true) {
+      if (other.currentLocationRetrieved == false && other.currentLocationRetrieved == true)
+        return false;
+    } else if (!(currentLocationRetrieved == (other.currentLocationRetrieved)))
       return false;
 
     return true;
@@ -1963,7 +2059,20 @@ public class GMLCCDRState implements Serializable {
 
     int psiMCC, psiMNC, psiLAC, psiCI;
     psiMCC = psiMNC = psiLAC = psiCI = -1;
-
+    double psiGeogLat, psiGeogLong, psiGeogUncertainty, psiGeodLat, psiGeodLong, psiGeodUncertainty;
+    psiGeogLat = psiGeogLong = psiGeogUncertainty = psiGeodLat = psiGeodLong = psiGeodUncertainty = 0.00;
+    int psiGeodConfidence, psiGeodScreeningAndPresentationInd;
+    psiGeodConfidence = psiGeodScreeningAndPresentationInd = -1;
+    String psiGeogTypeOfShape = "";
+    String psiGeodTypeOfShape = "";
+    String psiVLRnum = "";
+    String psiMSCnum = "";
+    String psiMNPImsi, psiMNPMsisdn, psiMNPRouteingNum;
+    psiMNPImsi = psiMNPMsisdn = psiMNPRouteingNum = "";
+    int psiMNPstatus = -1;
+    String psiSAIpresent, psiCurrentLocRetrieved;
+    psiSAIpresent = psiCurrentLocRetrieved = "";
+    String psiSubscriberState = "";
 
     try {
 
@@ -2205,10 +2314,6 @@ public class GMLCCDRState implements Serializable {
         reportingPLMNListPrioritized = String.valueOf(reportingPLMNList.getPlmnListPrioritized());
 
 
-
-
-
-
       if (locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength() != null) {
         psiMCC = locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMCC();
         psiMNC = locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMNC();
@@ -2220,9 +2325,43 @@ public class GMLCCDRState implements Serializable {
         psiMNC = locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMNC();
         psiLAC = locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getLac();
       }
+      if (locationInformation.getGeographicalInformation() != null) {
+        psiGeogLat = locationInformation.getGeographicalInformation().getLatitude();
+        psiGeogLong = locationInformation.getGeographicalInformation().getLongitude();
+        psiGeogUncertainty = locationInformation.getGeographicalInformation().getUncertainty();
+        psiGeogTypeOfShape = locationInformation.getGeographicalInformation().getTypeOfShape().name();
+      }
+      if (locationInformation.getGeodeticInformation() != null) {
+        psiGeodLat = locationInformation.getGeodeticInformation().getLatitude();
+        psiGeodLong = locationInformation.getGeodeticInformation().getLongitude();
+        psiGeodUncertainty = locationInformation.getGeodeticInformation().getUncertainty();
+        psiGeodTypeOfShape = locationInformation.getGeodeticInformation().getTypeOfShape().name();
+        psiGeodConfidence = locationInformation.getGeodeticInformation().getConfidence();
+        psiGeodScreeningAndPresentationInd = locationInformation.getGeodeticInformation().getScreeningAndPresentationIndicators();
+      }
+      if (locationInformation.getVlrNumber() != null)
+        psiVLRnum = locationInformation.getVlrNumber().getAddress();
+      if (locationInformation.getMscNumber() != null)
+        psiMSCnum = locationInformation.getMscNumber().getAddress();
+      if (locationInformation.getSaiPresent() != true && locationInformation.getSaiPresent() != false)
+        psiSAIpresent = String.valueOf(locationInformation.getSaiPresent());
+      if (locationInformation.getCurrentLocationRetrieved() != true && locationInformation.getCurrentLocationRetrieved() != false)
+        psiCurrentLocRetrieved = String.valueOf(locationInformation.getCurrentLocationRetrieved());
+
+      if (subscriberInfo.getSubscriberState() != null)
+        psiSubscriberState = subscriberInfo.getSubscriberState().getSubscriberStateChoice().toString();
+      if (subscriberInfo.getMNPInfoRes() != null) {
+        psiMNPImsi = new String(subscriberInfo.getMNPInfoRes().getIMSI().getData());
+        psiMNPMsisdn = subscriberInfo.getMNPInfoRes().getMSISDN().getAddress();
+        psiMNPstatus = subscriberInfo.getMNPInfoRes().getNumberPortabilityStatus().getType();
+        psiMNPRouteingNum = subscriberInfo.getMNPInfoRes().getRouteingNumber().getRouteingNumber();
+      }
     } catch (MAPException e) {
       e.printStackTrace();
     }
+
+
+
     return "GMLCCDRState [initiated=" + initiated +
             ", generated=" + generated +
             ", id=" + id +
@@ -2349,10 +2488,25 @@ public class GMLCCDRState implements Serializable {
             ", psiMNC=" + psiMNC +
             ", psiLAC=" + psiLAC +
             ", psiCI=" + psiCI +
-            ", psiGeographicLatitude=" + locationInformation.getGeographicalInformation().getLatitude() +
-            ", psiGeographicLongitude=" + locationInformation.getGeographicalInformation().getLongitude() +
-            ", psiGeographicUncertainty=" + locationInformation.getGeographicalInformation().getUncertainty() +
-            ", psiGeographicTypeOfShape=" + locationInformation.getGeographicalInformation().getTypeOfShape().getCode() +
+            ", psiGeographicLatitude=" + psiGeogLat +
+            ", psiGeographicLongitude=" + psiGeogLong +
+            ", psiGeographicUncertainty=" + psiGeogUncertainty +
+            ", psiGeographicTypeOfShape=" + psiGeogTypeOfShape +
+            ", psiGeodeticLatitude=" + psiGeodLat +
+            ", psiGeodeticLongitude=" + psiGeodLong +
+            ", psiGeodeticUncertainty=" + psiGeodUncertainty +
+            ", psiGeodeticConfidence=" + psiGeodConfidence +
+            ", psiGeodeticScreeningAndPresentationIndicators=" + psiGeodScreeningAndPresentationInd +
+            ", psiGeodeticTypeOfShape=" + psiGeodTypeOfShape +
+            ", psiVLRNumber=" + psiVLRnum +
+            ", psiMSCNumber=" + psiMSCnum +
+            ", psiSAIpresent=" + psiSAIpresent +
+            ", psiCurrentLocationRetrieved=" + psiCurrentLocRetrieved +
+            ", psiMNPStatus=" + psiMNPstatus +
+            ", psiMNPRouteingNumber=" + psiMNPRouteingNum +
+            ", psiMNPImsi=" + psiMNPImsi +
+            ", psiMNPMsisdn=" + psiMNPMsisdn +
+            ", psiSubscriberState=" + psiSubscriberState +
             "]@" + super.hashCode();
   }
 

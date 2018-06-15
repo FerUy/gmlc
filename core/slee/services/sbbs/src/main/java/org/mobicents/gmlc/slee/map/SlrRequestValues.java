@@ -141,6 +141,7 @@ public class SlrRequestValues  implements Serializable {
   private ReportingPLMNList reportingPLMNList;
   private VelocityEstimate velocityEstimate;
   private ServingNodeAddress servingNodeAddress;
+  private ISDNAddressString naESRD, naESRK;
 
   public SlrRequestValues() {
   }
@@ -162,7 +163,8 @@ public class SlrRequestValues  implements Serializable {
                           int lcsReferenceNumber, CellGlobalIdOrServiceAreaIdOrLAI cellGlobalIdOrServiceAreaIdOrLAI,
                           GSNAddress hGmlcAddress, int lcsServiceTypeID, boolean pseudonymIndicator,
                           AccuracyFulfilmentIndicator accuracyFulfilmentIndicator, int sequenceNumber,
-                          PeriodicLDRInfo periodicLDRInfo, boolean moLrShortCircuitIndicator, ReportingPLMNList reportingPLMNList) {
+                          PeriodicLDRInfo periodicLDRInfo, boolean moLrShortCircuitIndicator, ReportingPLMNList reportingPLMNList,
+                          ISDNAddressString naESRD, ISDNAddressString naESRK) {
     this.lcsEvent = lcsEvent;
     this.lcsClientID = lcsClientID;
     this.networkNodeNumber = networkNodeNumber;
@@ -189,6 +191,8 @@ public class SlrRequestValues  implements Serializable {
     this.periodicLDRInfo = periodicLDRInfo;
     this.moLrShortCircuitIndicator = moLrShortCircuitIndicator;
     this.reportingPLMNList = reportingPLMNList;
+    this.naESRD = naESRD;
+    this.naESRK = naESRK;
   }
 
   public LCSEvent getLcsEvent() {
@@ -415,6 +419,22 @@ public class SlrRequestValues  implements Serializable {
     this.servingNodeAddress = servingNodeAddress;
   }
 
+  public ISDNAddressString getNaESRD() {
+    return naESRD;
+  }
+
+  public void setNaESRD(ISDNAddressString naESRD) {
+    this.naESRD = naESRD;
+  }
+
+  public ISDNAddressString getNaESRK() {
+    return naESRK;
+  }
+
+  public void setNaESRK(ISDNAddressString naESRK) {
+    this.naESRK = naESRK;
+  }
+
   @Override
   public String toString() {
 
@@ -501,6 +521,12 @@ public class SlrRequestValues  implements Serializable {
 
     stringBuilder.append(", serving node address=");
     stringBuilder.append(servingNodeAddress);
+
+    stringBuilder.append(", NA-ESRD=");
+    stringBuilder.append(naESRD);
+
+    stringBuilder.append(", NA-ESRK=");
+    stringBuilder.append(naESRK);
 
     stringBuilder.append("]");
     return stringBuilder.toString();

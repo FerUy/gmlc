@@ -1853,6 +1853,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         if (this.logger.isFineEnabled()) {
           this.logger.fine("\nonSubscriberLocationReportRequest: received NaESRD parameter");
         }
+        slrRequestValues.setNaESRD(naESRD);
       }
 
       if (naESRK != null) {
@@ -1860,6 +1861,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         if (this.logger.isFineEnabled()) {
           this.logger.fine("\nonSubscriberLocationReportRequest: received NaESRK parameter");
         }
+        slrRequestValues.setNaESRK(naESRK);
       }
 
       if (extGeographicalInformation != null) {
@@ -2390,7 +2392,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
 
         MAPExtensionContainer mapExtensionContainer = null;
 
-        mapDialogLsmSlr.addSubscriberLocationReportResponse(event.getInvokeId(),naESRD, naESRD, mapExtensionContainer);
+        mapDialogLsmSlr.addSubscriberLocationReportResponse(event.getInvokeId(), naESRD, naESRK, mapExtensionContainer);
 
         // SubscriberLocationReportResponse is now composed by values taken from SubscriberLocationReportRequest and ready to be sent:
         mapDialogLsmSlr.close(false);
