@@ -208,7 +208,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
   private String pslLcsServiceTypeID, pslIntervalTime, pslReportingAmount, pslReportingInterval,
           pslLcsHorizontalAccuracy, pslLcsVerticalAccuracy, pslOccurrenceInfo, pslAreaType, pslAreaId, pslLocationEstimateType, pslDeferredLocationEventType,
           pslLcsPriority, pslVerticalCoordinateRequest, pslResponseTimeCategory, slrCallbackUrl, psiService;
-  private Integer pslLcsReferenceNumber;
+  private Integer pslLcsReferenceNumber, pslReferenceNumber;
 
   private HttpReport httpSubscriberLocationReport = new HttpReport();
 
@@ -957,7 +957,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         ReportingPLMNList reportingPLMNList = null;
 
         // TODO: register CallbackURL for PSL Report
-        Integer pslReferenceNumber = httpSubscriberLocationReport.Register(pslLcsReferenceNumber, slrCallbackUrl, null);
+        this.pslReferenceNumber = httpSubscriberLocationReport.Register(pslLcsReferenceNumber, slrCallbackUrl, null);
         logger.info(String.format("Sending PSL Req with ref# %d from LCS request ref# %d with url '%s'",
                 pslReferenceNumber, pslLcsReferenceNumber, slrCallbackUrl));
 
@@ -971,7 +971,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         mapDialogLsmPsl.addProvideSubscriberLocationRequest(locationType, mlcNumber, lcsClientID, false,
                 sriForLcsResponseValues.getImsi(), sriForLcsResponseValues.getMsisdn().getClass().newInstance().getMSISDN(),
                 sriForLcsResponseValues.getLmsi(), imei, lcsPriority, lcsQoS, mapExtensionContainer,
-                supportedGADShapes, pslLcsReferenceNumber, Integer.parseInt(pslLcsServiceTypeID), lcsCodeword, lcsPrivacyCheck,
+                supportedGADShapes, pslReferenceNumber, Integer.parseInt(pslLcsServiceTypeID), lcsCodeword, lcsPrivacyCheck,
                 areaEventInfo, hGmlcAddress, moLrShortCircuitIndicator, periodicLDRInfo, reportingPLMNList);
 
         // Keep ACI in across MAP dialog for PSL
@@ -2119,7 +2119,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         }
       }
 
-      if (lcsReferenceNumber <= Integer.MAX_VALUE && lcsReferenceNumber>=0) {
+      if (lcsReferenceNumber <= Integer.MAX_VALUE && lcsReferenceNumber>=Integer.MIN_VALUE)  {
         mlpRespResult = MLPResponse.MLPResultType.OK;
         if (this.logger.isFineEnabled()) {
           this.logger.fine("\nonSubscriberLocationReportRequest: received GeranPositioningDataInformation");

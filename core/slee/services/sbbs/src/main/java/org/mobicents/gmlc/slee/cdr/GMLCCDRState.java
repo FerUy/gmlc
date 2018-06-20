@@ -55,7 +55,6 @@ import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformatio
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.MNPInfoRes;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.SubscriberInfo;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.TypeOfShape;
-import org.mobicents.protocols.ss7.map.service.lsm.ExtGeographicalInformationImpl;
 import org.mobicents.protocols.ss7.sccp.parameter.SccpAddress;
 
 /**

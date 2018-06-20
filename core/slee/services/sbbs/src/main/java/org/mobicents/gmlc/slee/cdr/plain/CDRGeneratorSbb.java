@@ -19,7 +19,6 @@
 
 package org.mobicents.gmlc.slee.cdr.plain;
 
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 
@@ -64,7 +63,6 @@ import org.mobicents.protocols.ss7.map.api.service.lsm.ReportingPLMNList;
 
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.LocationInformation;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.SubscriberInfo;
-import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.SubscriberState;
 import org.mobicents.protocols.ss7.sccp.parameter.GlobalTitle;
 import org.mobicents.protocols.ss7.sccp.parameter.SccpAddress;
 
