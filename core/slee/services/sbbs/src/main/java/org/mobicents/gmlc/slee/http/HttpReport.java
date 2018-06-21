@@ -53,11 +53,10 @@ public class HttpReport {
         // register if not there the callback url by referenceNumber passed from client
         if (!callbackUrlHashMap.containsKey(referenceNumber)) {
             callbackUrlHashMap.put(referenceNumber, callbackUrl);
-            // return registered id for later retrieval and perform http method callback
-            return reportRegister.add(referenceNumber, reportParameters);
         }
 
-        return 0;
+        // return registered id for later retrieval and perform http method callback
+        return reportRegister.add(referenceNumber, reportParameters);
     }
 
     public void Cancel(Integer referenceNumber) {
@@ -70,8 +69,8 @@ public class HttpReport {
 
     public void Perform(HttpMethod httpMethod, Integer reportRegisterId) throws IOException {
         // get the report element register by previous registered id
-        if (callbackUrlHashMap.containsKey(reportRegisterId)) {
-            ReportElement reportElement = reportRegister.get(reportRegisterId);
+        ReportElement reportElement = reportRegister.get(reportRegisterId);
+        if (reportElement != null) {
             // get the callback from report element saved by referenceNumber identifying callback url
             String callbackUrl = callbackUrlHashMap.get(reportElement.referenceNumber);
 
@@ -81,7 +80,10 @@ public class HttpReport {
             httpUrlConnection.setRequestMethod(httpMethod.toString());
             httpUrlConnection.setDoOutput(true);
             OutputStream httpOutputStream = httpUrlConnection.getOutputStream();
-            httpOutputStream.write(reportElement.reportParameters.toString().getBytes());
+            if (reportElement.reportParameters == null)
+                httpOutputStream.write("{}".getBytes());
+            else
+                httpOutputStream.write(reportElement.reportParameters.toString().getBytes());
             httpOutputStream.flush();
             httpOutputStream.close();
 

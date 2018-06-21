@@ -1532,7 +1532,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
   public void onSubscriberLocationReportRequest(SubscriberLocationReportRequest event, ActivityContextInterface aci) {
 
     //temporary log
-    this.logger.severe("\nReceived onSubscriberLocationReportRequest = " + event);
+    this.logger.info("\nReceived onSubscriberLocationReportRequest = " + event);
 
     MAPErrorMessage mapErrorMessage = this.getErrorResponse();
 
