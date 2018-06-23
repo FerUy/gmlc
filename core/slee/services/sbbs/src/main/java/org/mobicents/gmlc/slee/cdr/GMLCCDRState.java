@@ -106,9 +106,11 @@ public class GMLCCDRState implements Serializable {
   protected ISDNAddressString networkNodeNumber;
   protected boolean gprsNodeIndicator;
   protected AdditionalNumber additionalNumber;
+  protected ISDNAddressString mscNumber, sgsnNumber;
   protected DiameterIdentity mmeName, sgsnName, sgsnRealm, aaaServerName;
   protected GSNAddress hGmlcAddress, vGmlcAddress, pprAddress;
   protected ExtGeographicalInformation locationEstimate;
+  protected TypeOfShape typeOfShape;
   protected boolean moLrShortCircuitIndicator;
   protected PositioningDataInformation geranPositioningDataInformation;
   protected UtranPositioningDataInfo utranPositioningDataInfo;
@@ -141,15 +143,16 @@ public class GMLCCDRState implements Serializable {
   protected Double psiGeographicLatitude, psiGeographicLongitude, psiGeographicUncertainty;
   protected Double psiGeodeticLatitude, psiGeodeticLongitude, psiGeodeticUncertainty;
   protected int psiGeodeticConfidence, psiScreeningAndPresentationIndicators;
-  protected TypeOfShape typeOfShape;
   protected MNPInfoRes mnpInfoRes;
   protected int mnpStatus, mnpRouteingNumber;
   protected IMSI mnpIMSI;
+  protected String mnpIMSIData;
   protected ISDNAddressString mnpMSISDN;
+  protected String mnpMSISDAddress;
   protected ISDNAddressString psiVlrNumber;
   protected ISDNAddressString psiMscNumber;
   protected boolean psiSaiPresent;
-  protected boolean currentLocationRetrieved;
+  protected boolean psiCurrentLocationRetrieved;
 
   /****************/
   /*** GETTERS ***/
@@ -370,6 +373,20 @@ public class GMLCCDRState implements Serializable {
    */
   public AdditionalNumber getAdditionalNumber() {
     return additionalNumber;
+  }
+
+  /**
+   * @return the Additional MSC Number
+   */
+  public ISDNAddressString getMscNumber() {
+    return mscNumber;
+  }
+
+  /**
+   * @return the Additional MSC Number
+   */
+  public ISDNAddressString getSgsnNumber() {
+    return sgsnNumber;
   }
 
   /**
@@ -709,24 +726,38 @@ public class GMLCCDRState implements Serializable {
   }
 
   /**
-   * @return the subscriber's MNP MSISDN address
+   * @return the subscriber's MNP IMSI data
+   */
+  public String getMnpIMSIData() {
+    return mnpIMSIData;
+  }
+
+  /**
+   * @return the subscriber's MNP MSISDN
    */
   public ISDNAddressString getMnpMSISDN() {
     return mnpMSISDN;
   }
 
   /**
-   * @return the subscriber's
+   * @return the subscriber's MNP MSISDN address
+   */
+  public String getMnpMSISDAddress() {
+    return mnpMSISDAddress;
+  }
+
+  /**
+   * @return if SAI is present
    */
   public boolean isPsiSaiPresent() {
     return psiSaiPresent;
   }
 
   /**
-   * @return the subscriber's
+   * @return if current location is retrieved
    */
-  public boolean isCurrentLocationRetrieved() {
-    return currentLocationRetrieved;
+  public boolean isPsiCurrentLocationRetrieved() {
+    return psiCurrentLocationRetrieved;
   }
 
   /**
@@ -948,6 +979,20 @@ public class GMLCCDRState implements Serializable {
    */
   public void setAdditionalNumber(AdditionalNumber additionalNumber) {
     this.additionalNumber = additionalNumber;
+  }
+
+  /**
+   * @param additionalMscNumber to set
+   */
+  public void setMscNumber(ISDNAddressString additionalMscNumber) {
+    this.mscNumber = mscNumber;
+  }
+
+  /**
+   * @param additionalSgsnNumber to set
+   */
+  public void setSgsnNumber(ISDNAddressString additionalSgsnNumber) {
+    this.sgsnNumber = sgsnNumber;
   }
 
   /**
@@ -1279,8 +1324,8 @@ public class GMLCCDRState implements Serializable {
     this.psiSaiPresent = psiSaiPresent;
   }
 
-  public void setCurrentLocationRetrieved(boolean currentLocationRetrieved) {
-    this.currentLocationRetrieved = currentLocationRetrieved;
+  public void setPsiCurrentLocationRetrieved(boolean psiCurrentLocationRetrieved) {
+    this.psiCurrentLocationRetrieved = psiCurrentLocationRetrieved;
   }
 
   /**
@@ -1312,10 +1357,24 @@ public class GMLCCDRState implements Serializable {
   }
 
   /**
+   * @param mnpIMSIData subscriber's MNP information to set
+   */
+  public void setMnpIMSIData(String mnpIMSIData) {
+    this.mnpIMSIData = mnpIMSIData;
+  }
+
+  /**
    * @param mnpMSISDN subscriber's MNP information to set
    */
   public void setMnpMSISDN(ISDNAddressString mnpMSISDN) {
     this.mnpMSISDN = mnpMSISDN;
+  }
+
+  /**
+   * @param mnpMSISDAddress subscriber's MNP information to set
+   */
+  public void setMnpMSISDAddress(String mnpMSISDAddress) {
+    this.mnpMSISDAddress = mnpMSISDAddress;
   }
 
   public void init(final Long dialogId, final AddressString destRef, final AddressString origRef, final ISDNAddressString isdnAddressString,
@@ -1667,6 +1726,20 @@ public class GMLCCDRState implements Serializable {
     } else if (!additionalNumber.equals(other.additionalNumber))
       return false;
 
+    if (mscNumber == null) {
+      if (other.mscNumber != null)
+        return false;
+    } else if (!mscNumber.equals(other.mscNumber)) {
+      return false;
+    }
+
+    if (sgsnNumber == null) {
+      if (other.sgsnNumber != null)
+        return false;
+    } else if (!sgsnNumber.equals(other.sgsnNumber)) {
+      return false;
+    }
+
     if (mmeName == null) {
       if (other.mmeName != null)
         return false;
@@ -1985,10 +2058,10 @@ public class GMLCCDRState implements Serializable {
     } else if (!(psiSaiPresent == (other.psiSaiPresent)))
       return false;
 
-    if (currentLocationRetrieved != false && currentLocationRetrieved != true) {
-      if (other.currentLocationRetrieved == false && other.currentLocationRetrieved == true)
+    if (psiCurrentLocationRetrieved != false && psiCurrentLocationRetrieved != true) {
+      if (other.psiCurrentLocationRetrieved == false && other.psiCurrentLocationRetrieved == true)
         return false;
-    } else if (!(currentLocationRetrieved == (other.currentLocationRetrieved)))
+    } else if (!(psiCurrentLocationRetrieved == (other.psiCurrentLocationRetrieved)))
       return false;
 
     return true;
@@ -2036,8 +2109,8 @@ public class GMLCCDRState implements Serializable {
     lsmMCC = lsmMNC = lsmLAC = lsmCI = -1;
     int accuracyFulfilmentIndicatorValue = -1;
     int sequenceNumberValue = -1;
-    int velEstHorizontalSpeed, velEstVerticalSpeed, velEstBearing, velEstHorSpeedUncertainty, velEstVertSpeedUncertainty, velocityTypeValue;
-    velEstHorizontalSpeed = velEstVerticalSpeed = velEstBearing = velEstHorSpeedUncertainty = velEstVertSpeedUncertainty = velocityTypeValue = -1;
+    int velEstHorizontalSpeed, velEstVerticalSpeed, velEstBearing, velEstHorSpeedUncertainty, velEstVertSpeedUncertainty, velocityEstTypeValue;
+    velEstHorizontalSpeed = velEstVerticalSpeed = velEstBearing = velEstHorSpeedUncertainty = velEstVertSpeedUncertainty = velocityEstTypeValue = -1;
     String servingNodeAddressMSC, servingNodeAddressSGSN, servingNodeAddressMME;
     servingNodeAddressMSC = servingNodeAddressSGSN = servingNodeAddressMME = "";
     int lcsQoSHorizontalAccuracy, lcsQoSVerticalAccuracy, lcsQoSResponseTimeCategory;
@@ -2189,13 +2262,13 @@ public class GMLCCDRState implements Serializable {
       }
 
       if (velocityEstimate.getData() != null) {
+        try {
           velEstHorizontalSpeed = velocityEstimate.getHorizontalSpeed();
           velEstVerticalSpeed = velocityEstimate.getVerticalSpeed();
-        try {
           velEstHorSpeedUncertainty = velocityEstimate.getUncertaintyHorizontalSpeed();
           velEstVertSpeedUncertainty = velocityEstimate.getUncertaintyVerticalSpeed();
           velEstBearing = velocityEstimate.getBearing();
-          velocityTypeValue = velocityEstimate.getVelocityType().getCode();
+          velocityEstTypeValue = velocityEstimate.getVelocityType().getCode();
         } catch (Exception e) {
           e.printStackTrace();
         }
@@ -2245,7 +2318,7 @@ public class GMLCCDRState implements Serializable {
           nfe.printStackTrace();
         }
       }
-      if (lcsQoS.getVerticalCoordinateRequest() != true && lcsQoS.getVerticalCoordinateRequest() != false)
+      if (lcsQoS.getVerticalCoordinateRequest() == true || lcsQoS.getVerticalCoordinateRequest() == false)
         lcsQoSVerticalCoordRequest = String.valueOf(lcsQoSVerticalCoordRequest);
 
       try {
@@ -2283,8 +2356,8 @@ public class GMLCCDRState implements Serializable {
           deferredmtlrDataAAAServerName = new String(deferredmtlrData.getLCSLocationInfo().getAaaServerName().getData());
         if (deferredmtlrData.getLCSLocationInfo().getMmeName() != null)
           deferredmtlrDataMMEname = new String(deferredmtlrData.getLCSLocationInfo().getMmeName().getData());
-        if (deferredmtlrData.getLCSLocationInfo().getGprsNodeIndicator() != true &&
-                deferredmtlrData.getLCSLocationInfo().getGprsNodeIndicator() != false)
+        if (deferredmtlrData.getLCSLocationInfo().getGprsNodeIndicator() == true ||
+                deferredmtlrData.getLCSLocationInfo().getGprsNodeIndicator() == false)
           deferredmtlrDataGPRSNodeInd = String.valueOf(deferredmtlrData.getLCSLocationInfo().getGprsNodeIndicator());
       }
       if (deferredmtlrData.getTerminationCause() != null)
@@ -2308,8 +2381,8 @@ public class GMLCCDRState implements Serializable {
           }
         }
       }
-      if (reportingPLMNList.getPlmnListPrioritized() != true &&
-              reportingPLMNList.getPlmnListPrioritized() != false)
+      if (reportingPLMNList.getPlmnListPrioritized() == true ||
+              reportingPLMNList.getPlmnListPrioritized() == false)
         reportingPLMNListPrioritized = String.valueOf(reportingPLMNList.getPlmnListPrioritized());
 
 
@@ -2342,9 +2415,9 @@ public class GMLCCDRState implements Serializable {
         psiVLRnum = locationInformation.getVlrNumber().getAddress();
       if (locationInformation.getMscNumber() != null)
         psiMSCnum = locationInformation.getMscNumber().getAddress();
-      if (locationInformation.getSaiPresent() != true && locationInformation.getSaiPresent() != false)
+      if (locationInformation.getSaiPresent() == true || locationInformation.getSaiPresent() == false)
         psiSAIpresent = String.valueOf(locationInformation.getSaiPresent());
-      if (locationInformation.getCurrentLocationRetrieved() != true && locationInformation.getCurrentLocationRetrieved() != false)
+      if (locationInformation.getCurrentLocationRetrieved() == true || locationInformation.getCurrentLocationRetrieved() == false)
         psiCurrentLocRetrieved = String.valueOf(locationInformation.getCurrentLocationRetrieved());
 
       if (subscriberInfo.getSubscriberState() != null)
@@ -2440,6 +2513,10 @@ public class GMLCCDRState implements Serializable {
             ", sequenceNumber" + sequenceNumberValue +
             ", horizontalVelocityEstimate=" + velEstHorizontalSpeed +
             ", verticalVelocityEstimate=" + velEstVerticalSpeed +
+            ", horizontalVelocityEstimateUncertainty=" + velEstHorSpeedUncertainty +
+            ", verticalVelocityEstimateUncertainty=" + velEstVertSpeedUncertainty +
+            ", velocityEstimateType=" + velocityEstTypeValue +
+            ", velocityEstimateBearing=" + velEstBearing +
             ", pseudonymIndicator" + pseudonymIndicatorStr +
             ", servingNodeAddressMSCNumber=" + servingNodeAddressMSC +
             ", servingNodeAddressSGSNNumber=" + servingNodeAddressSGSN +

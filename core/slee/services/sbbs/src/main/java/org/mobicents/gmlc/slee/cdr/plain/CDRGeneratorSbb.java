@@ -62,6 +62,7 @@ import org.mobicents.protocols.ss7.map.api.service.lsm.LCSClientID;
 import org.mobicents.protocols.ss7.map.api.service.lsm.ReportingPLMNList;
 
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.LocationInformation;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.MNPInfoRes;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.SubscriberInfo;
 import org.mobicents.protocols.ss7.sccp.parameter.GlobalTitle;
 import org.mobicents.protocols.ss7.sccp.parameter.SccpAddress;
@@ -318,7 +319,7 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
     /**
      * ORIGINATING REFERENCE Address
      */
-    AddressString addressString = gmlcCdrState.getOrigReference();
+/*    AddressString addressString = gmlcCdrState.getOrigReference();
     if(addressString != null) {
       // Originating Reference ADDRESS NATURE
       stringBuilder.append((byte) addressString.getAddressNature().getIndicator()).append(SEPARATOR);
@@ -331,10 +332,11 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
       stringBuilder.append(SEPARATOR);
       stringBuilder.append(SEPARATOR);
     }
-
+*/
     /**
      * DESTINATION REFERENCE Address
      */
+/*
     addressString = gmlcCdrState.getDestReference();
     if(addressString != null) {
       // Destination Reference ADDRESS NATURE
@@ -348,7 +350,7 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
       stringBuilder.append(SEPARATOR);
       stringBuilder.append(SEPARATOR);
     }
-
+*/
     /**
      * ISDN Address
      */
@@ -583,18 +585,11 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
       stringBuilder.append(SEPARATOR);
     }
 
-    // Location Estimate ALTITUDE
-    ExtGeographicalInformation altitude = gmlcCdrState.getLocationEstimate();
-    if(altitude != null) {
-      stringBuilder.append(altitude.getAltitude()).append(SEPARATOR);
-    } else {
-      stringBuilder.append(SEPARATOR);
-    }
-
-    // Location Estimate CONFIDENCE
-    ExtGeographicalInformation confidence = gmlcCdrState.getLocationEstimate();
-    if(confidence != null) {
-      stringBuilder.append(confidence.getConfidence()).append(SEPARATOR);
+    // Location Estimate TYPE OF SHAPE
+    ExtGeographicalInformation extGeographicalInformationTypeOfShape = gmlcCdrState.getLocationEstimate();
+    if(extGeographicalInformationTypeOfShape != null) {
+      if (extGeographicalInformationTypeOfShape.getTypeOfShape() != null)
+      stringBuilder.append(extGeographicalInformationTypeOfShape.getTypeOfShape().getCode()).append(SEPARATOR);
     } else {
       stringBuilder.append(SEPARATOR);
     }
@@ -607,7 +602,43 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
       stringBuilder.append(SEPARATOR);
     }
 
-    // GERAN Positioning Data Info
+    // Location Estimate UNCERTAINTY
+    ExtGeographicalInformation uncertainty = gmlcCdrState.getLocationEstimate();
+    if(uncertainty != null) {
+      stringBuilder.append(uncertainty.getUncertainty()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // Location Estimate CONFIDENCE
+    ExtGeographicalInformation confidence = gmlcCdrState.getLocationEstimate();
+    if(confidence != null) {
+      stringBuilder.append(confidence.getConfidence()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // Location Estimate ALTITUDE
+    ExtGeographicalInformation altitude = gmlcCdrState.getLocationEstimate();
+    if(altitude != null) {
+      stringBuilder.append(altitude.getAltitude()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * AGE OF LOCATION ESTIMATE
+     */
+    int ageOfLocationEstimate = gmlcCdrState.getAgeOfLocationEstimate();
+    if(ageOfLocationEstimate != -1) {
+      stringBuilder.append(ageOfLocationEstimate).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * GERAN Positioning Data Info
+     */
     PositioningDataInformation geranPositioningDataInformation = gmlcCdrState.getGeranPositioningDataInformation();
     if(geranPositioningDataInformation != null) {
       String geranPositioningDataInformationStr = new String(geranPositioningDataInformation.getData(), StandardCharsets.ISO_8859_1);
@@ -616,7 +647,9 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
       stringBuilder.append(SEPARATOR);
     }
 
-    // UTRAN Positioning Data Info
+    /**
+     * UTRAN Positioning Data Info
+     */
     UtranPositioningDataInfo utranPositioningDataInfo = gmlcCdrState.getUtranPositioningDataInfo();
     if(utranPositioningDataInfo != null) {
       String utranPositioningDataInformationStr = new String(utranPositioningDataInfo.getData(),  StandardCharsets.ISO_8859_1);
@@ -648,16 +681,6 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
     }
 
     /**
-     * AGE OF LOCATION ESTIMATE
-     */
-    int ageOfLocationEstimate = gmlcCdrState.getAgeOfLocationEstimate();
-    if(ageOfLocationEstimate != -1) {
-      stringBuilder.append(ageOfLocationEstimate).append(SEPARATOR);
-    } else {
-      stringBuilder.append(SEPARATOR);
-    }
-
-    /**
      * ADDITIONAL LOCATION ESTIMATE
      */
     // Additional Location Estimate LATITUDE
@@ -676,10 +699,27 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
       stringBuilder.append(SEPARATOR);
     }
 
-    // Additional Location Estimate ALTITUDE
-    AddGeographicalInformation additionalAltitude = gmlcCdrState.getAdditionalLocationEstimate();
-    if(additionalAltitude != null) {
-      stringBuilder.append(additionalAltitude.getAltitude()).append(SEPARATOR);
+    // Additional Location Estimate TYPE OF SHAPE
+    AddGeographicalInformation addGeographicalInformationTypeOfShape = gmlcCdrState.getAdditionalLocationEstimate();
+    if(addGeographicalInformationTypeOfShape != null) {
+      if(addGeographicalInformationTypeOfShape.getTypeOfShape() != null)
+        stringBuilder.append(addGeographicalInformationTypeOfShape.getTypeOfShape().getCode()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // Additional Location Estimate INNER RADIUS
+    AddGeographicalInformation additionalInnerRadius = gmlcCdrState.getAdditionalLocationEstimate();
+    if(additionalInnerRadius != null) {
+      stringBuilder.append(additionalInnerRadius.getInnerRadius()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // Additional Location Estimate UNCERTAINTY
+    AddGeographicalInformation addGeographicalInformationUncertainty = gmlcCdrState.getAdditionalLocationEstimate();
+    if(addGeographicalInformationUncertainty != null) {
+      stringBuilder.append(addGeographicalInformationUncertainty.getUncertainty()).append(SEPARATOR);
     } else {
       stringBuilder.append(SEPARATOR);
     }
@@ -692,10 +732,10 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
       stringBuilder.append(SEPARATOR);
     }
 
-    // Additional Location Estimate INNER RADIUS
-    AddGeographicalInformation additionalInnerRadius = gmlcCdrState.getAdditionalLocationEstimate();
-    if(additionalInnerRadius != null) {
-      stringBuilder.append(additionalInnerRadius.getInnerRadius()).append(SEPARATOR);
+    // Additional Location Estimate ALTITUDE
+    AddGeographicalInformation additionalAltitude = gmlcCdrState.getAdditionalLocationEstimate();
+    if(additionalAltitude != null) {
+      stringBuilder.append(additionalAltitude.getAltitude()).append(SEPARATOR);
     } else {
       stringBuilder.append(SEPARATOR);
     }
@@ -791,6 +831,39 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
       stringBuilder.append(SEPARATOR);
     }
 
+    // VELOCITY ESTIMATE HORIZONTAL UNCERTAINTY
+    VelocityEstimate velocityHorizontalUncertainty = gmlcCdrState.getVelocityEstimate();
+    if(velocityHorizontalUncertainty != null) {
+      stringBuilder.append(velocityHorizontalUncertainty.getUncertaintyHorizontalSpeed()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // VELOCITY ESTIMATE VERTICAL UNCERTAINTY
+    VelocityEstimate velocityVerticalUncertainty = gmlcCdrState.getVelocityEstimate();
+    if(velocityVerticalUncertainty != null) {
+      stringBuilder.append(velocityVerticalUncertainty.getUncertaintyVerticalSpeed()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // VELOCITY TYPE
+    VelocityEstimate velocityType = gmlcCdrState.getVelocityEstimate();
+    if(velocityType != null) {
+      stringBuilder.append(velocityType.getVelocityType().getCode()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    // VELOCITY ESTIMATE BEARING
+    VelocityEstimate velocityEstimateBearing = gmlcCdrState.getVelocityEstimate();
+    if(velocityEstimateBearing != null) {
+      stringBuilder.append(velocityEstimateBearing.getBearing()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+
     /**
      * SERVING NODE ADDRESS
      */
@@ -820,6 +893,7 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
     /**
      * LCSClientID
      */
+/*
     LCSClientID lcsClientID = gmlcCdrState.getLcsClientID();
     if(lcsClientID != null) {
       try {
@@ -869,10 +943,12 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
       stringBuilder.append(SEPARATOR);
       stringBuilder.append(SEPARATOR);
     }
+*/
 
     /**
      * LCS QoS
      */
+/*
     // HORIZONTAL ACCURACY
     LCSQoS horizontalAccuracy = gmlcCdrState.getLcsQoS();
     if(horizontalAccuracy != null) {
@@ -894,7 +970,7 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
     } else {
       stringBuilder.append(SEPARATOR);
     }
-
+*/
     /**
      * LCS REFERENCE NUMBER
      */
@@ -918,23 +994,25 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
     /**
      * BAROMETRIC PRESSURE
      */
+/*
     String barometricPressureMeasurement = gmlcCdrState.getBarometricPressureMeasurement();
     if(barometricPressureMeasurement != null) {
       stringBuilder.append(barometricPressureMeasurement).append(SEPARATOR);
     } else {
       stringBuilder.append(SEPARATOR);
     }
-
+*/
     /**
      * CIVIC ADDRESS
      */
+/*
     String civicAddress = gmlcCdrState.getCivicAddress();
     if(civicAddress != null) {
       stringBuilder.append(civicAddress).append(SEPARATOR);
     } else {
       stringBuilder.append(SEPARATOR);
     }
-
+*/
     /**
      * LCS EVENT
      */
@@ -990,26 +1068,39 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
       if(deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo() != null) {
         if (deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getNetworkNodeNumber() != null)
           stringBuilder.append(deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getNetworkNodeNumber().getAddress()).append(SEPARATOR);
-        if (deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getGprsNodeIndicator() == true ||
-                deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getGprsNodeIndicator() == false)
+        else
+          stringBuilder.append(SEPARATOR);
+        if (deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getGprsNodeIndicator())
           stringBuilder.append(deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getGprsNodeIndicator()).append(SEPARATOR);
+        else
+          stringBuilder.append(false).append(SEPARATOR);
         if (deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getAdditionalNumber() != null) {
           if (deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getAdditionalNumber().getMSCNumber() != null)
             stringBuilder.append(deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getAdditionalNumber().getMSCNumber().getAddress()).append(SEPARATOR);
+          else
+            stringBuilder.append(SEPARATOR);
           if (deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getAdditionalNumber().getSGSNNumber() != null)
             stringBuilder.append(deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getAdditionalNumber().getSGSNNumber().getAddress()).append(SEPARATOR);
+          else
+            stringBuilder.append(SEPARATOR);
         }
         if (deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getLMSI() != null) {
-          String lmsiStr = new String(deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getLMSI().getData());
+          String lmsiStr = new String(deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getLMSI().getData(), StandardCharsets.ISO_8859_1);
           stringBuilder.append(lmsiStr).append(SEPARATOR);
+        } else {
+          stringBuilder.append(SEPARATOR);
         }
         if (deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getMmeName() != null) {
-          String mmeNameStr = new String(deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getMmeName().getData());
+          String mmeNameStr = new String(deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getMmeName().getData(), StandardCharsets.ISO_8859_1);
           stringBuilder.append(mmeNameStr).append(SEPARATOR);
+        } else {
+          stringBuilder.append(SEPARATOR);
         }
         if (deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getAaaServerName() != null) {
-          String aaaServerNameStr = new String(deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getAaaServerName().getData());
+          String aaaServerNameStr = new String(deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getAaaServerName().getData(), StandardCharsets.ISO_8859_1);
           stringBuilder.append(aaaServerNameStr).append(SEPARATOR);
+        } else {
+          stringBuilder.append(SEPARATOR);
         }
         if (deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getSupportedLCSCapabilitySets() != null) {
           String LcsCsR98_99 = String.valueOf(deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getSupportedLCSCapabilitySets().getCapabilitySetRelease98_99());
@@ -1022,6 +1113,12 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
           stringBuilder.append(LcsCsR5).append(SEPARATOR);
           stringBuilder.append(LcsCsR6).append(SEPARATOR);
           stringBuilder.append(LcsCsR7).append(SEPARATOR);
+        } else {
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
         }
         if (deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getAdditionalLCSCapabilitySets() != null) {
           String aLCSCSR98_99 = String.valueOf(deferreddMTLRDataDeferredLcsLocationInfo.getLCSLocationInfo().getAdditionalLCSCapabilitySets().getCapabilitySetRelease98_99());
@@ -1034,9 +1131,14 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
           stringBuilder.append(aLCSCSR5).append(SEPARATOR);
           stringBuilder.append(aLCSCSR6).append(SEPARATOR);
           stringBuilder.append(aLCSCSR7).append(SEPARATOR);
+        } else {
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
         }
       }
-
     } else {
       stringBuilder.append(SEPARATOR);
       stringBuilder.append(SEPARATOR);
@@ -1154,7 +1256,9 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
         stringBuilder.append(locationInformation.getGeographicalInformation().getLatitude()).append(SEPARATOR);
         stringBuilder.append(locationInformation.getGeographicalInformation().getLongitude()).append(SEPARATOR);
         stringBuilder.append(locationInformation.getGeographicalInformation().getUncertainty()).append(SEPARATOR);
+        stringBuilder.append(locationInformation.getGeographicalInformation().getTypeOfShape()).append(SEPARATOR);
       } else {
+        stringBuilder.append(SEPARATOR);
         stringBuilder.append(SEPARATOR);
         stringBuilder.append(SEPARATOR);
         stringBuilder.append(SEPARATOR);
@@ -1164,7 +1268,11 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
         stringBuilder.append(locationInformation.getGeodeticInformation().getLongitude()).append(SEPARATOR);
         stringBuilder.append(locationInformation.getGeodeticInformation().getUncertainty()).append(SEPARATOR);
         stringBuilder.append(locationInformation.getGeodeticInformation().getConfidence()).append(SEPARATOR);
+        stringBuilder.append(locationInformation.getGeodeticInformation().getTypeOfShape()).append(SEPARATOR);
+        stringBuilder.append(locationInformation.getGeodeticInformation().getScreeningAndPresentationIndicators()).append(SEPARATOR);
       } else {
+        stringBuilder.append(SEPARATOR);
+        stringBuilder.append(SEPARATOR);
         stringBuilder.append(SEPARATOR);
         stringBuilder.append(SEPARATOR);
         stringBuilder.append(SEPARATOR);
@@ -1182,6 +1290,49 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
       stringBuilder.append(SEPARATOR);
       stringBuilder.append(SEPARATOR);
       stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * SAI Present (from PSI)
+     */
+    boolean psiSaiPresent = gmlcCdrState.isPsiSaiPresent();
+    if(psiSaiPresent) {
+      stringBuilder.append(psiSaiPresent).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * Current Location Retrieved (from PSI)
+     */
+    boolean psiCurrentLocationRetrieved = gmlcCdrState.isPsiCurrentLocationRetrieved();
+    if(psiCurrentLocationRetrieved) {
+      stringBuilder.append(psiCurrentLocationRetrieved).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
+     * MNP Info Result (from PSI)
+     */
+    MNPInfoRes psiMNPInfoResult = gmlcCdrState.getMnpInfoRes();
+    if(psiMNPInfoResult != null) {
+      if (psiMNPInfoResult.getNumberPortabilityStatus() != null)
+        stringBuilder.append(psiMNPInfoResult.getNumberPortabilityStatus().getType()).append(SEPARATOR);
+      if (psiMNPInfoResult.getIMSI() != null)
+        stringBuilder.append(psiMNPInfoResult.getIMSI().getData()).append(SEPARATOR);
+      if (psiMNPInfoResult.getMSISDN() != null)
+        stringBuilder.append(psiMNPInfoResult.getMSISDN().getAddress()).append(SEPARATOR);
+      if (psiMNPInfoResult.getRouteingNumber() != null)
+        stringBuilder.append(psiMNPInfoResult.getRouteingNumber().getRouteingNumber()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
     }
 
     /**
@@ -1189,7 +1340,7 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
      */
     SubscriberInfo subscriberInfo = gmlcCdrState.getSubscriberInfo();
     if(subscriberInfo != null) {
-      stringBuilder.append(subscriberInfo.getSubscriberState().getSubscriberStateChoice());//.append(SEPARATOR);
+      stringBuilder.append(subscriberInfo.getSubscriberState().getSubscriberStateChoice().toString());//.append(SEPARATOR);
     } else {
       /*stringBuilder.append(SEPARATOR);*/ /// Uncomment if further fields are added
     }

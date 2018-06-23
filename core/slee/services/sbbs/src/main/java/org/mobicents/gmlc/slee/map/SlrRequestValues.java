@@ -131,6 +131,7 @@ public class SlrRequestValues  implements Serializable {
   private DeferredmtlrData deferredmtlrData;
   private int lcsReferenceNumber;
   private CellGlobalIdOrServiceAreaIdOrLAI cellGlobalIdOrServiceAreaIdOrLAI;
+  private boolean saiPresent;
   private GSNAddress hGmlcAddress;
   private int lcsServiceTypeID;
   private boolean pseudonymIndicator;
@@ -158,7 +159,7 @@ public class SlrRequestValues  implements Serializable {
                           IMSI imsi, ISDNAddressString msisdn, IMEI imei, ExtGeographicalInformation locationEstimate,
                           PositioningDataInformation geranPositioningDataInformation, UtranPositioningDataInfo utranPositioningDataInfo,
                           GeranGANSSpositioningData geranGANSSpositioningData, UtranGANSSpositioningData utranGANSSpositioningData,
-                          int ageOfLocationEstimate, LMSI lmsi, boolean gprsNodeIndicator,
+                          int ageOfLocationEstimate, LMSI lmsi, boolean gprsNodeIndicator, boolean saiPresent,
                           AddGeographicalInformation additionalLocationEstimate, DeferredmtlrData deferredmtlrData,
                           int lcsReferenceNumber, CellGlobalIdOrServiceAreaIdOrLAI cellGlobalIdOrServiceAreaIdOrLAI,
                           GSNAddress hGmlcAddress, int lcsServiceTypeID, boolean pseudonymIndicator,
@@ -179,6 +180,7 @@ public class SlrRequestValues  implements Serializable {
     this.ageOfLocationEstimate = ageOfLocationEstimate;
     this.lmsi = lmsi;
     this.gprsNodeIndicator = gprsNodeIndicator;
+    this.saiPresent = saiPresent;
     this.additionalLocationEstimate = additionalLocationEstimate;
     this.deferredmtlrData = deferredmtlrData;
     this.lcsReferenceNumber = lcsReferenceNumber;
@@ -305,6 +307,18 @@ public class SlrRequestValues  implements Serializable {
 
   public void setGprsNodeIndicator(boolean gprsNodeIndicator) {
     this.gprsNodeIndicator = gprsNodeIndicator;
+  }
+
+  public boolean isSaiPresent() {
+    return saiPresent;
+  }
+
+  public void setSaiPresent(boolean saiPresent) {
+    this.saiPresent = saiPresent;
+  }
+
+  public boolean isPseudonymIndicator() {
+    return pseudonymIndicator;
   }
 
   public AddGeographicalInformation getAdditionalLocationEstimate() {

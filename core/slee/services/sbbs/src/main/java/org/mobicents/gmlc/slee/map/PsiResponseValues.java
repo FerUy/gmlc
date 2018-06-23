@@ -22,22 +22,30 @@
 package org.mobicents.gmlc.slee.map;
 
 import org.mobicents.protocols.ss7.map.api.MAPException;
+
 import org.mobicents.protocols.ss7.map.api.primitives.CellGlobalIdOrServiceAreaIdFixedLength;
 import org.mobicents.protocols.ss7.map.api.primitives.CellGlobalIdOrServiceAreaIdOrLAI;
 import org.mobicents.protocols.ss7.map.api.primitives.IMEI;
 import org.mobicents.protocols.ss7.map.api.primitives.IMSI;
 import org.mobicents.protocols.ss7.map.api.primitives.ISDNAddressString;
+import org.mobicents.protocols.ss7.map.api.primitives.DiameterIdentity;
+
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.LocationInformation;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.LocationInformationGPRS;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.LocationInformationEPS;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.TypeOfShape;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.EUtranCgi;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.LocationNumberMap;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.SubscriberState;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.PSSubscriberState;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.MSClassmark2;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.GPRSMSClass;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.MNPInfoRes;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.RouteingNumber;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.TAId;
 
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
 import java.util.TimeZone;
 
 /**
@@ -61,26 +69,26 @@ public class PsiResponseValues implements Serializable {
     8.11.2.2	Service primitives
               Table 8.11/2: Provide_Subscriber_Information
               Parameter name	                                Request	Indication	Response	Confirm
-              Invoke id	                                        M	        M(=)	    M(=)	    M(=)
-              Requested Info	                                  M	        M(=)
+              Invoke id	                                        M	        M(=)	   M(=)	        M(=)
+              Requested Info	                                M	        M(=)
               IMSI	                                            M	        M(=)
               LMSI	                                            U	        O
               Call Priority	                                    U	        O
-              Location Information			                                            C	        C(=)
-              Location Information for GPRS			                                    C	        C(=)
-              Subscriber State			                                                C	        C(=)
-              PS Subscriber State			                                              C	        C(=)
-              IMEI			                                                            C	        C(=)
-              MS Classmark 2			                                                  C	        C(=)
-              GPRS MS Class			                                                    C	        C(=)
-              IMS Voice Over PS Sessions Support Indicator		                      C	        C(=)
-              Last UE Activity Time			                                            C	        C(=)
-              Last RAT Type			                                                    C	        C(=)
-              Location Information for EPS			                                    C	        C(=)
-              Time Zone			                                                        C	        C(=)
-              Daylight Saving Time			                                            C	        C(=)
-              User error			                                                      C	        C(=)
-              Provider error				                                                          O
+              Location Information			                                           C	        C(=)
+              Location Information for GPRS			                                   C	        C(=)
+              Subscriber State			                                               C	        C(=)
+              PS Subscriber State			                                           C	        C(=)
+              IMEI			                                                           C	        C(=)
+              MS Classmark 2			                                               C	        C(=)
+              GPRS MS Class			                                                   C	        C(=)
+              IMS Voice Over PS Sessions Support Indicator		                       C	        C(=)
+              Last UE Activity Time			                                           C	        C(=)
+              Last RAT Type			                                                   C	        C(=)
+              Location Information for EPS			                                   C	        C(=)
+              Time Zone			                                                       C	        C(=)
+              Daylight Saving Time			                                           C	        C(=)
+              User error			                                                   C	        C(=)
+              Provider error				                                                        O
 
       ? (M): mandatory parameter.
       ? (O): provider option.
@@ -94,45 +102,93 @@ public class PsiResponseValues implements Serializable {
   */
 
     private LocationInformation locationInformation;
-    // Includes geographical information
+
+    // LocationInformation/GPRS/EPS includes Geographical Information
+    // The VLR indicates in this parameter the location of the served subscriber as defined in 3GPP TS 23.018 and 3GPP TS 23.032.
+    // Shall be present if the VLR can derive it from the stored service area identity, cell global identity or location area identity; otherwise shall be absent.
     private double geographicalLatitude;
     private double geographicalLongitude;
     private double geographicalUncertainty;
-    // includes geodetic information
+    private TypeOfShape typeOfShape;
+
+    // LocationInformation/GPRS/EPS includes Geodetic Information
+    // This information element corresponds to the Calling Geodetic Location defined in ITU-T Recommendation Q.763.
+    // Shall be present if the VLR can derive it from the stored service area identity, cell global identity or location area identity; otherwise shall be absent.
     private double geodeticLatitude;
     private double geodeticLongitude;
     private double geodeticUncertainty;
     private int geodeticConfidence;
     private int screeningAndPresentationIndicators;
-    // other location info
+
+    // LocationInformation/GPRS/EPS includes if SAI is present
     private boolean saiPresent;
+
+    // LocationInformation/GPRS/EPS includes if current location information is retrieved
+    // Shall be present when location information was obtained after a successful paging procedure for Active Location Retrieval.
     private boolean currentLocationRetrieved;
+
+    // LocationInformation includes CGI or SAI
+    // SAI: Service area identity of the cell in which the MS is currently in radio contact or in which the MS was last in radio contact.
+    // CGI: Cell global identity of the cell in which the MS is currently in radio contact or in which the MS was last in radio contact.
+    // SAI shall be present if the MS uses UMTS radio access and the subscriber record is marked as confirmed by radio contact; otherwise shall be absent.
+    // CGI shall be present if the MS uses GSM radio access and the subscriber record is marked as confirmed by radio contact; otherwise shall be absent.
     private CellGlobalIdOrServiceAreaIdOrLAI cellGlobalIdOrServiceAreaIdOrLAI;
     private CellGlobalIdOrServiceAreaIdFixedLength cellGlobalIdOrServiceAreaIdFixedLength;
-    // Includes Cell Global Identity (CI, LAC, MCC, MNC, Age of Location information
+    // The latter includes MCC, MNC, LAC, CI, Age of Location information
     private int mcc; // MCC of CGI or LAI
     private int mnc; // MNC of CGI or LAI
     private int lac; // LAC of CGI or LAI
     private int ci; // CI of CGI or LAI
-    private int ageOfLocationInfo; // Age of location information of CGI or LAI
+    private int ageOfLocationInfo; // Age of CGI or LAI, Measured in minutes. Shall be present if available in the MSC/VLR; otherwise shall be absent.
+
+    // LocationInformation includes Location Number (defined at ITU T Recommendation Q.763)
+    // Shall be present if the VLR can derive it from the stored service area identity (for UMTS) or cell global identity (for GSM) or location area identity;
+    // otherwise shall be absent. The mapping from service area identity or cell ID and location area to location number is network-specific
+    // and outside the scope of the UMTS and GSM standards.
+    private LocationNumberMap locationNumberMap;
+
+    // LocationInformation/EPS includes E-UTRAN CGI
+    // E-UTRAN cell global identity of the cell in which the MS is currently in radio contact or in which the MS was last in radio contact.
+    // Shall be present if the MS uses E-UTRAN radio access and the subscriber record is marked as confirmed by radio contact; otherwise shall be absent.
+    private EUtranCgi eUtranCgi;
+
+    // LocationInformation/EPS includes Tracking Area Id
+    // Tracking area identity of the cell in which the MS is currently in radio contact or in which the MS was last in radio contact.
+    // Shall be present if the MS uses E-UTRAN radio access; otherwise shall be absent.
+    TAId taId;
+
+    // LocationInformation includes VLR number
     ISDNAddressString vlrNumber; // VLR Global Title at which the MS is attached to
     ISDNAddressString mscNumber; // MSC Global Title at which the MS is attached to
+
+    // The SGSN indicates in LocationInformationGPRS the location of the served subscriber as defined in 3GPP TS 23.078.
     private LocationInformationGPRS locationInformationGPRS; // The SGSN indicates here the location of the served subscriber.
+
+    // The MME (via an IWF) indicates in LocationInformationEPS the location of the served subscriber.
     private LocationInformationEPS locationInformationEPS; // The MME indicates here the location of the served subscriber.
-    private SubscriberState subscriberState; // State of the MS as defined in 3GPP TS 23.018.
+    private DiameterIdentity mmeName;
+
+    // SubscriberState: State of the MS as defined in 3GPP TS 23.018.
     // Possible values are assumedIdle, camelBusy, networkDeterminedNotReachable, notProvidedFromVlr
-    private PSSubscriberState psSubscriberState; // Packet-Switched state of the MS.
+    private SubscriberState subscriberState;
+
+    // PSSubscriberState: Packet-Switched state of the MS.
+    private PSSubscriberState psSubscriberState;
     private IMEI imei; // International Mobile Equipment Identity.
     private MSClassmark2 msClassmark2; // Defined in 3GPP TS 24.008.
     private GPRSMSClass gprsmsClass;
-    private MNPInfoRes mnpInfoRes; // Mobile Number Portability (MNP) information result number portability status, MSISDN, IMSI, Routeing number.
-    private int numberPortabilityStatus;
+
+    // MNP Info Result refers to the Mobile Number Portability (MNP) information result (3GPP TS 23.078 and 3GPP TS 23.066).
+    // This parameter may contain the following information: Routeing Number, IMSI, MSISDN, Number Portability Status.
+    private MNPInfoRes mnpInfoRes;
+    private int numberPortabilityStatus; // Number portability status of subscriber (3GPP TS 23.066).
     private ISDNAddressString msisdn;
     private String msisdnAddress;
     private IMSI imsi;
     private String imsiData;
-    private RouteingNumber routeingNumber;
+    private RouteingNumber routeingNumber; // RouteingNumber refers to a number used for routeing purpose and identifying a network operator (3GPP TS 23.066).
     private String routeingNumberStr;
+
     private boolean imsVoiceOverPsSessionsSupportIndicator;
     // Last UE Activity Time
     // Last RAT Type
@@ -155,10 +211,14 @@ public class PsiResponseValues implements Serializable {
         this.locationInformationEPS = locationInformationEPS;
     }
 
-    public PsiResponseValues(LocationInformation locationInformation, LocationInformationGPRS locationInformationGPRS, SubscriberState subscriberState,
-                             PSSubscriberState psSubscriberState, IMEI imei, MSClassmark2 msClassmark2, GPRSMSClass gprsmsClass,
+    public PsiResponseValues(LocationInformation locationInformation, EUtranCgi eUtranCgi, TAId taId,
+                             LocationNumberMap locationNumberMap, LocationInformationGPRS locationInformationGPRS,
+                             SubscriberState subscriberState, PSSubscriberState psSubscriberState, IMEI imei, MSClassmark2 msClassmark2, GPRSMSClass gprsmsClass,
                              Boolean imsVoiceOverPsSessionsSupportIndicator, LocationInformationEPS locationInformationEPS, TimeZone timeZone) {
         this.locationInformation = locationInformation;
+        this.eUtranCgi = eUtranCgi;
+        this.taId = taId;
+        this.locationNumberMap = locationNumberMap;
         this.locationInformationGPRS = locationInformationGPRS;
         this.subscriberState = subscriberState;
         this.psSubscriberState = psSubscriberState;
@@ -180,6 +240,14 @@ public class PsiResponseValues implements Serializable {
 
     public void setLocationInformation(LocationInformation locationInformation) {
         this.locationInformation = locationInformation;
+    }
+
+    public LocationNumberMap getLocationNumberMap() {
+        return locationNumberMap;
+    }
+
+    public void setLocationNumberMap(LocationNumberMap locationNumberMap) {
+        this.locationNumberMap = locationNumberMap;
     }
 
     public LocationInformationGPRS getLocationInformationGPRS() {
@@ -272,6 +340,30 @@ public class PsiResponseValues implements Serializable {
 
     public void setAgeOfLocationInfo(int ageOfLocationInfo) {
         this.ageOfLocationInfo = ageOfLocationInfo;
+    }
+
+    public EUtranCgi geteUtranCgi() {
+        return eUtranCgi;
+    }
+
+    public void seteUtranCgi(EUtranCgi eUtranCgi) {
+        this.eUtranCgi = eUtranCgi;
+    }
+
+    public TAId getTaId() {
+        return taId;
+    }
+
+    public void setTaId(TAId taId) {
+        this.taId = taId;
+    }
+
+    public TypeOfShape getTypeOfShape() {
+        return typeOfShape;
+    }
+
+    public void setTypeOfShape(TypeOfShape typeOfShape) {
+        this.typeOfShape = typeOfShape;
     }
 
     public double getGeoraphicalLatitude() {
@@ -470,6 +562,14 @@ public class PsiResponseValues implements Serializable {
         this.locationInformationEPS = locationInformationEPS;
     }
 
+    public DiameterIdentity getMmeName() {
+        return mmeName;
+    }
+
+    public void setMmeName(DiameterIdentity mmeName) {
+        this.mmeName = mmeName;
+    }
+
     public boolean isSaiPresent() {
         return saiPresent;
     }
@@ -513,37 +613,90 @@ public class PsiResponseValues implements Serializable {
         stringBuilder.append(", location information, VLR number=");
         stringBuilder.append(locationInformation.getVlrNumber().getAddress());
 
-        stringBuilder.append(", location information, latitude=");
+        try {
+            stringBuilder.append(", location information, CGI MCC=");
+            stringBuilder.append(locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMCC());
+            stringBuilder.append(", location information, CGI MNC=");
+            stringBuilder.append(locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMNC());
+            stringBuilder.append(", location information, CGI LAC=");
+            stringBuilder.append(locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getLac());
+            stringBuilder.append(", location information, CGI CI=");
+            stringBuilder.append(locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode());
+        } catch (MAPException e) {
+            e.printStackTrace();
+        }
+
+        if (locationInformation.getLocationInformationEPS() != null) {
+            stringBuilder.append(", location information, E-UTRAN CGI=");
+            String eUtranCGI = new String(locationInformation.getLocationInformationEPS().getEUtranCellGlobalIdentity().getData(), StandardCharsets.ISO_8859_1);
+            stringBuilder.append(eUtranCGI);
+        }
+
+        stringBuilder.append(", location information, geographical latitude=");
         stringBuilder.append(locationInformation.getGeographicalInformation().getLatitude());
 
-        stringBuilder.append(", location information, longitude=");
+        stringBuilder.append(", location information, geographical longitude=");
         stringBuilder.append(locationInformation.getGeographicalInformation().getLongitude());
 
-        stringBuilder.append(", location information for GPRS");
+        stringBuilder.append(", location information, geographical type of shape=");
+        stringBuilder.append(locationInformation.getGeographicalInformation().getTypeOfShape());
+
+        stringBuilder.append(", location information, geographical uncertainty=");
+        stringBuilder.append(locationInformation.getGeographicalInformation().getUncertainty());
+
+        stringBuilder.append(", location information, geodetic latitude=");
+        stringBuilder.append(locationInformation.getGeodeticInformation().getLatitude());
+
+        stringBuilder.append(", location information, geodetic longitude=");
+        stringBuilder.append(locationInformation.getGeodeticInformation().getLongitude());
+
+        stringBuilder.append(", location information, geodetic type of shape=");
+        stringBuilder.append(locationInformation.getGeodeticInformation().getTypeOfShape());
+
+        stringBuilder.append(", location information, geodetic uncertainty=");
+        stringBuilder.append(locationInformation.getGeodeticInformation().getUncertainty());
+
+        stringBuilder.append(", location information, geodetic confidence=");
+        stringBuilder.append(locationInformation.getGeodeticInformation().getUncertainty());
+
+        stringBuilder.append(", location information, geodetic screening abd presentation indicators=");
+        stringBuilder.append(locationInformation.getGeodeticInformation().getScreeningAndPresentationIndicators());
+
+        stringBuilder.append(", location information for GPRS=");
         stringBuilder.append(locationInformationGPRS);
 
-        stringBuilder.append(", location information for EPS");
-        stringBuilder.append(locationInformationEPS);
+        if (locationInformationEPS != null) {
+            stringBuilder.append(", location information for EPS, E-UTRAN CGI=");
+            String eUtranCGI = new String(locationInformationEPS.getEUtranCellGlobalIdentity().getData(), StandardCharsets.ISO_8859_1);
+            stringBuilder.append(eUtranCGI);
+            stringBuilder.append(", location information for EPS, MME name=");
+            String mmeName = new String(locationInformationEPS.getMmeName().getData(), StandardCharsets.ISO_8859_1);
+            stringBuilder.append(mmeName);
+            stringBuilder.append(", location information for EPS, Tracking Area Id=");
+            String taId = new String(locationInformationEPS.getTrackingAreaIdentity().getData(), StandardCharsets.ISO_8859_1);
+            stringBuilder.append(taId);
+        }
 
-        stringBuilder.append(", subscriber state");
-        stringBuilder.append(subscriberState);
+        stringBuilder.append(", subscriber state=");
+        stringBuilder.append(subscriberState.getSubscriberStateChoice().toString());
 
-        stringBuilder.append(", PS subscriber state");
-        stringBuilder.append(psSubscriberState);
+        stringBuilder.append(", PS subscriber state=");
+        stringBuilder.append(psSubscriberState.getChoice().toString());
 
-        stringBuilder.append(", IMEI");
-        stringBuilder.append(imei);
+        stringBuilder.append(", IMEI=");
+        stringBuilder.append(imei.getIMEI());
 
-        stringBuilder.append(", MS Classmark 2");
-        stringBuilder.append(msClassmark2);
+        stringBuilder.append(", MSClassmark2=");
+        String msClassMark2 = new String(msClassmark2.getData(), StandardCharsets.ISO_8859_1);
+        stringBuilder.append(msClassMark2);
 
-        stringBuilder.append(", GPRS MS Class");
+        stringBuilder.append(", GPRS MS Class=");
         stringBuilder.append(gprsmsClass);
 
-        stringBuilder.append(", IMS Voice Over PS Sessions Support Indicator");
+        stringBuilder.append(", IMS Voice Over PS Sessions Support Indicator=");
         stringBuilder.append(imsVoiceOverPsSessionsSupportIndicator);
 
-        stringBuilder.append(", time zone");
+        stringBuilder.append(", time zone=");
         stringBuilder.append(timeZone);
 
         stringBuilder.append("]");
