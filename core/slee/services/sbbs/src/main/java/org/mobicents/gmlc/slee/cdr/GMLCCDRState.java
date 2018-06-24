@@ -52,9 +52,12 @@ import org.mobicents.protocols.ss7.map.api.service.lsm.PeriodicLDRInfo;
 import org.mobicents.protocols.ss7.map.api.service.lsm.ReportingPLMNList;
 
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.LocationInformation;
-import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.MNPInfoRes;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.SubscriberInfo;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.MNPInfoRes;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.TypeOfShape;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.TAId;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.EUtranCgi;
+
 import org.mobicents.protocols.ss7.sccp.parameter.SccpAddress;
 
 /**
@@ -143,16 +146,20 @@ public class GMLCCDRState implements Serializable {
   protected Double psiGeographicLatitude, psiGeographicLongitude, psiGeographicUncertainty;
   protected Double psiGeodeticLatitude, psiGeodeticLongitude, psiGeodeticUncertainty;
   protected int psiGeodeticConfidence, psiScreeningAndPresentationIndicators;
+  protected ISDNAddressString psiVlrNumber;
+  protected ISDNAddressString psiMscNumber;
+  protected boolean psiSaiPresent;
+  protected boolean psiCurrentLocationRetrieved;
+  protected int psiAol;
+  protected TAId taId;
+  protected EUtranCgi eUtranCgi;
   protected MNPInfoRes mnpInfoRes;
   protected int mnpStatus, mnpRouteingNumber;
   protected IMSI mnpIMSI;
   protected String mnpIMSIData;
   protected ISDNAddressString mnpMSISDN;
   protected String mnpMSISDAddress;
-  protected ISDNAddressString psiVlrNumber;
-  protected ISDNAddressString psiMscNumber;
-  protected boolean psiSaiPresent;
-  protected boolean psiCurrentLocationRetrieved;
+
 
   /****************/
   /*** GETTERS ***/
@@ -635,56 +642,63 @@ public class GMLCCDRState implements Serializable {
   }
 
   /**
-   * @return the subscriber's geographic
+   * @return the subscriber's age of location info
+   */
+  public int getPsiAol() {
+    return psiAol;
+  }
+
+  /**
+   * @return the subscriber's geographic latitude
    */
   public Double getPsiGeographicLatitude() {
     return psiGeographicLatitude;
   }
 
   /**
-   * @return the subscriber's geographic
+   * @return the subscriber's geographic longitude
    */
   public Double getPsiGeographicLongitude() {
     return psiGeographicLongitude;
   }
 
   /**
-   * @return the subscriber's geographic
+   * @return the subscriber's geographic uncertainty
    */
   public Double getPsiGeographicUncertainty() {
     return psiGeographicUncertainty;
   }
 
   /**
-   * @return the subscriber's geodetic
+   * @return the subscriber's geodetic latitude
    */
   public Double getPsiGeodeticLatitude() {
     return psiGeodeticLatitude;
   }
 
   /**
-   * @return the subscriber's geodetic
+   * @return the subscriber's geodetic longitude
    */
   public Double getPsiGeodeticLongitude() {
     return psiGeodeticLongitude;
   }
 
   /**
-   * @return the subscriber's geodetic
+   * @return the subscriber's geodetic uncertainty
    */
   public Double getPsiGeodeticUncertainty() {
     return psiGeodeticUncertainty;
   }
 
   /**
-   * @return the subscriber's geodetic
+   * @return the subscriber's geodetic confidence
    */
   public int getPsiGeodeticConfidence() {
     return psiGeodeticConfidence;
   }
 
   /**
-   * @return the subscriber's geodetic
+   * @return the subscriber's geodetic screening and presentation indicators
    */
   public int getPsiScreeningAndPresentationIndicators() {
     return psiScreeningAndPresentationIndicators;
@@ -772,6 +786,20 @@ public class GMLCCDRState implements Serializable {
    */
   public ISDNAddressString getPsiMscNumber() {
     return psiMscNumber;
+  }
+
+  /**
+   * @return the subscriber's location Tracking Area Id
+   */
+  public TAId getTaId() {
+    return taId;
+  }
+
+  /**
+   * @return the subscriber's E-UTRAN Cell Id
+   */
+  public EUtranCgi geteUtranCgi() {
+    return eUtranCgi;
   }
 
   /****************/
@@ -1241,6 +1269,13 @@ public class GMLCCDRState implements Serializable {
   }
 
   /**
+   * @param psiAol to set
+   */
+  public void setPsiAol(int psiAol) {
+    this.psiAol = psiAol;
+  }
+
+  /**
    * @param psiVlrNumber subscriber's location information to set
    */
   public void setPsiVlrNumber(ISDNAddressString psiVlrNumber) {
@@ -1377,6 +1412,23 @@ public class GMLCCDRState implements Serializable {
     this.mnpMSISDAddress = mnpMSISDAddress;
   }
 
+  /**
+   * @param taId subscriber's Tracking Area Id to set
+   */
+  public void setTaId(TAId taId) {
+    this.taId = taId;
+  }
+
+  /**
+   * @param eUtranCgi subscriber's E-UTRAN Cell Id  to set
+   */
+  public void seteUtranCgi(EUtranCgi eUtranCgi) {
+    this.eUtranCgi = eUtranCgi;
+  }
+
+  /*********************/
+  /*** CONSTRUCTORS ***/
+  /*******************/
   public void init(final Long dialogId, final AddressString destRef, final AddressString origRef, final ISDNAddressString isdnAddressString,
                    final SccpAddress localAddress, final SccpAddress remoteAddress) {
     this.localDialogId = dialogId;
@@ -1437,7 +1489,8 @@ public class GMLCCDRState implements Serializable {
                    VelocityEstimate velocityEstimate, ServingNodeAddress servingNodeAddress, LCSQoS lcsQoS, int lcsReferenceNumber, String barometricPressureMeasurement,
                    String civicAddress, LCSEvent lcsEvent, ISDNAddressString msisdn, IMEI imei, DeferredmtlrData deferredmtlrData, int lcsServiceTypeID,
                    boolean pseudonymIndicator, int sequenceNumber, PeriodicLDRInfo periodicLDRInfo, ReportingPLMNList reportingPLMNList,
-                   SubscriberInfo subscriberInfo, LocationInformation locationInformation, ISDNAddressString psiVlrNumber, ISDNAddressString psiMscNumber) {
+                   SubscriberInfo subscriberInfo, LocationInformation locationInformation, ISDNAddressString psiVlrNumber, ISDNAddressString psiMscNumber,
+                   int psiAol, TAId taId, EUtranCgi eUtranCgi) {
     this.initiated = initiated;
     this.generated = generated;
     this.id = id;
@@ -1503,6 +1556,9 @@ public class GMLCCDRState implements Serializable {
     this.locationInformation = locationInformation;
     this.psiVlrNumber = psiVlrNumber;
     this.psiMscNumber = psiMscNumber;
+    this.psiAol = psiAol;
+    this.taId = taId;
+    this.eUtranCgi = eUtranCgi;
   }
 
 
@@ -1558,6 +1614,7 @@ public class GMLCCDRState implements Serializable {
     result = prime * result + ((deferredmtlrData == null) ? 0 : deferredmtlrData.hashCode());
     result = prime * result + ((periodicLDRInfo == null) ? 0 : periodicLDRInfo.hashCode());
     result = prime * result + ((reportingPLMNList == null) ? 0 : reportingPLMNList.hashCode());
+    result = prime * result + ((subscriberInfo == null) ? 0 : subscriberInfo.hashCode());
     result = prime * result + ((locationInformation == null) ? 0 : locationInformation.hashCode());
     return result;
   }
@@ -1956,6 +2013,12 @@ public class GMLCCDRState implements Serializable {
     } else if (!locationInformation.equals(other.locationInformation))
       return false;
 
+    if (psiAol == -1) {
+      if (other.psiAol != -1)
+        return false;
+    } else if (psiAol != other.psiAol)
+      return false;
+
     if (psiVlrNumber == null) {
       if (other.psiVlrNumber != null)
         return false;
@@ -2064,6 +2127,18 @@ public class GMLCCDRState implements Serializable {
     } else if (!(psiCurrentLocationRetrieved == (other.psiCurrentLocationRetrieved)))
       return false;
 
+    if (taId == null) {
+      if (other.taId != null)
+        return false;
+    } else if (!taId.equals(other.taId))
+      return false;
+
+    if (eUtranCgi == null) {
+      if (other.eUtranCgi != null)
+        return false;
+    } else if (!eUtranCgi.equals(other.eUtranCgi))
+      return false;
+
     return true;
   }
 
@@ -2129,8 +2204,8 @@ public class GMLCCDRState implements Serializable {
     String reportingPLMNListArray, reportingPLMNListPrioritized;
     reportingPLMNListArray = reportingPLMNListPrioritized = "";
 
-    int psiMCC, psiMNC, psiLAC, psiCI;
-    psiMCC = psiMNC = psiLAC = psiCI = -1;
+    int psiMCC, psiMNC, psiLAC, psiCI, psiAgeOfLocationInfo;
+    psiMCC = psiMNC = psiLAC = psiCI = psiAgeOfLocationInfo = -1;
     double psiGeogLat, psiGeogLong, psiGeogUncertainty, psiGeodLat, psiGeodLong, psiGeodUncertainty;
     psiGeogLat = psiGeogLong = psiGeogUncertainty = psiGeodLat = psiGeodLong = psiGeodUncertainty = 0.00;
     int psiGeodConfidence, psiGeodScreeningAndPresentationInd;
@@ -2139,6 +2214,8 @@ public class GMLCCDRState implements Serializable {
     String psiGeodTypeOfShape = "";
     String psiVLRnum = "";
     String psiMSCnum = "";
+    String psiTrackingAreaId = "";
+    String psiEUTRANcgi = "";
     String psiMNPImsi, psiMNPMsisdn, psiMNPRouteingNum;
     psiMNPImsi = psiMNPMsisdn = psiMNPRouteingNum = "";
     int psiMNPstatus = -1;
@@ -2419,6 +2496,14 @@ public class GMLCCDRState implements Serializable {
         psiSAIpresent = String.valueOf(locationInformation.getSaiPresent());
       if (locationInformation.getCurrentLocationRetrieved() == true || locationInformation.getCurrentLocationRetrieved() == false)
         psiCurrentLocRetrieved = String.valueOf(locationInformation.getCurrentLocationRetrieved());
+      if (locationInformation.getAgeOfLocationInformation() <=Integer.MAX_VALUE && locationInformation.getAgeOfLocationInformation() >= Integer.MIN_VALUE)
+        psiAgeOfLocationInfo = locationInformation.getAgeOfLocationInformation();
+      if (locationInformation.getLocationInformationEPS() != null) {
+        if (locationInformation.getLocationInformationEPS().getTrackingAreaIdentity() != null)
+          psiTrackingAreaId = new String(locationInformation.getLocationInformationEPS().getTrackingAreaIdentity().getData());
+        if (locationInformation.getLocationInformationEPS().getEUtranCellGlobalIdentity() != null)
+          psiEUTRANcgi = new String(locationInformation.getLocationInformationEPS().getEUtranCellGlobalIdentity().getData());
+      }
 
       if (subscriberInfo.getSubscriberState() != null)
         psiSubscriberState = subscriberInfo.getSubscriberState().getSubscriberStateChoice().toString();
@@ -2431,7 +2516,6 @@ public class GMLCCDRState implements Serializable {
     } catch (MAPException e) {
       e.printStackTrace();
     }
-
 
 
     return "GMLCCDRState [initiated=" + initiated +
@@ -2578,6 +2662,9 @@ public class GMLCCDRState implements Serializable {
             ", psiMSCNumber=" + psiMSCnum +
             ", psiSAIpresent=" + psiSAIpresent +
             ", psiCurrentLocationRetrieved=" + psiCurrentLocRetrieved +
+            ", psiAgeOfLocationInformation=" + psiAgeOfLocationInfo +
+            ", psiTrackingAreaId=" + psiTrackingAreaId +
+            ", psiE-UTRAN-CGI=" + psiEUTRANcgi +
             ", psiMNPStatus=" + psiMNPstatus +
             ", psiMNPRouteingNumber=" + psiMNPRouteingNum +
             ", psiMNPImsi=" + psiMNPImsi +

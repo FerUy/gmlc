@@ -893,39 +893,54 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
     /**
      * LCSClientID
      */
-/*
     LCSClientID lcsClientID = gmlcCdrState.getLcsClientID();
     if(lcsClientID != null) {
       try {
         if (lcsClientID.getLCSClientType() != null && (lcsClientID.getLCSClientType().getType() > Integer.MIN_VALUE
                 && lcsClientID.getLCSClientType().getType() < Integer.MAX_VALUE)) {
           stringBuilder.append(lcsClientID.getLCSClientType().getType()).append(SEPARATOR);
+        } else {
+          stringBuilder.append(SEPARATOR);
         }
         if (lcsClientID.getLCSClientName() != null) {
           if (lcsClientID.getLCSClientName().getNameString() != null) {
-            String lcsClientNameEncondedString = new String(lcsClientID.getLCSClientName().getNameString().getEncodedString());
-            stringBuilder.append(lcsClientNameEncondedString).append(SEPARATOR);
+            stringBuilder.append(new String(lcsClientID.getLCSClientName().getNameString().getEncodedString())).append(SEPARATOR);
           }
           stringBuilder.append(lcsClientID.getLCSClientName().getDataCodingScheme().getCode()).append(SEPARATOR);
           stringBuilder.append(lcsClientID.getLCSClientName().getLCSFormatIndicator().getIndicator()).append(SEPARATOR);
+        } else {
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
         }
         if (lcsClientID.getLCSAPN() != null) {
           if (lcsClientID.getLCSAPN().getApn() != null) {
-            String lcsApn = new String(lcsClientID.getLCSAPN().getApn().getBytes());
-            stringBuilder.append(lcsApn).append(SEPARATOR);
+            stringBuilder.append(new String(lcsClientID.getLCSAPN().getApn().getBytes())).append(SEPARATOR);
           }
+        } else {
+          stringBuilder.append(SEPARATOR);
         }
         if (lcsClientID.getLCSClientDialedByMS() != null)
           stringBuilder.append(lcsClientID.getLCSClientDialedByMS().getAddress()).append(SEPARATOR);
+        else
+          stringBuilder.append(SEPARATOR);
         if (lcsClientID.getLCSClientExternalID() != null)
           stringBuilder.append(lcsClientID.getLCSClientExternalID().getExternalAddress().getAddress()).append(SEPARATOR);
+        else
+          stringBuilder.append(SEPARATOR);
         if (lcsClientID.getLCSClientInternalID() != null && (lcsClientID.getLCSClientInternalID().getId() > Integer.MIN_VALUE
                 && lcsClientID.getLCSClientInternalID().getId() < Integer.MAX_VALUE))
           stringBuilder.append(lcsClientID.getLCSClientInternalID().getId()).append(SEPARATOR);
+        else
+          stringBuilder.append(SEPARATOR);
         if (lcsClientID.getLCSRequestorID() != null) {
           stringBuilder.append(lcsClientID.getLCSRequestorID().getDataCodingScheme().getCode()).append(SEPARATOR);
           stringBuilder.append(lcsClientID.getLCSRequestorID().getLCSFormatIndicator().getIndicator()).append(SEPARATOR);
           stringBuilder.append(lcsClientID.getLCSRequestorID().getRequestorIDString().getEncodedString()).append(SEPARATOR);
+        } else {
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
         }
       } catch (Exception e) {
         e.printStackTrace();
@@ -943,7 +958,7 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
       stringBuilder.append(SEPARATOR);
       stringBuilder.append(SEPARATOR);
     }
-*/
+
 
     /**
      * LCS QoS
@@ -994,25 +1009,23 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
     /**
      * BAROMETRIC PRESSURE
      */
-/*
     String barometricPressureMeasurement = gmlcCdrState.getBarometricPressureMeasurement();
     if(barometricPressureMeasurement != null) {
       stringBuilder.append(barometricPressureMeasurement).append(SEPARATOR);
     } else {
       stringBuilder.append(SEPARATOR);
     }
-*/
+
     /**
      * CIVIC ADDRESS
      */
-/*
     String civicAddress = gmlcCdrState.getCivicAddress();
     if(civicAddress != null) {
       stringBuilder.append(civicAddress).append(SEPARATOR);
     } else {
       stringBuilder.append(SEPARATOR);
     }
-*/
+
     /**
      * LCS EVENT
      */
@@ -1211,6 +1224,9 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
     LocationInformation locationInformation = gmlcCdrState.getLocationInformation();
     if(locationInformation != null) {
       if(locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI() != null) {
+        /**
+         * Cell Global Id
+         */
         if(locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength() != null) {
           try {
             stringBuilder.append(locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMCC()).append(SEPARATOR);
@@ -1242,16 +1258,33 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
           stringBuilder.append(SEPARATOR);
         }
       }
+      /**
+       * VLR Number
+       */
       if(locationInformation.getVlrNumber() != null) {
         stringBuilder.append(locationInformation.getVlrNumber().getAddress()).append(SEPARATOR);
       } else {
         stringBuilder.append(SEPARATOR);
       }
+      /**
+       * MSC Number
+       */
       if(locationInformation.getMscNumber() != null) {
         stringBuilder.append(locationInformation.getMscNumber().getAddress()).append(SEPARATOR);
       } else {
         stringBuilder.append(SEPARATOR);
       }
+      /**
+       * Age of Location Information
+       */
+      if(locationInformation.getAgeOfLocationInformation() != null) {
+        stringBuilder.append(locationInformation.getAgeOfLocationInformation().intValue()).append(SEPARATOR);
+      } else {
+        stringBuilder.append(SEPARATOR);
+      }
+      /**
+       * Geographical Information
+       */
       if(locationInformation.getGeographicalInformation() != null) {
         stringBuilder.append(locationInformation.getGeographicalInformation().getLatitude()).append(SEPARATOR);
         stringBuilder.append(locationInformation.getGeographicalInformation().getLongitude()).append(SEPARATOR);
@@ -1263,6 +1296,9 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
         stringBuilder.append(SEPARATOR);
         stringBuilder.append(SEPARATOR);
       }
+      /**
+       * Geodetic Information
+       */
       if(locationInformation.getGeodeticInformation() != null) {
         stringBuilder.append(locationInformation.getGeodeticInformation().getLatitude()).append(SEPARATOR);
         stringBuilder.append(locationInformation.getGeodeticInformation().getLongitude()).append(SEPARATOR);
@@ -1278,7 +1314,26 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
         stringBuilder.append(SEPARATOR);
         stringBuilder.append(SEPARATOR);
       }
+      if(locationInformation.getLocationInformationEPS() != null){
+        /**
+         * Tracking Area Identity
+         */
+        if(locationInformation.getLocationInformationEPS().getTrackingAreaIdentity() != null)
+          stringBuilder.append(new String(locationInformation.getLocationInformationEPS().getTrackingAreaIdentity().getData())).append(SEPARATOR);
+        else
+          stringBuilder.append(SEPARATOR);
+        /**
+         * E-UTRAN Cell Global Identity
+         */
+        if(locationInformation.getLocationInformationEPS().getEUtranCellGlobalIdentity() != null)
+          stringBuilder.append(new String(locationInformation.getLocationInformationEPS().getEUtranCellGlobalIdentity().getData())).append(SEPARATOR);
+        else
+          stringBuilder.append(SEPARATOR);
+      }
     } else {
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
       stringBuilder.append(SEPARATOR);
       stringBuilder.append(SEPARATOR);
       stringBuilder.append(SEPARATOR);
