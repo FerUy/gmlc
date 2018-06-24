@@ -319,7 +319,8 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
     /**
      * ORIGINATING REFERENCE Address
      */
-/*    AddressString addressString = gmlcCdrState.getOrigReference();
+/*
+    AddressString addressString = gmlcCdrState.getOrigReference();
     if(addressString != null) {
       // Originating Reference ADDRESS NATURE
       stringBuilder.append((byte) addressString.getAddressNature().getIndicator()).append(SEPARATOR);
@@ -963,29 +964,39 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
     /**
      * LCS QoS
      */
-/*
     // HORIZONTAL ACCURACY
     LCSQoS horizontalAccuracy = gmlcCdrState.getLcsQoS();
     if(horizontalAccuracy != null) {
-      stringBuilder.append(horizontalAccuracy.getHorizontalAccuracy().toString()).append(SEPARATOR);
+      if(horizontalAccuracy.getHorizontalAccuracy() != null)
+        stringBuilder.append(horizontalAccuracy.getHorizontalAccuracy().intValue()).append(SEPARATOR);
     } else {
       stringBuilder.append(SEPARATOR);
     }
     // VERTICAL ACCURACY
     LCSQoS verticalAccuracy = gmlcCdrState.getLcsQoS();
     if(verticalAccuracy != null) {
-      stringBuilder.append(verticalAccuracy.getVerticalAccuracy().toString()).append(SEPARATOR);
+      if(verticalAccuracy.getVerticalAccuracy() != null)
+        stringBuilder.append(verticalAccuracy.getVerticalAccuracy().intValue()).append(SEPARATOR);
+    } else {
+      stringBuilder.append(SEPARATOR);
+    }
+    // VERTICAL COORDINATE REQUESTED
+    LCSQoS verticalCoordinateRequest = gmlcCdrState.getLcsQoS();
+    if(verticalCoordinateRequest != null) {
+      if(verticalCoordinateRequest.getVerticalCoordinateRequest() || !verticalCoordinateRequest.getVerticalCoordinateRequest())
+        stringBuilder.append(verticalCoordinateRequest.getVerticalCoordinateRequest()).append(SEPARATOR);
     } else {
       stringBuilder.append(SEPARATOR);
     }
     // RESPONSE TIME
     LCSQoS responseTime = gmlcCdrState.getLcsQoS();
     if(responseTime != null) {
-      stringBuilder.append(responseTime.getResponseTime().toString()).append(SEPARATOR);
+      if(responseTime.getResponseTime() != null)
+        stringBuilder.append(responseTime.getResponseTime().getResponseTimeCategory()).append(SEPARATOR);
     } else {
       stringBuilder.append(SEPARATOR);
     }
-*/
+
     /**
      * LCS REFERENCE NUMBER
      */

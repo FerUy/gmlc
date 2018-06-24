@@ -496,13 +496,6 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
           //atiResponse.subscriberState = subscriberInfo.getSubscriberState().getSubscriberStateChoice().toString();
           if (gmlcCdrState.isInitialized()) {
             gmlcCdrState.setSubscriberState(atiResponseValues.getSubscriberState().getSubscriberStateChoice().toString());
-            if (subscriberInfo.getLocationInformation() == null) {
-              if (this.logger.isFineEnabled()) {
-                this.logger.fine("\nonAnyTimeInterrogationResponse: "
-                        + "CDR state is initialized, ATI_STATE_SUCCESS");
-              }
-              this.createCDRRecord(RecordStatus.ATI_STATE_SUCCESS);
-            }
           }
         }
         // Inquire if Location information is included in MAP ATI response subscriber's info
@@ -553,11 +546,6 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 }
                 gmlcCdrState.setAol(atiResponseValues.getAgeOfLocationInfo());
                 gmlcCdrState.setAtiVlrGt(atiResponseValues.getVlrNumber());
-                if (gmlcCdrState.getSubscriberState() != null) {
-                  this.createCDRRecord(RecordStatus.ATI_CGI_STATE_SUCCESS);
-                } else {
-                  this.createCDRRecord(RecordStatus.ATI_CGI_SUCCESS);
-                }
               }
             } else if (cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength() != null) {
               // Case when LAI length is fixed
@@ -576,32 +564,53 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 gmlcCdrState.setMcc(cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength().getMCC());
                 gmlcCdrState.setMnc(cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength().getMNC());
                 gmlcCdrState.setLac(cellGlobalIdOrServiceAreaIdOrLAI.getLAIFixedLength().getLac());
-                if (gmlcCdrState.getSubscriberState() != null) {
-                  this.createCDRRecord(RecordStatus.ATI_LAI_STATE_SUCCESS);
-                } else {
-                  this.createCDRRecord(RecordStatus.ATI_LAI_SUCCESS);
-                }
               }
             }
           }
         }
 
-        // ATI Error CDR creation
-        if (mapErrorMessage != null) {
-          if (gmlcCdrState.isInitialized()) {
-            if (mapErrorMessage.getErrorCode() == 49)
-              this.createCDRRecord(RecordStatus.ATI_NOT_ALLOWED);
-            if (mapErrorMessage.getErrorCode() == 34)
-              this.createCDRRecord(RecordStatus.ATI_SYSTEM_FAILURE);
-            if (mapErrorMessage.getErrorCode() == 35)
-              this.createCDRRecord(RecordStatus.ATI_DATA_MISSING);
-            if (mapErrorMessage.getErrorCode() == 36)
-              this.createCDRRecord(RecordStatus.ATI_UNEXPECTED_DATA_VALUE);
-            if (mapErrorMessage.getErrorCode() == 1)
-              this.createCDRRecord(RecordStatus.ATI_UNKNOWN_SUBSCRIBER);
+        if (subscriberInfo != null) {
+          if (subscriberInfo.getLocationInformation() != null) {
+            if (subscriberInfo.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI() != null) {
+              if (subscriberInfo.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength() != null) {
+                if (gmlcCdrState.getSubscriberState() != null) {
+                  this.createCDRRecord(RecordStatus.ATI_CGI_STATE_SUCCESS);
+                } else {
+                  this.createCDRRecord(RecordStatus.ATI_CGI_SUCCESS);
+                }
+              }
+              if (subscriberInfo.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength() != null) {
+                if (subscriberInfo.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength() != null) {
+                  if (gmlcCdrState.getSubscriberState() != null) {
+                    this.createCDRRecord(RecordStatus.ATI_LAI_STATE_SUCCESS);
+                  } else {
+                    this.createCDRRecord(RecordStatus.ATI_LAI_SUCCESS);
+                  }
+                }
+              }
+            }
+          } else if (subscriberInfo.getSubscriberState() != null) {
+            if (gmlcCdrState.getSubscriberState() != null) {
+              this.createCDRRecord(RecordStatus.ATI_STATE_SUCCESS);
+            }
+          }
+        } else {
+          // ATI Error CDR creation
+          if (mapErrorMessage != null) {
+            if (gmlcCdrState.isInitialized()) {
+              if (mapErrorMessage.getErrorCode() == 49)
+                this.createCDRRecord(RecordStatus.ATI_NOT_ALLOWED);
+              if (mapErrorMessage.getErrorCode() == 34)
+                this.createCDRRecord(RecordStatus.ATI_SYSTEM_FAILURE);
+              if (mapErrorMessage.getErrorCode() == 35)
+                this.createCDRRecord(RecordStatus.ATI_DATA_MISSING);
+              if (mapErrorMessage.getErrorCode() == 36)
+                this.createCDRRecord(RecordStatus.ATI_UNEXPECTED_DATA_VALUE);
+              if (mapErrorMessage.getErrorCode() == 1)
+                this.createCDRRecord(RecordStatus.ATI_UNKNOWN_SUBSCRIBER);
+            }
           }
         }
-
 
       } else {
         if (gmlcCdrState.isInitialized()) {
@@ -926,6 +935,9 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         ResponseTime responseTime = new ResponseTimeImpl(responseTimeCategory);
         MAPExtensionContainer PslMapExtensionContainer = null;
         LCSQoS lcsQoS = new LCSQoSImpl(horizontalAccuracy, verticalAccuracy, verticalCoordinateRequest, responseTime, PslMapExtensionContainer);
+        if (gmlcCdrState.isInitialized()) {
+          gmlcCdrState.setLcsQoS(lcsQoS);
+        }
 
         // SupportedGADShapes hardcoded to true for all shapes for now
         boolean ellipsoidPoint = true;
@@ -1513,6 +1525,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
               this.createCDRRecord(RecordStatus.PSL_ILLEGAL_EQUIPMENT);
             if (mapErrorMessage.getErrorCode() == 5)
               this.createCDRRecord(RecordStatus.PSL_UNIDENTIFIED_SUBSCRIBER);
+            this.createCDRRecord(RecordStatus.PSL_ERROR);
           }
         }
       }
@@ -2357,7 +2370,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
           gmlcCdrState.setServingNodeAddress(slrRequestValues.getServingNodeAddress());
           if (this.logger.isFineEnabled()) {
             this.logger.fine("\nonSubscriberLocationReportRequest: "
-                    + "CDR state is initialized, UTRAN GANSS Positioning Data set");
+                    + "CDR state is initialized, Serving Node address set");
           }
         }
       }
@@ -2398,6 +2411,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
             this.createCDRRecord(RecordStatus.PSL_UNIDENTIFIED_SUBSCRIBER);
           if (mapErrorMessage.getErrorCode() == 1)
             this.createCDRRecord(RecordStatus.SLR_UNKNOWN_SUBSCRIBER);
+          this.createCDRRecord(RecordStatus.SLR_ERROR);
         }
       }
 
@@ -2628,6 +2642,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
               this.createCDRRecord(RecordStatus.SRISM_TELESERVICE_NOT_PROVISIONED);
             if (mapErrorMessage.getErrorCode() == 12)
               this.createCDRRecord(RecordStatus.SRISM_ILLEGAL_EQUIPMENT);
+            this.createCDRRecord(RecordStatus.SRISM_ERROR);
           }
         }
       }
@@ -3058,6 +3073,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
               this.createCDRRecord(RecordStatus.PSI_TELESERVICE_NOT_PROVISIONED);
             if (mapErrorMessage.getErrorCode() == 12)
               this.createCDRRecord(RecordStatus.PSI_ILLEGAL_EQUIPMENT);
+            this.createCDRRecord(RecordStatus.PSI_ERROR);
           }
         }
       }
