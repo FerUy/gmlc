@@ -2424,6 +2424,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         mapDialogLsmSlr.close(false);
 
         // Handle successful retrieval of subscriber's location report request (SLR request) info by sending HTTP POST back to the requestor
+        slrReportParameters(slrRequestValues);
         logger.info(String.format("Handling SubscriberLocationReport POST ReferenceNumber '%s'\n", lcsReferenceNumber));
         httpSubscriberLocationReport.Perform(HttpReport.HttpMethod.POST, lcsReferenceNumber);
 
@@ -4974,11 +4975,11 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
           if (slrReq.getDeferredmtlrData().getLCSLocationInfo().getNetworkNodeNumber() != null)
             slrParamList.add("DeferredMTLRNetworkNodeNumber=" + slrReq.getDeferredmtlrData().getLCSLocationInfo().getNetworkNodeNumber().getAddress());
           if (slrReq.getDeferredmtlrData().getLCSLocationInfo().getLMSI() != null)
-            slrParamList.add("DeferredMTLRLMSI=" + slrReq.getDeferredmtlrData().getLCSLocationInfo().getLMSI().getData().toString());
+            slrParamList.add("DeferredMTLRLMSI=" + new String(slrReq.getDeferredmtlrData().getLCSLocationInfo().getLMSI().getData()));
           if (slrReq.getDeferredmtlrData().getLCSLocationInfo().getMmeName() != null)
-            slrParamList.add("DeferredMTLRMMEName=" + slrReq.getDeferredmtlrData().getLCSLocationInfo().getMmeName().getData().toString());
+            slrParamList.add("DeferredMTLRMMEName=" + new String(slrReq.getDeferredmtlrData().getLCSLocationInfo().getMmeName().getData()));
           if (slrReq.getDeferredmtlrData().getLCSLocationInfo().getAaaServerName() != null)
-            slrParamList.add("DeferredMTLRAAAServerName=" + slrReq.getDeferredmtlrData().getLCSLocationInfo().getAaaServerName().getData().toString());
+            slrParamList.add("DeferredMTLRAAAServerName=" + new String(slrReq.getDeferredmtlrData().getLCSLocationInfo().getAaaServerName().getData()));
         }
       }
 
