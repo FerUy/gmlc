@@ -439,7 +439,6 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
     if(imsi != null) {
       String imsiStr = new String(imsi.getData().getBytes(), StandardCharsets.ISO_8859_1);
       stringBuilder.append(imsiStr).append(SEPARATOR);
-      //stringBuilder.append(imsi.getData().getBytes(Charset.forName("ISO-8859-1")).toString()).append(SEPARATOR);
     } else {
       stringBuilder.append(SEPARATOR);
     }

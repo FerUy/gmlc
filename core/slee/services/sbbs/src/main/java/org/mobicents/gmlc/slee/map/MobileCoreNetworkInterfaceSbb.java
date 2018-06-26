@@ -207,7 +207,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
 
   private String pslLcsServiceTypeID, pslIntervalTime, pslReportingAmount, pslReportingInterval,
           pslLcsHorizontalAccuracy, pslLcsVerticalAccuracy, pslOccurrenceInfo, pslAreaType, pslAreaId, pslLocationEstimateType, pslDeferredLocationEventType,
-          pslLcsPriority, pslVerticalCoordinateRequest, pslResponseTimeCategory, slrCallbackUrl, psiService;
+          pslLcsPriority, pslVerticalCoordinateRequest, pslResponseTimeCategory, slrCallbackUrl, sriForSMImsi, psiService;
   private Integer pslLcsReferenceNumber, pslReferenceNumber;
 
   private HttpReport httpSubscriberLocationReport = new HttpReport();
@@ -2564,6 +2564,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
           this.logger.fine("\nonSendRoutingInfoForSmResponse: received IMSI parameter");
         }
         sriForSmResponseValues.setImsi(imsi);
+        this.sriForSMImsi = new String(imsi.getData().getBytes());
         if (gmlcCdrState.isInitialized()) {
           gmlcCdrState.setImsi(sriForSmResponseValues.getImsi());
           if (this.logger.isFineEnabled()) {
@@ -3149,7 +3150,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
           psiResponseValues.setNumberPortabilityStatus(subscriberInfo.getMNPInfoRes().getNumberPortabilityStatus().getType());
           psiResponseValues.setMsisdnAddress(subscriberInfo.getMNPInfoRes().getMSISDN().getAddress());
           psiResponseValues.setImsiData(subscriberInfo.getMNPInfoRes().getIMSI().getData());
-          psiResponseValues.setRouteingNumberStr(subscriberInfo.getMNPInfoRes().getRouteingNumber().getRouteingNumber());
+          psiResponseValues.setRouteingNumber(subscriberInfo.getMNPInfoRes().getRouteingNumber());
           if (gmlcCdrState.isInitialized()) {
             gmlcCdrState.setMnpInfoRes(subscriberInfo.getMNPInfoRes());
             if (gmlcCdrState.getMnpInfoRes() != null) {
@@ -4554,16 +4555,22 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
           String mnpInfoResultMSISDN = "";
           String mnpInfoResultIMSI = "";
           String mnpInfoResultRouteingNumber = "";
+          String imsi = "";
 
           StringBuilder psiResponseSb = new StringBuilder();
-          psiResponseSb.append("PSI response:");
+          psiResponseSb.append("PSI response: ");
+          psiResponseSb.append("IMSI: ");
+          imsi = this.sriForSMImsi;
+          psiResponseSb.append(imsi);
+
           try {
+
             if (psiResponseValues.getLocationInformation() != null) {
               if (psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength() != null) {
                 mcc = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMCC();
                 mnc = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMNC();
                 lac = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getLac();
-                psiResponseSb.append("Location Information: LAI fixed length values:");
+                psiResponseSb.append("; Location Information: LAI fixed length values:");
                 psiResponseSb.append(" mcc=");
                 psiResponseSb.append(mcc);
                 psiResponseSb.append(", mnc=");
@@ -4575,7 +4582,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 mnc = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMNC();
                 lac = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getLac();
                 ci = psiResponseValues.getLocationInformation().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode();
-                psiResponseSb.append(" CGI or LAI of SAI fixed length values:");
+                psiResponseSb.append("; CGI or LAI of SAI fixed length values:");
                 psiResponseSb.append(" mcc=");
                 psiResponseSb.append(mcc);
                 psiResponseSb.append(", mnc=");
@@ -4683,13 +4690,13 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 psiResponseSb.append(" mmeName=");
                 psiResponseSb.append(mmeName);
               }
-              if (psiResponseValues.getLocationInformationEPS().getEUtranCellGlobalIdentity() != null){
-                eUtranCgi = new String(psiResponseValues.getLocationInformationEPS().getEUtranCellGlobalIdentity().getData());
+              if (psiResponseValues.getLocationInformation().getLocationInformationEPS().getEUtranCellGlobalIdentity() != null){
+                eUtranCgi = new String(psiResponseValues.getLocationInformation().getLocationInformationEPS().getEUtranCellGlobalIdentity().getData());
                 psiResponseSb.append(", EUTRAN-CGI=");
                 psiResponseSb.append(eUtranCgi);
               }
-              if (psiResponseValues.getLocationInformationEPS().getTrackingAreaIdentity() != null){
-                trackingAreaId = new String(psiResponseValues.getLocationInformationEPS().getTrackingAreaIdentity().getData());
+              if (psiResponseValues.getLocationInformation().getLocationInformationEPS().getTrackingAreaIdentity() != null){
+                trackingAreaId = new String(psiResponseValues.getLocationInformation().getLocationInformationEPS().getTrackingAreaIdentity().getData());
                 psiResponseSb.append(", TAId=");
                 psiResponseSb.append(trackingAreaId);
               }
@@ -4791,8 +4798,8 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 psiResponseSb.append(", mnpInfoResultIMSI=");
                 psiResponseSb.append(mnpInfoResultIMSI);
               }
-              if (psiResponseValues.getRouteingNumberStr() != null) {
-                mnpInfoResultRouteingNumber = psiResponseValues.getRouteingNumberStr();
+              if (psiResponseValues.getRouteingNumber() != null) {
+                mnpInfoResultRouteingNumber = psiResponseValues.getRouteingNumber().getRouteingNumber();
                 psiResponseSb.append(", mnpInfoResultRouteingNumber=");
                 psiResponseSb.append(mnpInfoResultRouteingNumber);
               }
@@ -4800,8 +4807,10 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
 
           } catch (MAPException me) {
             logger.severe("Map exception while retrieving PSI response values: "+me);
+            me.printStackTrace();;
           } catch (Exception e) {
             logger.severe("Exception while retrieving PSI response values: " +e);
+            e.printStackTrace();
           }
 
           this.sendHTTPResult(httpServletResponse.SC_OK, psiResponseSb.toString());
@@ -4829,46 +4838,6 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
     }
   }
 
-
-  /**
-   * Handle generating the appropriate HTTP response
-   * We're making use of the MLPResponse class for both GET/POST requests for convenience and
-   * because eventually the GET method will likely be removed
-   *
-   * @param mlpResultType   OK or error type to return to client
-   * @param errorMessage    Error message to send to client
-   */
-  protected void handlePsiNotSupportedYet(MLPResponse.MLPResultType mlpResultType, String errorMessage, ActivityContextInterface aci) {
-
-    HttpRequest request = getHttpRequest();
-    EventContext httpEventContext = this.resumeHttpEventContext();
-
-    CDRInterface cdrInterface = this.getCDRInterface();
-    GMLCCDRState gmlcCdrState = cdrInterface.getState();
-    gmlcCdrState.init(null, null, null,null, null, null);
-    gmlcCdrState.setDialogStartTime(DateTime.now());
-    gmlcCdrState.setRemoteDialogId(null);
-    cdrInterface.setState(gmlcCdrState);
-    SbbLocalObject sbbLO = (SbbLocalObject) cdrInterface;
-    aci.attach(sbbLO);
-    this.setTimer(aci);
-    if (gmlcCdrState.isInitialized()) {
-      this.createCDRRecord(RecordStatus.FAILED_NOT_IMPLEMENTED);
-    }
-
-    switch (request.type) {
-      case REST:
-        this.sendHTTPResult(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, errorMessage);
-        break;
-
-      case MLP:
-        String svcResultXml;
-        MLPResponse mlpResponse = new MLPResponse(this.logger);
-        svcResultXml = mlpResponse.getPositionErrorResponseXML(request.msisdn, mlpResultType, errorMessage);
-        this.sendHTTPResult(HttpServletResponse.SC_OK, svcResultXml);
-        break;
-    }
-  }
 
   /**
    * Handle generating the appropriate HTTP response
@@ -4928,7 +4897,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         urlParamsList.add("LCSClientIDNameFormatIndicator=" + Integer.toString(slrReq.getLcsClientID().getLCSClientName().getLCSFormatIndicator().getIndicator()));
       }
       if (slrReq.getLcsClientID().getLCSAPN() != null)
-        // urlParamsList.add("LCSClientIDAPN=" + slrReq.getLcsClientID().getLCSAPN().getApn().getBytes()); // temporary fail avoidance
+        urlParamsList.add("LCSClientIDAPN=" + new String(slrReq.getLcsClientID().getLCSAPN().getApn().getBytes())); // temporary fail avoidance
         if (slrReq.getLcsClientID().getLCSRequestorID() != null) {
           urlParamsList.add("LCSClientIDRequestorIDEncodedString=" + slrReq.getLcsClientID().getLCSRequestorID().getRequestorIDString().getEncodedString().toString());
           urlParamsList.add("LCSClientIDRequestorIDFormatIndicator=" + Integer.toString(slrReq.getLcsClientID().getLCSRequestorID().getLCSFormatIndicator().getIndicator()));
