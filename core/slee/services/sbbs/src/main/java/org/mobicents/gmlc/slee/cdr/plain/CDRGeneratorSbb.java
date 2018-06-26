@@ -35,7 +35,6 @@ import org.mobicents.gmlc.slee.map.MobileCoreNetworkInterfaceSbb;
 import org.mobicents.protocols.ss7.indicator.AddressIndicator;
 
 import org.mobicents.protocols.ss7.map.api.MAPException;
-import org.mobicents.protocols.ss7.map.api.primitives.AddressString;
 import org.mobicents.protocols.ss7.map.api.primitives.ISDNAddressString;
 import org.mobicents.protocols.ss7.map.api.primitives.GSNAddress;
 import org.mobicents.protocols.ss7.map.api.primitives.DiameterIdentity;
@@ -62,6 +61,7 @@ import org.mobicents.protocols.ss7.map.api.service.lsm.LCSClientID;
 import org.mobicents.protocols.ss7.map.api.service.lsm.ReportingPLMNList;
 
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.LocationInformation;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.LocationInformationGPRS;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.MNPInfoRes;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.SubscriberInfo;
 import org.mobicents.protocols.ss7.sccp.parameter.GlobalTitle;
@@ -1270,6 +1270,33 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
         }
       }
       /**
+       * Location Number
+       */
+      if(locationInformation.getLocationNumber() != null) {
+        try {
+          if (locationInformation.getLocationNumber().getLocationNumber() != null) {
+            stringBuilder.append(locationInformation.getLocationNumber().getLocationNumber().isOddFlag()).append(SEPARATOR);
+            stringBuilder.append(locationInformation.getLocationNumber().getLocationNumber().getNatureOfAddressIndicator()).append(SEPARATOR);
+            stringBuilder.append(locationInformation.getLocationNumber().getLocationNumber().getInternalNetworkNumberIndicator()).append(SEPARATOR);
+            stringBuilder.append(locationInformation.getLocationNumber().getLocationNumber().getNumberingPlanIndicator()).append(SEPARATOR);
+            stringBuilder.append(locationInformation.getLocationNumber().getLocationNumber().getAddressRepresentationRestrictedIndicator()).append(SEPARATOR);
+            stringBuilder.append(locationInformation.getLocationNumber().getLocationNumber().getScreeningIndicator()).append(SEPARATOR);
+            stringBuilder.append(locationInformation.getLocationNumber().getLocationNumber().getAddress()).append(SEPARATOR);
+          }
+
+        } catch (MAPException e) {
+          e.printStackTrace();
+        }
+      } else {
+        stringBuilder.append(SEPARATOR);
+        stringBuilder.append(SEPARATOR);
+        stringBuilder.append(SEPARATOR);
+        stringBuilder.append(SEPARATOR);
+        stringBuilder.append(SEPARATOR);
+        stringBuilder.append(SEPARATOR);
+        stringBuilder.append(SEPARATOR);
+      }
+      /**
        * VLR Number
        */
       if(locationInformation.getVlrNumber() != null) {
@@ -1362,6 +1389,138 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
     }
 
     /**
+     * Location Information GPRS (from PSI)
+     */
+    LocationInformationGPRS locationInformationGPRS = gmlcCdrState.getLocationInformationGPRS();
+    if(locationInformationGPRS != null) {
+      if(locationInformationGPRS.getCellGlobalIdOrServiceAreaIdOrLAI() != null) {
+        /**
+         * Cell Global Id
+         */
+        if(locationInformationGPRS.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength() != null) {
+          try {
+            stringBuilder.append(locationInformationGPRS.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMCC()).append(SEPARATOR);
+            stringBuilder.append(locationInformationGPRS.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMNC()).append(SEPARATOR);
+            stringBuilder.append(locationInformationGPRS.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getLac()).append(SEPARATOR);
+            stringBuilder.append(locationInformationGPRS.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode()).append(SEPARATOR);
+          } catch (MAPException e) {
+            e.printStackTrace();
+          }
+        } else {
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
+        }
+        if(locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength() != null) {
+          try {
+            stringBuilder.append(locationInformationGPRS.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMCC()).append(SEPARATOR);
+            stringBuilder.append(locationInformationGPRS.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMNC()).append(SEPARATOR);
+            stringBuilder.append(locationInformationGPRS.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getLac()).append(SEPARATOR);
+            stringBuilder.append(SEPARATOR);
+          } catch (MAPException e) {
+            e.printStackTrace();
+          }
+        } else {
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
+          stringBuilder.append(SEPARATOR);
+        }
+      }
+      /**
+       * SGSN Number
+       */
+      if(locationInformationGPRS.getSGSNNumber() != null) {
+        stringBuilder.append(locationInformationGPRS.getSGSNNumber().getAddress()).append(SEPARATOR);
+      } else {
+        stringBuilder.append(SEPARATOR);
+      }
+      /**
+       * Age of Location Information
+       */
+      if(locationInformationGPRS.getAgeOfLocationInformation() != null) {
+        stringBuilder.append(locationInformationGPRS.getAgeOfLocationInformation().intValue()).append(SEPARATOR);
+      } else {
+        stringBuilder.append(SEPARATOR);
+      }
+      /**
+       * Geographical Information
+       */
+      if(locationInformationGPRS.getGeographicalInformation() != null) {
+        stringBuilder.append(locationInformationGPRS.getGeographicalInformation().getLatitude()).append(SEPARATOR);
+        stringBuilder.append(locationInformationGPRS.getGeographicalInformation().getLongitude()).append(SEPARATOR);
+        stringBuilder.append(locationInformationGPRS.getGeographicalInformation().getUncertainty()).append(SEPARATOR);
+        stringBuilder.append(locationInformationGPRS.getGeographicalInformation().getTypeOfShape()).append(SEPARATOR);
+      } else {
+        stringBuilder.append(SEPARATOR);
+        stringBuilder.append(SEPARATOR);
+        stringBuilder.append(SEPARATOR);
+        stringBuilder.append(SEPARATOR);
+      }
+      /**
+       * Geodetic Information
+       */
+      if(locationInformationGPRS.getGeodeticInformation() != null) {
+        stringBuilder.append(locationInformationGPRS.getGeodeticInformation().getLatitude()).append(SEPARATOR);
+        stringBuilder.append(locationInformationGPRS.getGeodeticInformation().getLongitude()).append(SEPARATOR);
+        stringBuilder.append(locationInformationGPRS.getGeodeticInformation().getUncertainty()).append(SEPARATOR);
+        stringBuilder.append(locationInformationGPRS.getGeodeticInformation().getConfidence()).append(SEPARATOR);
+        stringBuilder.append(locationInformationGPRS.getGeodeticInformation().getTypeOfShape()).append(SEPARATOR);
+        stringBuilder.append(locationInformationGPRS.getGeodeticInformation().getScreeningAndPresentationIndicators()).append(SEPARATOR);
+      } else {
+        stringBuilder.append(SEPARATOR);
+        stringBuilder.append(SEPARATOR);
+        stringBuilder.append(SEPARATOR);
+        stringBuilder.append(SEPARATOR);
+        stringBuilder.append(SEPARATOR);
+        stringBuilder.append(SEPARATOR);
+      }
+      /**
+       * LSA Identity
+       */
+      if(locationInformationGPRS.getLSAIdentity() != null) {
+        stringBuilder.append(new String(locationInformationGPRS.getLSAIdentity().getData())).append(SEPARATOR);
+        if (locationInformationGPRS.getLSAIdentity().isPlmnSignificantLSA() ||
+                !locationInformationGPRS.getLSAIdentity().isPlmnSignificantLSA())
+          stringBuilder.append(locationInformationGPRS.getLSAIdentity().isPlmnSignificantLSA()).append(SEPARATOR);
+        else
+          stringBuilder.append(SEPARATOR);
+      } else {
+        stringBuilder.append(SEPARATOR);
+        stringBuilder.append(SEPARATOR);
+      }
+      /**
+       * Routeing Area Identity
+       */
+      if(locationInformationGPRS.getRouteingAreaIdentity() != null)
+        stringBuilder.append(new String(locationInformationGPRS.getRouteingAreaIdentity().getData())).append(SEPARATOR);
+      else
+        stringBuilder.append(SEPARATOR);
+
+    } else {
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+      stringBuilder.append(SEPARATOR);
+    }
+
+    /**
      * SAI Present (from PSI)
      */
     boolean psiSaiPresent = gmlcCdrState.isPsiSaiPresent();
@@ -1389,7 +1548,7 @@ public abstract class CDRGeneratorSbb extends MobileCoreNetworkInterfaceSbb impl
       if (psiMNPInfoResult.getNumberPortabilityStatus() != null)
         stringBuilder.append(psiMNPInfoResult.getNumberPortabilityStatus().getType()).append(SEPARATOR);
       if (psiMNPInfoResult.getIMSI() != null)
-        stringBuilder.append(psiMNPInfoResult.getIMSI().getData()).append(SEPARATOR);
+        stringBuilder.append(new String(psiMNPInfoResult.getIMSI().getData().getBytes())).append(SEPARATOR);
       if (psiMNPInfoResult.getMSISDN() != null)
         stringBuilder.append(psiMNPInfoResult.getMSISDN().getAddress()).append(SEPARATOR);
       if (psiMNPInfoResult.getRouteingNumber() != null)

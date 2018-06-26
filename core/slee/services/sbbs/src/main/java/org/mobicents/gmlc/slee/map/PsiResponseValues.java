@@ -43,6 +43,9 @@ import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformatio
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.MNPInfoRes;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.RouteingNumber;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.TAId;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.RAIdentity;
+
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberManagement.LSAIdentity;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
@@ -163,6 +166,11 @@ public class PsiResponseValues implements Serializable {
 
     // The SGSN indicates in LocationInformationGPRS the location of the served subscriber as defined in 3GPP TS 23.078.
     private LocationInformationGPRS locationInformationGPRS; // The SGSN indicates here the location of the served subscriber.
+    // LocationInformationGPRS includes SGSN number, LSAIdentity, RAIdentity
+    private ISDNAddressString sgsnNumber;
+    private LSAIdentity lsaIdentity;
+    private boolean isPLMNSignificantLSA;
+    private RAIdentity raIdentity;
 
     // The MME (via an IWF) indicates in LocationInformationEPS the location of the served subscriber.
     private LocationInformationEPS locationInformationEPS; // The MME indicates here the location of the served subscriber.
@@ -256,6 +264,38 @@ public class PsiResponseValues implements Serializable {
 
     public void setLocationInformationGPRS(LocationInformationGPRS locationInformationGPRS) {
         this.locationInformationGPRS = locationInformationGPRS;
+    }
+
+    public ISDNAddressString getSgsnNumber() {
+        return sgsnNumber;
+    }
+
+    public void setSgsnNumber(ISDNAddressString sgsnNumber) {
+        this.sgsnNumber = sgsnNumber;
+    }
+
+    public LSAIdentity getLsaIdentity() {
+        return lsaIdentity;
+    }
+
+    public void setLsaIdentity(LSAIdentity lsaIdentity) {
+        this.lsaIdentity = lsaIdentity;
+    }
+
+    public boolean isPLMNSignificantLSA() {
+        return isPLMNSignificantLSA;
+    }
+
+    public void setPLMNSignificantLSA(boolean PLMNSignificantLSA) {
+        isPLMNSignificantLSA = PLMNSignificantLSA;
+    }
+
+    public RAIdentity getRaIdentity() {
+        return raIdentity;
+    }
+
+    public void setRaIdentity(RAIdentity raIdentity) {
+        this.raIdentity = raIdentity;
     }
 
     public SubscriberState getSubscriberState() {

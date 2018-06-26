@@ -57,7 +57,11 @@ import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformatio
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.TypeOfShape;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.TAId;
 import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.EUtranCgi;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.LocationInformationGPRS;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.RAIdentity;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.LocationNumberMap;
 
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberManagement.LSAIdentity;
 import org.mobicents.protocols.ss7.sccp.parameter.SccpAddress;
 
 /**
@@ -143,16 +147,21 @@ public class GMLCCDRState implements Serializable {
   //MAP PSI operation parameters.
   protected SubscriberInfo subscriberInfo;
   protected LocationInformation locationInformation;
+  protected LocationInformationGPRS locationInformationGPRS;
   protected Double psiGeographicLatitude, psiGeographicLongitude, psiGeographicUncertainty;
   protected Double psiGeodeticLatitude, psiGeodeticLongitude, psiGeodeticUncertainty;
   protected int psiGeodeticConfidence, psiScreeningAndPresentationIndicators;
   protected ISDNAddressString psiVlrNumber;
   protected ISDNAddressString psiMscNumber;
+  protected LSAIdentity lsaIdentity;
   protected boolean psiSaiPresent;
   protected boolean psiCurrentLocationRetrieved;
+  protected boolean plmnSignificantLSA;
+  protected RAIdentity raIdentity;
   protected int psiAol;
   protected TAId taId;
   protected EUtranCgi eUtranCgi;
+  protected LocationNumberMap locationNumberMap;
   protected MNPInfoRes mnpInfoRes;
   protected int mnpStatus, mnpRouteingNumber;
   protected IMSI mnpIMSI;
@@ -642,6 +651,34 @@ public class GMLCCDRState implements Serializable {
   }
 
   /**
+   * @return the subscriber's location info GPRS
+   */
+  public LocationInformationGPRS getLocationInformationGPRS() {
+    return locationInformationGPRS;
+  }
+
+  /**
+   * @return the subscriber's location info GPRS LSA Identity
+   */
+  public LSAIdentity getLsaIdentity() {
+    return lsaIdentity;
+  }
+
+  /**
+   * @return the subscriber's location info GPRS if PLMN is significant LSA
+   */
+  public boolean isPlmnSignificantLSA() {
+    return plmnSignificantLSA;
+  }
+
+  /**
+   * @return the subscriber's location info GPRS Routing Area Identity
+   */
+  public RAIdentity getRaIdentity() {
+    return raIdentity;
+  }
+
+  /**
    * @return the subscriber's age of location info
    */
   public int getPsiAol() {
@@ -801,6 +838,14 @@ public class GMLCCDRState implements Serializable {
   public EUtranCgi geteUtranCgi() {
     return eUtranCgi;
   }
+
+  /**
+   * @return the subscriber's information Location Number
+   */
+  public LocationNumberMap getLocationNumberMap() {
+    return locationNumberMap;
+  }
+
 
   /****************/
   /*** SETTERS ***/
@@ -1269,6 +1314,34 @@ public class GMLCCDRState implements Serializable {
   }
 
   /**
+   * @param locationInformationGPRS to set
+   */
+  public void setLocationInformationGPRS(LocationInformationGPRS locationInformationGPRS) {
+    this.locationInformationGPRS = locationInformationGPRS;
+  }
+
+  /**
+   * @param lsaIdentity to set
+   */
+  public void setLsaIdentity(LSAIdentity lsaIdentity) {
+    this.lsaIdentity = lsaIdentity;
+  }
+
+  /**
+   * @param plmnSignificantLSA to set
+   */
+  public void setPlmnSignificantLSA(boolean plmnSignificantLSA) {
+    this.plmnSignificantLSA = plmnSignificantLSA;
+  }
+
+  /**
+   * @param raIdentity to set
+   */
+  public void setRaIdentity(RAIdentity raIdentity) {
+    this.raIdentity = raIdentity;
+  }
+
+  /**
    * @param psiAol to set
    */
   public void setPsiAol(int psiAol) {
@@ -1426,7 +1499,13 @@ public class GMLCCDRState implements Serializable {
     this.eUtranCgi = eUtranCgi;
   }
 
-  /*********************/
+  /**
+   * @param locationNumberMap subscriber's E-UTRAN Cell Id  to set
+   */
+  public void setLocationNumberMap(LocationNumberMap locationNumberMap) {
+    this.locationNumberMap = locationNumberMap;
+  }
+/*********************/
   /*** CONSTRUCTORS ***/
   /*******************/
   public void init(final Long dialogId, final AddressString destRef, final AddressString origRef, final ISDNAddressString isdnAddressString,
@@ -1490,7 +1569,8 @@ public class GMLCCDRState implements Serializable {
                    String civicAddress, LCSEvent lcsEvent, ISDNAddressString msisdn, IMEI imei, DeferredmtlrData deferredmtlrData, int lcsServiceTypeID,
                    boolean pseudonymIndicator, int sequenceNumber, PeriodicLDRInfo periodicLDRInfo, ReportingPLMNList reportingPLMNList,
                    SubscriberInfo subscriberInfo, LocationInformation locationInformation, ISDNAddressString psiVlrNumber, ISDNAddressString psiMscNumber,
-                   int psiAol, TAId taId, EUtranCgi eUtranCgi) {
+                   int psiAol, TAId taId, EUtranCgi eUtranCgi, LocationNumberMap locationNumberMap, LocationInformationGPRS locationInformationGPRS,
+                   LSAIdentity lsaIdentity, RAIdentity raIdentity) {
     this.initiated = initiated;
     this.generated = generated;
     this.id = id;
@@ -1559,6 +1639,10 @@ public class GMLCCDRState implements Serializable {
     this.psiAol = psiAol;
     this.taId = taId;
     this.eUtranCgi = eUtranCgi;
+    this.locationNumberMap = locationNumberMap;
+    this.locationInformationGPRS = locationInformationGPRS;
+    this.lsaIdentity = lsaIdentity;
+    this.raIdentity = raIdentity;
   }
 
 
@@ -1616,6 +1700,12 @@ public class GMLCCDRState implements Serializable {
     result = prime * result + ((reportingPLMNList == null) ? 0 : reportingPLMNList.hashCode());
     result = prime * result + ((subscriberInfo == null) ? 0 : subscriberInfo.hashCode());
     result = prime * result + ((locationInformation == null) ? 0 : locationInformation.hashCode());
+    result = prime * result + ((locationInformationGPRS == null) ? 0 : locationInformationGPRS.hashCode());
+    result = prime * result + ((lsaIdentity == null) ? 0 : lsaIdentity.hashCode());
+    result = prime * result + ((raIdentity == null) ? 0 : raIdentity.hashCode());
+    result = prime * result + ((taId == null) ? 0 : taId.hashCode());
+    result = prime * result + ((locationNumberMap == null) ? 0 : locationNumberMap.hashCode());
+    result = prime * result + ((mnpInfoRes == null) ? 0 : mnpInfoRes.hashCode());
     return result;
   }
 
@@ -1675,6 +1765,7 @@ public class GMLCCDRState implements Serializable {
 
     if (generated != other.generated)
       return false;
+
     if (id == null) {
       if (other.id != null)
         return false;
@@ -2013,6 +2104,30 @@ public class GMLCCDRState implements Serializable {
     } else if (!locationInformation.equals(other.locationInformation))
       return false;
 
+    if (locationInformationGPRS == null) {
+      if (other.locationInformationGPRS != null)
+        return false;
+    } else if (!locationInformationGPRS.equals(other.locationInformationGPRS))
+      return false;
+
+    if (lsaIdentity == null) {
+      if (other.lsaIdentity != null)
+        return false;
+    } else if (!lsaIdentity.equals(other.lsaIdentity))
+      return false;
+
+    if (plmnSignificantLSA != false && plmnSignificantLSA != true) {
+      if (other.plmnSignificantLSA == false && other.plmnSignificantLSA == true)
+        return false;
+    } else if (!(plmnSignificantLSA == (other.plmnSignificantLSA)))
+      return false;
+
+    if (raIdentity == null) {
+      if (other.raIdentity != null)
+        return false;
+    } else if (!raIdentity.equals(other.raIdentity))
+      return false;
+
     if (psiAol == -1) {
       if (other.psiAol != -1)
         return false;
@@ -2139,6 +2254,12 @@ public class GMLCCDRState implements Serializable {
     } else if (!eUtranCgi.equals(other.eUtranCgi))
       return false;
 
+    if (locationNumberMap == null) {
+      if (other.locationNumberMap != null)
+        return false;
+    } else if (!locationNumberMap.equals(other.locationNumberMap))
+      return false;
+
     return true;
   }
 
@@ -2214,6 +2335,7 @@ public class GMLCCDRState implements Serializable {
     String psiGeodTypeOfShape = "";
     String psiVLRnum = "";
     String psiMSCnum = "";
+    String psiSGSNnum = "";
     String psiTrackingAreaId = "";
     String psiEUTRANcgi = "";
     String psiMNPImsi, psiMNPMsisdn, psiMNPRouteingNum;
@@ -2222,6 +2344,9 @@ public class GMLCCDRState implements Serializable {
     String psiSAIpresent, psiCurrentLocRetrieved;
     psiSAIpresent = psiCurrentLocRetrieved = "";
     String psiSubscriberState = "";
+    String psiLSAIdentity = "";
+    boolean psiIsPlmnSignificantLSA = false;
+    String psiRAIdentity = "";
 
     try {
 
@@ -2474,12 +2599,14 @@ public class GMLCCDRState implements Serializable {
         psiMNC = locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMNC();
         psiLAC = locationInformation.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getLac();
       }
+
       if (locationInformation.getGeographicalInformation() != null) {
         psiGeogLat = locationInformation.getGeographicalInformation().getLatitude();
         psiGeogLong = locationInformation.getGeographicalInformation().getLongitude();
         psiGeogUncertainty = locationInformation.getGeographicalInformation().getUncertainty();
         psiGeogTypeOfShape = locationInformation.getGeographicalInformation().getTypeOfShape().name();
       }
+
       if (locationInformation.getGeodeticInformation() != null) {
         psiGeodLat = locationInformation.getGeodeticInformation().getLatitude();
         psiGeodLong = locationInformation.getGeodeticInformation().getLongitude();
@@ -2488,22 +2615,45 @@ public class GMLCCDRState implements Serializable {
         psiGeodConfidence = locationInformation.getGeodeticInformation().getConfidence();
         psiGeodScreeningAndPresentationInd = locationInformation.getGeodeticInformation().getScreeningAndPresentationIndicators();
       }
+
       if (locationInformation.getVlrNumber() != null)
         psiVLRnum = locationInformation.getVlrNumber().getAddress();
+
       if (locationInformation.getMscNumber() != null)
         psiMSCnum = locationInformation.getMscNumber().getAddress();
+
       if (locationInformation.getSaiPresent() == true || locationInformation.getSaiPresent() == false)
         psiSAIpresent = String.valueOf(locationInformation.getSaiPresent());
+
       if (locationInformation.getCurrentLocationRetrieved() == true || locationInformation.getCurrentLocationRetrieved() == false)
         psiCurrentLocRetrieved = String.valueOf(locationInformation.getCurrentLocationRetrieved());
+
       if (locationInformation.getAgeOfLocationInformation() <=Integer.MAX_VALUE && locationInformation.getAgeOfLocationInformation() >= Integer.MIN_VALUE)
         psiAgeOfLocationInfo = locationInformation.getAgeOfLocationInformation();
+
       if (locationInformation.getLocationInformationEPS() != null) {
         if (locationInformation.getLocationInformationEPS().getTrackingAreaIdentity() != null)
           psiTrackingAreaId = new String(locationInformation.getLocationInformationEPS().getTrackingAreaIdentity().getData());
         if (locationInformation.getLocationInformationEPS().getEUtranCellGlobalIdentity() != null)
           psiEUTRANcgi = new String(locationInformation.getLocationInformationEPS().getEUtranCellGlobalIdentity().getData());
       }
+
+      if (locationInformationGPRS != null){
+
+        if(locationInformationGPRS.getSGSNNumber() != null)
+          psiSGSNnum = locationInformationGPRS.getSGSNNumber().getAddress();
+
+        if(locationInformationGPRS.getLSAIdentity() != null) {
+          psiLSAIdentity = new String(locationInformationGPRS.getLSAIdentity().getData());
+          if(locationInformationGPRS.getLSAIdentity().isPlmnSignificantLSA())
+            psiIsPlmnSignificantLSA = locationInformationGPRS.getLSAIdentity().isPlmnSignificantLSA();
+        }
+
+        if(locationInformationGPRS.getRouteingAreaIdentity() != null) {
+          psiRAIdentity = new String(locationInformationGPRS.getRouteingAreaIdentity().getData());
+        }
+      }
+
 
       if (subscriberInfo.getSubscriberState() != null)
         psiSubscriberState = subscriberInfo.getSubscriberState().getSubscriberStateChoice().toString();
@@ -2660,7 +2810,11 @@ public class GMLCCDRState implements Serializable {
             ", psiGeodeticTypeOfShape=" + psiGeodTypeOfShape +
             ", psiVLRNumber=" + psiVLRnum +
             ", psiMSCNumber=" + psiMSCnum +
+            ", psiSGSNNumber=" + psiSGSNnum +
             ", psiSAIpresent=" + psiSAIpresent +
+            ", psiLSAIdentity" + psiLSAIdentity +
+            ", psiIsPLMNSignificantLSA" + psiIsPlmnSignificantLSA +
+            ", psiRAIdentity" + psiRAIdentity +
             ", psiCurrentLocationRetrieved=" + psiCurrentLocRetrieved +
             ", psiAgeOfLocationInformation=" + psiAgeOfLocationInfo +
             ", psiTrackingAreaId=" + psiTrackingAreaId +
