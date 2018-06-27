@@ -19,7 +19,6 @@
 
 package org.mobicents.gmlc.slee.map;
 
-//import io.netty.handler.codec.http.HttpMethod;
 import net.java.slee.resource.http.events.HttpServletRequestEvent;
 import org.joda.time.DateTime;
 
@@ -31,6 +30,7 @@ import org.mobicents.gmlc.slee.cdr.CDRInterfaceParent;
 import org.mobicents.gmlc.slee.cdr.GMLCCDRState;
 import org.mobicents.gmlc.slee.cdr.RecordStatus;
 import org.mobicents.gmlc.slee.http.HttpReport;
+import org.mobicents.gmlc.slee.http.report.ReportParameters;
 import org.mobicents.gmlc.slee.mlp.MLPException;
 import org.mobicents.gmlc.slee.mlp.MLPRequest;
 import org.mobicents.gmlc.slee.mlp.MLPResponse;
@@ -49,7 +49,18 @@ import org.mobicents.protocols.ss7.map.api.MAPProvider;
 import org.mobicents.protocols.ss7.map.api.errors.MAPErrorMessage;
 import org.mobicents.protocols.ss7.map.api.errors.MAPErrorCode;
 
-import org.mobicents.protocols.ss7.map.api.primitives.*;
+import org.mobicents.protocols.ss7.map.api.primitives.AddressNature;
+import org.mobicents.protocols.ss7.map.api.primitives.AddressString;
+import org.mobicents.protocols.ss7.map.api.primitives.LAIFixedLength;
+import org.mobicents.protocols.ss7.map.api.primitives.CellGlobalIdOrServiceAreaIdFixedLength;
+import org.mobicents.protocols.ss7.map.api.primitives.CellGlobalIdOrServiceAreaIdOrLAI;
+import org.mobicents.protocols.ss7.map.api.primitives.ISDNAddressString;
+import org.mobicents.protocols.ss7.map.api.primitives.GSNAddress;
+import org.mobicents.protocols.ss7.map.api.primitives.IMSI;
+import org.mobicents.protocols.ss7.map.api.primitives.LMSI;
+import org.mobicents.protocols.ss7.map.api.primitives.SubscriberIdentity;
+import org.mobicents.protocols.ss7.map.api.primitives.IMEI;
+import org.mobicents.protocols.ss7.map.api.primitives.MAPExtensionContainer;
 
 import org.mobicents.protocols.ss7.map.api.service.lsm.AccuracyFulfilmentIndicator;
 import org.mobicents.protocols.ss7.map.api.service.lsm.AddGeographicalInformation;
@@ -92,7 +103,14 @@ import org.mobicents.protocols.ss7.map.api.service.lsm.UtranPositioningDataInfo;
 import org.mobicents.protocols.ss7.map.api.service.lsm.VelocityEstimate;
 
 import org.mobicents.protocols.ss7.map.api.service.mobility.MAPDialogMobility;
-import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.*;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.AnyTimeInterrogationRequest;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.AnyTimeInterrogationResponse;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.ProvideSubscriberInfoRequest;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.ProvideSubscriberInfoResponse;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.SubscriberInfo;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.RequestedInfo;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.TypeOfShape;
+import org.mobicents.protocols.ss7.map.api.service.mobility.subscriberInformation.DomainType;
 
 import org.mobicents.protocols.ss7.map.api.service.sms.LocationInfoWithLMSI;
 import org.mobicents.protocols.ss7.map.api.service.sms.MAPDialogSms;
@@ -159,12 +177,10 @@ import java.io.Serializable;
 import java.io.InputStream;
 import java.io.PrintWriter;
 
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.HashMap;
 
 /**
  * @author <a href="mailto:fernando.mendioroz@gmail.com"> Fernando Mendioroz </a>
@@ -2424,9 +2440,9 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         mapDialogLsmSlr.close(false);
 
         // Handle successful retrieval of subscriber's location report request (SLR request) info by sending HTTP POST back to the requestor
-        slrReportParameters(slrRequestValues);
+        ReportParameters slrReportParams = slrReportParameters(slrRequestValues);
         logger.info(String.format("Handling SubscriberLocationReport POST ReferenceNumber '%s'\n", lcsReferenceNumber));
-        httpSubscriberLocationReport.Perform(HttpReport.HttpMethod.POST, lcsReferenceNumber);
+        httpSubscriberLocationReport.Perform(HttpReport.HttpMethod.POST, lcsReferenceNumber, slrReportParams);
 
       }
 
@@ -4867,7 +4883,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
   /**
    * Report Parameters HashMap construction for HTTP POST to send back to LCS requestor after SLR request
    */
-  protected HashMap<String, String> slrReportParameters(SlrRequestValues slrReq) throws Exception {
+  protected ReportParameters slrReportParameters(SlrRequestValues slrReq) throws Exception {
 
     List<String> slrParamList = new ArrayList<>();
     try {
@@ -4983,7 +4999,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         }
       }
 
-      HashMap<String, String> slrReportParameters = new HashMap<>();
+      ReportParameters slrReportParameters = new ReportParameters();
       Iterator<String> slrReportParametersIterator = slrParamList.iterator();
       while (slrReportParametersIterator.hasNext()) {
         slrReportParameters.put(String.valueOf(slrReq.getLcsReferenceNumber()), slrReportParametersIterator.next());

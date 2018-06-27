@@ -67,7 +67,7 @@ public class HttpReport {
         }
     }
 
-    public void Perform(HttpMethod httpMethod, Integer reportRegisterId) throws IOException {
+    public void Perform(HttpMethod httpMethod, Integer reportRegisterId, ReportParameters reportParameters) throws IOException {
         // get the report element register by previous registered id
         ReportElement reportElement = reportRegister.get(reportRegisterId);
         if (reportElement != null) {
@@ -84,6 +84,8 @@ public class HttpReport {
                 httpOutputStream.write("{}".getBytes());
             else
                 httpOutputStream.write(reportElement.reportParameters.toString().getBytes());
+            if (reportParameters != null)
+                httpOutputStream.write(reportParameters.toString().getBytes());
             httpOutputStream.flush();
             httpOutputStream.close();
 
