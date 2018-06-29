@@ -21,8 +21,6 @@
 
 package org.mobicents.gmlc.slee.http.report;
 
-import java.util.HashMap;
-
 /**
  * @author <a href="mailto:aferreiraguido@gmail.com"> Alejandro Ferreira Guido </a>
  */
