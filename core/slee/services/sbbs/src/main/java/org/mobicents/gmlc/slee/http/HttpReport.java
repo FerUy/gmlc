@@ -21,7 +21,6 @@
 
 package org.mobicents.gmlc.slee.http;
 
-//import io.netty.handler.codec.http.HttpMethod;
 import org.mobicents.gmlc.slee.http.report.ReportElement;
 import org.mobicents.gmlc.slee.http.report.ReportParameters;
 import org.mobicents.gmlc.slee.http.report.ReportRegister;

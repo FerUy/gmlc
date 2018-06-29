@@ -118,6 +118,7 @@ import org.mobicents.protocols.ss7.map.api.service.sms.SendRoutingInfoForSMReque
 import org.mobicents.protocols.ss7.map.api.service.sms.SendRoutingInfoForSMResponse;
 import org.mobicents.protocols.ss7.map.primitives.ISDNAddressStringImpl;
 import org.mobicents.protocols.ss7.map.primitives.SubscriberIdentityImpl;
+import org.mobicents.protocols.ss7.map.primitives.IMSIImpl;
 
 import org.mobicents.protocols.ss7.map.service.lsm.AreaDefinitionImpl;
 import org.mobicents.protocols.ss7.map.service.lsm.AreaEventInfoImpl;
@@ -137,6 +138,7 @@ import org.mobicents.protocols.ss7.sccp.impl.parameter.ParameterFactoryImpl;
 import org.mobicents.protocols.ss7.sccp.parameter.EncodingScheme;
 import org.mobicents.protocols.ss7.sccp.parameter.GlobalTitle;
 import org.mobicents.protocols.ss7.sccp.parameter.ParameterFactory;
+import org.mobicents.protocols.ss7.map.MAPParameterFactoryImpl;
 import org.mobicents.protocols.ss7.sccp.parameter.SccpAddress;
 
 import org.mobicents.slee.ChildRelationExt;
@@ -220,7 +222,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
 
   private String pslLcsServiceTypeID, pslIntervalTime, pslReportingAmount, pslReportingInterval,
           pslLcsHorizontalAccuracy, pslLcsVerticalAccuracy, pslOccurrenceInfo, pslAreaType, pslAreaId, pslLocationEstimateType, pslDeferredLocationEventType,
-          pslLcsPriority, pslVerticalCoordinateRequest, pslResponseTimeCategory, slrCallbackUrl, sriForSMImsi, psiService;
+          pslLcsPriority, pslVerticalCoordinateRequest, pslResponseTimeCategory, slrCallbackUrl, sriForSMImsi, psiService, psiServiceType, psiOnlyImsi, psiOnlyNnn;
   private Integer pslLcsReferenceNumber, pslReferenceNumber;
 
   private HttpReport httpSubscriberLocationReport = new HttpReport();
@@ -2681,6 +2683,56 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
       logger.severe(String.format("Error while trying to process onProvideSubscriberInformationRequest=%s", event), e);
     }
   }
+  /**
+   * MAP-PROVIDE-SUBSCRIBER-INFO (PSI)
+   */
+  public void provideSubscriberInfoRequestFirst(String imsiStr, String nnn) {
+
+    IMSI imsi = new IMSIImpl(imsiStr);
+    LMSI lmsi = null;
+    boolean locationInformation = true;
+    boolean subscriberState = true;
+    MAPExtensionContainer mapExtensionContainer = null;
+    boolean currentLocation = true;
+    DomainType requestedDomain = null;
+    boolean imei = true;
+    boolean msClassmark = false;
+    boolean mnpRequestedInfo = false;
+    RequestedInfo requestedInfo = new RequestedInfoImpl(locationInformation, subscriberState, mapExtensionContainer, currentLocation, requestedDomain, imei, msClassmark, mnpRequestedInfo);
+
+    AddressString originAddressString, destinationAddressString;
+    originAddressString = destinationAddressString = null;
+    SccpAddress networkNodeAddress = getNNNSCCPAddress(nnn);
+
+    MAPDialogMobility mapDialogMobility = null;
+    try {
+      mapDialogMobility = this.mapProvider.getMAPServiceMobility().createNewDialog(
+              this.getMAPPsiApplicationContext(), this.getGmlcSccpAddress(), originAddressString,
+              networkNodeAddress, destinationAddressString);
+    } catch (MAPException e) {
+      e.printStackTrace();
+    }
+
+    try {
+      mapDialogMobility.addProvideSubscriberInfoRequest(imsi, lmsi, requestedInfo, mapExtensionContainer, null);
+    } catch (MAPException e) {
+      logger.severe(String.format("MAP Exception while trying to add PSI to MAP dialog mobility dialog on provideSubscriberInfoRequestFirst=%s", e.getMessage()));
+      e.printStackTrace();
+    }
+
+    // Keep ACI in across MAP dialog for PSL
+    ActivityContextInterface lsmPslDialogACI = this.mapAcif.getActivityContextInterface(mapDialogMobility);
+    lsmPslDialogACI.attach(this.sbbContext.getSbbLocalObject());
+
+    // ProvideSubscriberInfoRequest is now composed by values taken from SRIforSM response
+    // Send PSI
+    try {
+      mapDialogMobility.send();
+    } catch (MAPException e) {
+      logger.severe(String.format("MAP Exception while trying to send PSI on provideSubscriberInfoRequestFirst=%s", e.getMessage()));
+      e.printStackTrace();
+    }
+  }
 
   public void onProvideSubscriberInformationResponse(ProvideSubscriberInfoResponse event, ActivityContextInterface aci) {
 
@@ -3180,6 +3232,10 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
 
           }
         }
+        if (gmlcCdrState.isInitialized() && this.psiServiceType.equalsIgnoreCase("psiFirst") && this.psiOnlyImsi != null && this.psiOnlyNnn != null) {
+          IMSI imsi = new IMSIImpl(this.psiOnlyImsi);
+          gmlcCdrState.setImsi(imsi);
+        }
       }
 
       if (subscriberInfo != null) {
@@ -3637,6 +3693,23 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
             psiService = "false";
           }
 
+          this.psiServiceType = httpServletRequest.getParameter("psiServiceType");
+          if (psiServiceType == null) {
+            psiServiceType = "sriFirst";
+          }
+          if (psiServiceType.equalsIgnoreCase("psiFirst")) {
+            psiServiceType = "psiFirst";
+          } else {
+            psiServiceType = "sriFirst";
+          }
+
+          this.psiOnlyImsi = httpServletRequest.getParameter("psiImsi");
+          this.psiOnlyNnn = httpServletRequest.getParameter("psiNnn");
+          if (psiOnlyImsi != null && psiOnlyNnn != null && psiServiceType.equalsIgnoreCase("psiFirst")) {
+            psiServiceType = "psiFirst";
+          }
+
+
         } catch (IllegalArgumentException iae) {
           iae.printStackTrace();
           handleLsmLocationResponse(MLPResponse.MLPResultType.FORMAT_ERROR, null, null, null, "Failure: " + inputIllegalArgument);
@@ -3704,7 +3777,14 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
       eventContext.suspendDelivery();
       setEventContextCMP(eventContext);
       if (psiService.equalsIgnoreCase("true")) {
-        getLocationViaSubscriberInformation(requestingMSISDN);
+        if (!psiServiceType.equalsIgnoreCase("psiFirst")) {
+          getLocationViaSubscriberInformation(requestingMSISDN);
+        } else {
+          if (psiOnlyImsi != null && psiOnlyNnn != null)
+            provideSubscriberInfoRequestFirst(psiOnlyImsi, psiOnlyNnn);
+          else
+            getLocationViaSubscriberInformation(requestingMSISDN);
+        }
       } else {
         if (coreNetwork.equalsIgnoreCase("UMTS")) {
           getMsisdnGeolocationViaLsm(requestingMSISDN);
@@ -4574,8 +4654,13 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
           StringBuilder psiResponseSb = new StringBuilder();
           psiResponseSb.append("PSI response: ");
           psiResponseSb.append("IMSI: ");
-          imsi = this.sriForSMImsi;
-          psiResponseSb.append(imsi);
+          if (psiOnlyImsi != null && psiOnlyNnn != null && psiServiceType.equalsIgnoreCase("psiFirst")) {
+            imsi = this.psiOnlyImsi;
+            psiResponseSb.append(imsi);
+          } else {
+            imsi = this.sriForSMImsi;
+            psiResponseSb.append(imsi);
+          }
 
           try {
 
@@ -4617,7 +4702,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
               if (psiResponseValues.getLocationInformation().getLocationNumber() != null) {
                 if (psiResponseValues.getLocationInformation().getLocationNumber().getLocationNumber() != null) {
                   locationNumber = psiResponseValues.getLocationInformation().getLocationNumber().getLocationNumber().getAddress();
-                  psiResponseSb.append(", locationNumberAddress=");
+                  psiResponseSb.append("; locationNumberAddress=");
                   psiResponseSb.append(locationNumber);
                 }
               }
