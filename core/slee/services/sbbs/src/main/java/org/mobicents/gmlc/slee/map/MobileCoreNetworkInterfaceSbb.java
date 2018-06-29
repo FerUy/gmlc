@@ -2442,9 +2442,8 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
         mapDialogLsmSlr.close(false);
 
         // Handle successful retrieval of subscriber's location report request (SLR request) info by sending HTTP POST back to the requestor
-        ReportParameters slrReportParams = slrReportParameters(slrRequestValues);
         logger.info(String.format("Handling SubscriberLocationReport POST ReferenceNumber '%s'\n", lcsReferenceNumber));
-        httpSubscriberLocationReport.Perform(HttpReport.HttpMethod.POST, lcsReferenceNumber, slrReportParams);
+        httpSubscriberLocationReport.Perform(HttpReport.HttpMethod.POST, lcsReferenceNumber, slrReportParameters(slrRequestValues));
 
       }
 
@@ -4968,129 +4967,127 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
   /**
    * Report Parameters HashMap construction for HTTP POST to send back to LCS requestor after SLR request
    */
-  protected ReportParameters slrReportParameters(SlrRequestValues slrReq) throws Exception {
+  protected List<String> slrReportParameters(SlrRequestValues slrReq) throws Exception {
 
     List<String> slrParamList = new ArrayList<>();
     try {
       if (slrReq.getLcsClientID() != null) {
         if (slrReq.getLcsClientID().getLCSClientType() != null && (slrReq.getLcsClientID().getLCSClientType().getType() > Integer.MIN_VALUE
                 && slrReq.getLcsClientID().getLCSClientType().getType() < Integer.MAX_VALUE))
-          slrParamList.add("LCSClientIDType=" + Integer.toString(slrReq.getLcsClientID().getLCSClientType().getType()));
+          slrParamList.add("LCSClientIDType=" + Integer.toString(slrReq.getLcsClientID().getLCSClientType().getType()) + ", ");
         if (slrReq.getLcsClientID().getLCSClientExternalID() != null)
-          slrParamList.add("LCSClientIDExternalID=" + slrReq.getLcsClientID().getLCSClientExternalID().getExternalAddress().getAddress());
+          slrParamList.add("LCSClientIDExternalID=" + slrReq.getLcsClientID().getLCSClientExternalID().getExternalAddress().getAddress() + ", ");
         if (slrReq.getLcsClientID().getLCSClientInternalID() != null
                 && (slrReq.getLcsClientID().getLCSClientInternalID().getId() > Integer.MIN_VALUE
                 && slrReq.getLcsClientID().getLCSClientInternalID().getId() < Integer.MAX_VALUE))
-          slrParamList.add("LCSClientIDInternalID=" + Integer.toString(slrReq.getLcsClientID().getLCSClientInternalID().getId()));
+          slrParamList.add("LCSClientIDInternalID=" + Integer.toString(slrReq.getLcsClientID().getLCSClientInternalID().getId()) + ", ");
         if (slrReq.getLcsClientID().getLCSClientName() != null) {
-          slrParamList.add("LCSClientIDNameString=" + slrReq.getLcsClientID().getLCSClientName().getNameString().toString());
-          slrParamList.add("LCSClientIDNameDCS=" + Integer.toString(slrReq.getLcsClientID().getLCSClientName().getDataCodingScheme().getCode()));
-          slrParamList.add("LCSClientIDNameFormatIndicator=" + Integer.toString(slrReq.getLcsClientID().getLCSClientName().getLCSFormatIndicator().getIndicator()));
+          slrParamList.add("LCSClientIDNameString=" + new String(slrReq.getLcsClientID().getLCSClientName().getNameString().getEncodedString()) + ", ");
+          slrParamList.add("LCSClientIDNameDCS=" + Integer.toString(slrReq.getLcsClientID().getLCSClientName().getDataCodingScheme().getCode()) + ", ");
+          slrParamList.add("LCSClientIDNameFormatIndicator=" + Integer.toString(slrReq.getLcsClientID().getLCSClientName().getLCSFormatIndicator().getIndicator()) + ", ");
         }
         if (slrReq.getLcsClientID().getLCSAPN() != null)
-          slrParamList.add("LCSClientIDAPN=" + new String(slrReq.getLcsClientID().getLCSAPN().getApn().getBytes())); // temporary fail avoidance
+          slrParamList.add("LCSClientIDAPN=" + new String(slrReq.getLcsClientID().getLCSAPN().getApn().getBytes()) + ", ");
         if (slrReq.getLcsClientID().getLCSRequestorID() != null) {
-          slrParamList.add("LCSClientIDRequestorIDEncodedString=" + slrReq.getLcsClientID().getLCSRequestorID().getRequestorIDString().getEncodedString().toString());
-          slrParamList.add("LCSClientIDRequestorIDFormatIndicator=" + Integer.toString(slrReq.getLcsClientID().getLCSRequestorID().getLCSFormatIndicator().getIndicator()));
-          slrParamList.add("LCSClientIDRequestorIDDCS=" + Integer.toString(slrReq.getLcsClientID().getLCSRequestorID().getDataCodingScheme().getCode()));
+          slrParamList.add("LCSClientIDRequestorIDEncodedString=" + new String(slrReq.getLcsClientID().getLCSRequestorID().getRequestorIDString().getEncodedString()) + ", ");
+          slrParamList.add("LCSClientIDRequestorIDFormatIndicator=" + Integer.toString(slrReq.getLcsClientID().getLCSRequestorID().getLCSFormatIndicator().getIndicator()) + ", ");
+          slrParamList.add("LCSClientIDRequestorIDDCS=" + Integer.toString(slrReq.getLcsClientID().getLCSRequestorID().getDataCodingScheme().getCode()) + ", ");
         }
         if (slrReq.getLcsClientID().getLCSClientDialedByMS() != null)
-          slrParamList.add("LCSClientIDLCSClientDialedByMS=" + slrReq.getLcsClientID().getLCSClientDialedByMS().getAddress());
+          slrParamList.add("LCSClientIDLCSClientDialedByMS=" + slrReq.getLcsClientID().getLCSClientDialedByMS().getAddress() + ", ");
       }
       if (slrReq.getLcsEvent() != null) {
-        slrParamList.add("LCSEvent=" + Integer.toString(slrReq.getLcsEvent().getEvent()));
+        slrParamList.add("LCSEvent=" + Integer.toString(slrReq.getLcsEvent().getEvent()) + ", ");
       }
       if (slrReq.getLcsReferenceNumber() > Integer.MIN_VALUE && slrReq.getLcsReferenceNumber() < Integer.MAX_VALUE) {
-        slrParamList.add("LCSReferenceNumber=" + Integer.toString(slrReq.getLcsReferenceNumber()));
+        slrParamList.add("LCSReferenceNumber=" + Integer.toString(slrReq.getLcsReferenceNumber()) + ", ");
       }
       if (slrReq.getLcsServiceTypeID() > Integer.MIN_VALUE && slrReq.getLcsServiceTypeID() < Integer.MAX_VALUE) {
-        slrParamList.add("LCSServiceTypeID=" + Integer.toString(slrReq.getLcsServiceTypeID()));
+        slrParamList.add("LCSServiceTypeID=" + Integer.toString(slrReq.getLcsServiceTypeID()) + ", ");
       }
       if (slrReq.getLocationEstimate() != null) {
-        slrParamList.add("Latitude=" + Double.toString(slrReq.getLocationEstimate().getLatitude()));
-        slrParamList.add("Longitude=" + Double.toString(slrReq.getLocationEstimate().getLongitude()));
-        slrParamList.add("Altitude=" + Double.toString(slrReq.getLocationEstimate().getAltitude()));
-        slrParamList.add("Confidence=" + Double.toString(slrReq.getLocationEstimate().getInnerRadius()));
-        slrParamList.add("Uncertainty=" + Double.toString(slrReq.getLocationEstimate().getUncertainty()));
-        slrParamList.add("UncertaintyAltitude=" + Double.toString(slrReq.getLocationEstimate().getUncertaintyAltitude()));
-        slrParamList.add("UncertaintyInnerRadius=" + Double.toString(slrReq.getLocationEstimate().getUncertaintyRadius()));
-        slrParamList.add("OffsetAngle=" + Double.toString(slrReq.getLocationEstimate().getOffsetAngle()));
-        slrParamList.add("IncludeAngle=" + Double.toString(slrReq.getLocationEstimate().getIncludedAngle()));
-        slrParamList.add("TypeOfShape=" + Integer.toString(slrReq.getLocationEstimate().getTypeOfShape().getCode()));
+        slrParamList.add("Location Estimate: ");
+        slrParamList.add("Latitude=" + Double.toString(slrReq.getLocationEstimate().getLatitude()) + ", ");
+        slrParamList.add("Longitude=" + Double.toString(slrReq.getLocationEstimate().getLongitude()) + ", ");
+        slrParamList.add("Altitude=" + Double.toString(slrReq.getLocationEstimate().getAltitude()) + ", ");
+        slrParamList.add("Confidence=" + Double.toString(slrReq.getLocationEstimate().getInnerRadius()) + ", ");
+        slrParamList.add("Uncertainty=" + Double.toString(slrReq.getLocationEstimate().getUncertainty()) + ", ");
+        slrParamList.add("UncertaintyAltitude=" + Double.toString(slrReq.getLocationEstimate().getUncertaintyAltitude()) + ", ");
+        slrParamList.add("UncertaintyInnerRadius=" + Double.toString(slrReq.getLocationEstimate().getUncertaintyRadius()) + ", ");
+        slrParamList.add("OffsetAngle=" + Double.toString(slrReq.getLocationEstimate().getOffsetAngle()) + ", ");
+        slrParamList.add("IncludeAngle=" + Double.toString(slrReq.getLocationEstimate().getIncludedAngle()) + ", ");
+        slrParamList.add("TypeOfShape=" + Integer.toString(slrReq.getLocationEstimate().getTypeOfShape().getCode()) + ", ");
 
       }
       if (slrReq.getAdditionalLocationEstimate() != null) {
-        slrParamList.add("addLatitude=" + Double.toString(slrReq.getAdditionalLocationEstimate().getLatitude()));
-        slrParamList.add("addLongitude=" + Double.toString(slrReq.getAdditionalLocationEstimate().getLongitude()));
-        slrParamList.add("addAltitude=" + Double.toString(slrReq.getAdditionalLocationEstimate().getAltitude()));
-        slrParamList.add("addConfidence=" + Double.toString(slrReq.getAdditionalLocationEstimate().getInnerRadius()));
-        slrParamList.add("addUncertainty=" + Double.toString(slrReq.getAdditionalLocationEstimate().getUncertainty()));
-        slrParamList.add("addUncertaintyAltitude=" + Double.toString(slrReq.getAdditionalLocationEstimate().getUncertaintyAltitude()));
-        slrParamList.add("addUncertaintyInnerRadius=" + Double.toString(slrReq.getAdditionalLocationEstimate().getUncertaintyRadius()));
-        slrParamList.add("addOffset=" + Double.toString(slrReq.getAdditionalLocationEstimate().getOffsetAngle()));
-        slrParamList.add("addInclude=" + Double.toString(slrReq.getAdditionalLocationEstimate().getIncludedAngle()));
-        slrParamList.add("addTypeOfShape=" + Integer.toString(slrReq.getAdditionalLocationEstimate().getTypeOfShape().getCode()));
+        slrParamList.add("Additional Location Estimate: ");
+        slrParamList.add("addLatitude=" + Double.toString(slrReq.getAdditionalLocationEstimate().getLatitude()) + ", ");
+        slrParamList.add("addLongitude=" + Double.toString(slrReq.getAdditionalLocationEstimate().getLongitude()) + ", ");
+        slrParamList.add("addAltitude=" + Double.toString(slrReq.getAdditionalLocationEstimate().getAltitude()) + ", ");
+        slrParamList.add("addConfidence=" + Double.toString(slrReq.getAdditionalLocationEstimate().getInnerRadius()) + ", ");
+        slrParamList.add("addUncertainty=" + Double.toString(slrReq.getAdditionalLocationEstimate().getUncertainty()) + ", ");
+        slrParamList.add("addUncertaintyAltitude=" + Double.toString(slrReq.getAdditionalLocationEstimate().getUncertaintyAltitude()) + ", ");
+        slrParamList.add("addUncertaintyInnerRadius=" + Double.toString(slrReq.getAdditionalLocationEstimate().getUncertaintyRadius()) + ", ");
+        slrParamList.add("addOffset=" + Double.toString(slrReq.getAdditionalLocationEstimate().getOffsetAngle()) + ", ");
+        slrParamList.add("addInclude=" + Double.toString(slrReq.getAdditionalLocationEstimate().getIncludedAngle()) + ", ");
+        slrParamList.add("addTypeOfShape=" + Integer.toString(slrReq.getAdditionalLocationEstimate().getTypeOfShape().getCode()) + ", ");
 
       }
       if (slrReq.getAgeOfLocationEstimate() > Integer.MIN_VALUE && slrReq.getAgeOfLocationEstimate() < Integer.MAX_VALUE) {
-        slrParamList.add("AgeOfLocationEstimate=" + Integer.toString(slrReq.getAgeOfLocationEstimate()));
+        slrParamList.add("AgeOfLocationEstimate=" + Integer.toString(slrReq.getAgeOfLocationEstimate()) + ", ");
       }
       if (slrReq.getAccuracyFulfilmentIndicator() != null) {
-        slrParamList.add("AccuracyFulfillmentIndicator=" + Integer.toString(slrReq.getAccuracyFulfilmentIndicator().getIndicator()));
+        slrParamList.add("AccuracyFulfillmentIndicator=" + Integer.toString(slrReq.getAccuracyFulfilmentIndicator().getIndicator()) + ", ");
       }
       if (slrReq.getCellGlobalIdOrServiceAreaIdOrLAI() != null) {
         if (slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength() != null) {
-          slrParamList.add("CGIorSAIorLAIMCC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMCC()));
-          slrParamList.add("CGIorSAIorLAIMNC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMNC()));
-          slrParamList.add("CGIorSAIorLAILAC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getLac()));
+          slrParamList.add("LAI fixed length: ");
+          slrParamList.add("MCC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMCC()) + ", ");
+          slrParamList.add("MNC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getMNC()) + ", ");
+          slrParamList.add("LAC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getLAIFixedLength().getLac()) + ", ");
         }
         if (slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength() != null) {
-          slrParamList.add("CGIorSAIorLAIMCC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMCC()));
-          slrParamList.add("CGIorSAIorLAIMNC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMNC()));
-          slrParamList.add("CGIorSAIorLAILAC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getLac()));
-          slrParamList.add("CGIorSAIorLAICI=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode()));
+          slrParamList.add("CGI or SAI fixed length: ");
+          slrParamList.add("MCC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMCC()) + ", ");
+          slrParamList.add("MNC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMNC()) + ", ");
+          slrParamList.add("LAC=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getLac()) + ", ");
+          slrParamList.add("CGI=" + Integer.toString(slrReq.getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode()) + ", ");
         }
       }
       if (slrReq.getPseudonymIndicator() != false && slrReq.getPseudonymIndicator() != true) {
-        slrParamList.add("PseudonymIndicator=" + Boolean.toString(slrReq.getPseudonymIndicator()));
+        slrParamList.add("PseudonymIndicator=" + Boolean.toString(slrReq.getPseudonymIndicator()) + ", ");
       }
       if (slrReq.isMoLrShortCircuitIndicator() != false && slrReq.isMoLrShortCircuitIndicator() != true) {
-        slrParamList.add("MOLRShortCircuitIndicator=" + Boolean.toString(slrReq.isMoLrShortCircuitIndicator()));
+        slrParamList.add("MOLRShortCircuitIndicator=" + Boolean.toString(slrReq.isMoLrShortCircuitIndicator()) + ", ");
       }
       if (slrReq.getPeriodicLDRInfo() != null) {
-        slrParamList.add("ReportingAmount=" + Integer.toString(slrReq.getPeriodicLDRInfo().getReportingAmount()));
-        slrParamList.add("ReportingInterval=" + Integer.toString(slrReq.getPeriodicLDRInfo().getReportingInterval()));
+        slrParamList.add("ReportingAmount=" + Integer.toString(slrReq.getPeriodicLDRInfo().getReportingAmount()) + ", ");
+        slrParamList.add("ReportingInterval=" + Integer.toString(slrReq.getPeriodicLDRInfo().getReportingInterval()) + ", ");
       }
       if (slrReq.getSequenceNumber() > Integer.MIN_VALUE && slrReq.getSequenceNumber() < Integer.MAX_VALUE) {
-        slrParamList.add("Sequence Number=" + Integer.toString(slrReq.getSequenceNumber()));
+        slrParamList.add("Sequence Number=" + Integer.toString(slrReq.getSequenceNumber()) + ", ");
       }
       if (slrReq.getDeferredmtlrData() != null) {
         if (slrReq.getDeferredmtlrData().getDeferredLocationEventType() != null) {
-          slrParamList.add("EnteringArea=" + Boolean.toString(slrReq.getDeferredmtlrData().getDeferredLocationEventType().getEnteringIntoArea()));
-          slrParamList.add("InsideArea=" + Boolean.toString(slrReq.getDeferredmtlrData().getDeferredLocationEventType().getBeingInsideArea()));
-          slrParamList.add("LeavingArea=" + Boolean.toString(slrReq.getDeferredmtlrData().getDeferredLocationEventType().getLeavingFromArea()));
-          slrParamList.add("MSAvailable=" + Boolean.toString(slrReq.getDeferredmtlrData().getDeferredLocationEventType().getMsAvailable()));
+          slrParamList.add("EnteringArea=" + Boolean.toString(slrReq.getDeferredmtlrData().getDeferredLocationEventType().getEnteringIntoArea()) + ", ");
+          slrParamList.add("InsideArea=" + Boolean.toString(slrReq.getDeferredmtlrData().getDeferredLocationEventType().getBeingInsideArea()) + ", ");
+          slrParamList.add("LeavingArea=" + Boolean.toString(slrReq.getDeferredmtlrData().getDeferredLocationEventType().getLeavingFromArea()) + ", ");
+          slrParamList.add("MSAvailable=" + Boolean.toString(slrReq.getDeferredmtlrData().getDeferredLocationEventType().getMsAvailable()) + ", ");
         }
         if (slrReq.getDeferredmtlrData().getLCSLocationInfo() != null) {
-          slrParamList.add("GPRSNodeIndicator=" + Boolean.toString(slrReq.getDeferredmtlrData().getLCSLocationInfo().getGprsNodeIndicator()));
+          slrParamList.add("GPRSNodeIndicator=" + Boolean.toString(slrReq.getDeferredmtlrData().getLCSLocationInfo().getGprsNodeIndicator()) + ", ");
           if (slrReq.getDeferredmtlrData().getLCSLocationInfo().getNetworkNodeNumber() != null)
-            slrParamList.add("DeferredMTLRNetworkNodeNumber=" + slrReq.getDeferredmtlrData().getLCSLocationInfo().getNetworkNodeNumber().getAddress());
+            slrParamList.add("DeferredMTLRNetworkNodeNumber=" + slrReq.getDeferredmtlrData().getLCSLocationInfo().getNetworkNodeNumber().getAddress() + ", ");
           if (slrReq.getDeferredmtlrData().getLCSLocationInfo().getLMSI() != null)
-            slrParamList.add("DeferredMTLRLMSI=" + new String(slrReq.getDeferredmtlrData().getLCSLocationInfo().getLMSI().getData()));
+            slrParamList.add("DeferredMTLRLMSI=" + new String(slrReq.getDeferredmtlrData().getLCSLocationInfo().getLMSI().getData()) + ", ");
           if (slrReq.getDeferredmtlrData().getLCSLocationInfo().getMmeName() != null)
-            slrParamList.add("DeferredMTLRMMEName=" + new String(slrReq.getDeferredmtlrData().getLCSLocationInfo().getMmeName().getData()));
+            slrParamList.add("DeferredMTLRMMEName=" + new String(slrReq.getDeferredmtlrData().getLCSLocationInfo().getMmeName().getData()) + ", ");
           if (slrReq.getDeferredmtlrData().getLCSLocationInfo().getAaaServerName() != null)
             slrParamList.add("DeferredMTLRAAAServerName=" + new String(slrReq.getDeferredmtlrData().getLCSLocationInfo().getAaaServerName().getData()));
         }
       }
 
-      ReportParameters slrReportParameters = new ReportParameters();
-      Iterator<String> slrReportParametersIterator = slrParamList.iterator();
-      while (slrReportParametersIterator.hasNext()) {
-        slrReportParameters.put(String.valueOf(slrReq.getLcsReferenceNumber()), slrReportParametersIterator.next());
-      }
-
-      return slrReportParameters;
+      return slrParamList;
 
     } catch (Exception e) {
       e.printStackTrace();

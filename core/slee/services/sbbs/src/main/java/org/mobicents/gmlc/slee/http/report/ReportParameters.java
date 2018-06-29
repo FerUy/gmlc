@@ -21,18 +21,30 @@
 
 package org.mobicents.gmlc.slee.http.report;
 
+import java.io.Serializable;
 import java.util.HashMap;
 
 /**
  * @author <a href="mailto:aferreiraguido@gmail.com"> Alejandro Ferreira Guido </a>
  */
-public class ReportParameters extends HashMap<String, String> {
+public class ReportParameters extends HashMap<String, String> implements Serializable {
 
     public ReportParameters() {
     }
 
     @Override
     public String toString() {
-        return "TODO{ HashMap(ReportParameters) }";
+        StringBuilder builder = new StringBuilder();
+
+        builder.append("{ ");
+
+        for (HashMap.Entry<String,String> element: this.entrySet()) {
+            builder.append(String.format("%s%s = %s",
+                    builder.length() > 2 ? ", " : "", element.getKey(), element.getValue()));
+        }
+
+        builder.append(" }");
+
+        return builder.toString();
     }
 }

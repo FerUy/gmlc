@@ -30,6 +30,8 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author <a href="mailto:aferreiraguido@gmail.com"> Alejandro Ferreira Guido </a>
@@ -66,7 +68,7 @@ public class HttpReport {
         }
     }
 
-    public void Perform(HttpMethod httpMethod, Integer reportRegisterId, ReportParameters reportParameters) throws IOException {
+    public void Perform(HttpMethod httpMethod, Integer reportRegisterId, List<String> slrReportParameters) throws IOException {
         // get the report element register by previous registered id
         ReportElement reportElement = reportRegister.get(reportRegisterId);
         if (reportElement != null) {
@@ -75,16 +77,23 @@ public class HttpReport {
 
             // perform the http method
             URL urlCallback = new URL(callbackUrl);
-            HttpURLConnection httpUrlConnection = (HttpURLConnection)urlCallback.openConnection();
+            HttpURLConnection httpUrlConnection = (HttpURLConnection) urlCallback.openConnection();
             httpUrlConnection.setRequestMethod(httpMethod.toString());
             httpUrlConnection.setDoOutput(true);
             OutputStream httpOutputStream = httpUrlConnection.getOutputStream();
-            if (reportElement.reportParameters == null)
+
+            if (reportElement.reportParameters == null && slrReportParameters == null)
                 httpOutputStream.write("{}".getBytes());
-            else
+
+            if (reportElement.reportParameters != null)
                 httpOutputStream.write(reportElement.reportParameters.toString().getBytes());
-            if (reportParameters != null)
-                httpOutputStream.write(reportParameters.toString().getBytes());
+
+            if (slrReportParameters != null) {
+                Iterator<String> slrReportParametersIterator = slrReportParameters.iterator();
+                while (slrReportParametersIterator.hasNext())
+                    httpOutputStream.write(slrReportParametersIterator.next().getBytes());
+            }
+
             httpOutputStream.flush();
             httpOutputStream.close();
 
