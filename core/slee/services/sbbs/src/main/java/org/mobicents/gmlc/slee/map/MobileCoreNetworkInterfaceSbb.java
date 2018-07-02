@@ -4630,7 +4630,7 @@ public abstract class MobileCoreNetworkInterfaceSbb extends GMLCBaseSbb implemen
                 mnc = psiResponseValues.getLocationInformationGPRS().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getMNC();
                 lac = psiResponseValues.getLocationInformationGPRS().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getLac();
                 ci = psiResponseValues.getLocationInformationGPRS().getCellGlobalIdOrServiceAreaIdOrLAI().getCellGlobalIdOrServiceAreaIdFixedLength().getCellIdOrServiceAreaCode();
-                psiResponseSb.append(", CGI or LAI of SAI fixed length values (GPRS):");
+                psiResponseSb.append(" CGI of SAI fixed length values (GPRS):");
                 psiResponseSb.append(" mcc=");
                 psiResponseSb.append(mcc);
                 psiResponseSb.append(", mnc=");
